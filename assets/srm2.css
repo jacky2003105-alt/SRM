@@ -1,0 +1,63 @@
+:root{--ink:#172033;--muted:#5d6779;--navy:#0e1d30;--navy2:#1c3858;--gold:#b88938;--line:#dce1e8;--bg:#eef1f5;--paper:#fff;--blue:#17527c}
+*{box-sizing:border-box}
+html{scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.85 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+a{color:var(--blue)}
+.course-switcher{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:10px 22px;background:var(--navy);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.course-switcher .brand{color:#fff;text-decoration:none;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.course-switcher .pickers{display:flex;align-items:center;gap:10px;margin-left:auto;min-width:0}
+.course-switcher label{font-size:13px;color:#c8d3e2;white-space:nowrap}
+.course-switcher select{background:var(--navy2);color:#fff;border:1px solid #2e5079;border-radius:7px;padding:6px 10px;font-size:14px;max-width:min(62vw,520px)}
+main.course{max-width:1000px;margin:0 auto;padding:22px 18px 60px}
+.ch-head{background:var(--paper);border-radius:14px;padding:26px 30px;border:1px solid var(--line);margin-bottom:16px}
+.kicker{color:var(--gold);font-size:13px;font-weight:700;letter-spacing:.06em}
+h1{margin:4px 0 8px;font-size:30px;line-height:1.35;color:var(--navy)}
+.ch-sub{color:var(--muted);margin:0 0 12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips a{font-size:14px;padding:4px 12px;border-radius:999px;background:#eef3f9;border:1px solid #d3deea;text-decoration:none}
+.toc,.unit{background:var(--paper);border-radius:14px;padding:22px 30px;border:1px solid var(--line);margin-bottom:16px}
+.toc h2{font-size:18px;margin:0 0 6px}
+.unit>h2{font-size:23px;color:var(--navy);margin:2px 0 14px;padding-bottom:8px;border-bottom:2px solid #e6eaf0}
+.unit h3{font-size:18.5px;color:#173c55;margin:26px 0 8px}
+.unit h4{font-size:16.5px;margin:18px 0 6px}
+p{margin:.55em 0}
+.box{margin:16px 0;padding:12px 18px;border-radius:10px;border:1px solid var(--line);background:#f7f9fc}
+.box-t{font-weight:700;font-size:15px;margin-bottom:4px}
+.box.derive{background:#f4f7fb;border-left:4px solid #2b5d8a}.box.derive .box-t{color:#1f4e78}
+.box.ex{background:#f3f9f4;border-left:4px solid #2f7d4f}.box.ex .box-t{color:#1f5e3a}
+.box.warn{background:#fff6f1;border-left:4px solid #c0612b}.box.warn .box-t{color:#9c4a1c}
+.box.key{background:#fbf7ec;border-left:4px solid var(--gold)}.box.key .box-t{color:#7d5a1d}
+.box.intuit{background:#f5f3fb;border-left:4px solid #6550a8}.box.intuit .box-t{color:#4d3c86}
+.box.exam{background:#eef6fa;border-left:4px solid #2a7c9a}.box.exam .box-t{color:#1d5e76}
+figure{margin:18px 0;text-align:center}
+figure img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+figcaption{font-size:14px;color:var(--muted);margin-top:6px;text-align:left}
+table{border-collapse:collapse;margin:12px 0;font-size:15px;min-width:50%}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:center}
+th{background:#eef2f7}
+.tabwrap{overflow-x:auto}
+.katex-display{overflow-x:auto;overflow-y:hidden;padding:2px 0}
+.sec-ex{margin-top:24px;border-top:1px dashed #cdd5df;padding-top:12px}
+.sec-ex-t{font-weight:700;color:var(--gold);font-size:15px}
+.exercise{margin:14px 0;padding:14px 18px;border:1px solid var(--line);border-radius:10px;background:#fcfdfe}
+.ex-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+.ex-head small{color:var(--muted)}
+.ex-tag{font-size:12.5px;padding:1px 8px;border-radius:5px;background:#e8edf3;color:#405066;font-weight:700}
+.ex-tag.star{background:#f6ead0;color:#7d5a1d}
+.prompt{margin-top:6px}
+button.reveal{margin:8px 0 6px;font-size:13.5px;padding:3px 12px;border-radius:999px;border:1px solid #b9c6d6;background:#fff;color:#2a4a6b;cursor:pointer}
+.exercise.folded .solution{display:none}
+.sol-part{margin:10px 0;padding:8px 14px;border-radius:8px;background:#f5f8fb}
+.sol-part.答案{background:#eff8f1;border-left:4px solid #2f7d4f}
+.sol-part.易錯{background:#fff6f1;border-left:4px solid #c0612b}
+.sol-t{font-weight:700;font-size:14px;color:#1f4e78}
+.sol-part.答案 .sol-t{color:#1f5e3a}.sol-part.易錯 .sol-t{color:#9c4a1c}
+a.concept{color:inherit;text-decoration:none;border-bottom:1.5px dashed #6d8fb3}
+.pop{position:fixed;z-index:50;max-width:340px;background:#fff;border:1px solid #c9d3df;border-radius:9px;padding:10px 13px;box-shadow:0 6px 22px rgba(0,0,0,.16);font-size:14px;line-height:1.6}
+.pop p{margin:0 0 6px}
+.back{position:fixed;right:18px;bottom:18px;z-index:40;padding:8px 14px;border-radius:999px;border:0;background:var(--navy);color:#fff;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.25)}
+.navfoot{display:flex;justify-content:space-between;margin:20px 4px}
+@media (max-width:640px){body{font-size:16px}.course-switcher{padding:8px 12px;flex-wrap:wrap;gap:6px}.course-switcher .pickers{margin-left:0;width:100%}.course-switcher select{max-width:none;flex:1 1 0;min-width:0;width:0}
+ .ch-head,.toc,.unit{padding:16px 16px;border-radius:10px}main.course{padding:14px 10px 40px}h1{font-size:24px}.unit>h2{font-size:20px}.exercise{padding:12px 12px}}
+@media print{.course-switcher,button.reveal,.back,.navfoot,.chips{display:none!important}body{background:#fff;font-size:12.5pt}.ch-head,.toc,.unit{border:0;padding:0 0 10px}.exercise.folded .solution{display:block}.unit{break-before:page}figure,.box,.exercise{break-inside:avoid}}
+.katex{position:relative}.katex .katex-mathml{left:0;top:0}

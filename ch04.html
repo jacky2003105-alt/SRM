@@ -1,7 +1,433 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第 4 章　線性迴歸：F 檢定與巢狀模型｜SRM 精算筆記</title><link rel="stylesheet" href="assets/site.css"><link rel="stylesheet" href="assets/katex/katex.min.css"><script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/site.js"></script></head><body><nav aria-label="課程導覽"><a class="brand" href="index.html">SRM 精算筆記</a><label for="chapter">章節</label><select id="chapter"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html" selected>第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題與參考解答</option></select><a href="practice.html">題庫</a></nav><main><header><div class="kicker">SRM · 第 04 章</div><h1>線性迴歸：F 檢定與巢狀模型</h1><p>新增一組變數之後，擬合改善多少才足以超過抽樣雜訊？</p><div class="chips"><a href="pdf/ch04.pdf">下載本章 PDF</a><a href="practice.html#chapter4">習題索引</a></div></header><section class="panel"><h2>本章閱讀順序</h2><ol><li><a href="#s1">整體 F 檢定與 ANOVA：改善幅度相對於多少雜訊？</a></li><li><a href="#s2">部分 F 檢定：一次檢驗一組限制</a></li></ol><div class="minititle">優先練習 · 10 題</div><div class="chips"><a href="#q4-1">4.1</a><a href="#q4-2">4.2</a><a href="#q4-8">4.8</a><a href="#q4-10">4.10</a><a href="#q4-15">4.15</a><a href="#q4-17">4.17</a><a href="#q4-18">4.18</a><a href="#q4-26">4.26</a><a href="#q4-27">4.27</a><a href="#q4-32">4.32</a></div></section><article class="unit" id="s1"><div class="kicker">概念 01</div><h2>整體 F 檢定與 ANOVA：改善幅度相對於多少雜訊？</h2><p>即使新增無關變數，普通最小平方法也能令訓練 RSS 不增。因此「RSS 下降」本身不能回答新變數是否有用。整體檢定的虛無假設是所有 \(p\) 個斜率同時等於零；對立假設是至少一個不為零。只剩截距時最好的預測是 \(\bar y\)，此時誤差為 TSS；完整模型的誤差為 RSS。改善量就是 \(TSS-RSS=RegSS\)。每增加一個斜率要花一個自由度，故分子以 \(RegSS/p\) 衡量平均改善，分母以殘差均方估背景雜訊：
-\[F=\frac{RegSS/p}{RSS/(n-p-1)}=\frac{R^2/p}{(1-R^2)/(n-p-1)}.\]
-在同變異獨立常態誤差、設計滿秩且虛無成立時，投影到新增的 \(p\) 維方向與剩餘的 \(n-p-1\) 維殘差空間彼此正交；常態投影的平方和各除 \(\sigma^2\) 是獨立卡方，兩個卡方各除自由度相除，因此是 \(F_{p,n-p-1}\)。越大表示改善遠高於雜訊，故查右尾。即：F 不是直接看多解釋多少，而是先除去新增參數的代價，再跟剩餘雜訊比。</p>
-<p>自由度核對：ANOVA 表中迴歸 \(p\)、誤差 \(n-p-1\)、總計 \(n-1\)。從 F 重建 \(R^2\)，交叉相乘得 \(R^2=pF/(pF+n-p-1)\)。若只限一個斜率，在 \(H_0:\beta_1=0\) 下，\(RegSS=\hat\beta_1^2 S_{xx}\)，故 \(F=\hat\beta_1^2/(s^2/S_{xx})=t^2\)；要還原 t 的正負，必須看斜率號。</p><div class="related"><small>接著讀：<a class="concept" data-definition="以只猜樣本平均為基準，衡量迴歸減少了多少比例的平方誤差。" data-target="第 3 章 · 決定係數" href="ch03.html#s2">決定係數</a> · <a class="concept" data-definition="從候選解釋變數中選子集合，使模型在預測與簡潔間取得平衡。" data-target="第 7 章 · 子集選擇" href="ch07.html#s1">子集選擇</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q4-1">4.1</a><a href="#q4-2">4.2</a><a href="#q4-3">4.3</a><a href="#q4-4">4.4</a><a href="#q4-5">4.5</a><a href="#q4-6">4.6</a><a href="#q4-7">4.7</a><a href="#q4-8">4.8</a><a href="#q4-9">4.9</a><a href="#q4-10">4.10</a><a href="#q4-11">4.11</a><a href="#q4-12">4.12</a><a href="#q4-13">4.13</a><a href="#q4-14">4.14</a><a href="#q4-15">4.15</a><a href="#q4-16">4.16</a><a href="#q4-28">4.28</a></div></article><article class="exercise" id="q4-1"><button class="toggle" aria-controls="a-q4-1" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 4.1 · 講義 p.61</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-1">題目連結</a></small><p>25 筆、3 斜率，TSS=40、RSS=30，求整體 F。</p><div class="solution" id="a-q4-1"><strong class="label">參考解答</strong><p>\([(40-30)/3]/[30/21]=2.3333\)。</p><strong class="label">解析</strong><p>總平方和先扣誤差才是迴歸平方和。</p></div></article><article class="exercise" id="q4-2"><button class="toggle" aria-controls="a-q4-2" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 4.2 · 講義 p.62</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-2">題目連結</a></small><p>20 筆、5 斜率且 F=21，求 \(R^2\)。</p><div class="solution" id="a-q4-2"><strong class="label">參考解答</strong><p>\(5(21)/(5(21)+14)=15/17\)（C）。</p><strong class="label">解析</strong><p>用 F 與兩個自由度即可反推。</p></div></article><article class="exercise" id="q4-8"><button class="toggle" aria-controls="a-q4-8" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 4.8 · 講義 p.63</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-8">題目連結</a></small><p>22 筆簡單迴歸 \(b=2.5,R^2=0.9\)；求斜率 90% 區間寬。</p><div class="solution" id="a-q4-8"><strong class="label">參考解答</strong><p>\(F=180, t=\sqrt{180}\)，\(SE=2.5/\sqrt{180}\)；寬 \(2(1.725)SE\approx0.643\)。</p><strong class="label">解析</strong><p>斜率的 t 與整體 F 在此是一個限制。</p></div></article><article class="exercise" id="q4-10"><button class="toggle" aria-controls="a-q4-10" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 4.10 · 講義 p.63</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-10">題目連結</a></small><p>20 筆 \(\sum x=4860,\sum y=2.452,\sum xy=539.309,\sum x^2=1330224,F=19.45\)。求 95% 斜率區間上界。</p><div class="solution" id="a-q4-10"><strong class="label">參考解答</strong><p>\(S_{xy}=-56.527,S_{xx}=149244,b=-0.000379\)；\(SE=\lvert b\rvert/\sqrt{19.45}\)，上界約 −0.00020（E）。</p><strong class="label">解析</strong><p>F 沒有斜率的符號；要從共變動找方向。</p></div></article><article class="exercise" id="q4-15"><button class="toggle" aria-controls="a-q4-15" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 4.15 · 講義 p.65</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-15">題目連結</a></small><p>迴歸 df=4，總 df=22、TSS=14230、F=20.79。求 RegSS。</p><div class="solution" id="a-q4-15"><strong class="label">參考解答</strong><p>\(RegSS=TSS\times4F/(4F+18)=11697.97\)。</p><strong class="label">解析</strong><p>使用總自由度減迴歸自由度得到殘差自由度。</p></div></article><article class="unit" id="s2"><div class="kicker">概念 02</div><h2>部分 F 檢定：一次檢驗一組限制</h2><p>比較兩模型時，要用相同反應、相同樣本，且受限模型可由完整模型施加 \(q\) 個獨立限制得到。例如地區有四組，完整模型有三個地區指標；刪除地區是同時將三個斜率設零。不能拿不同樣本或任意兩模型的 RSS 作相同檢定。</p>
-<p>設 \(RSS_R\) 與 \(RSS_F\) 分別是受限與完整模型的殘差平方和。放開限制讓 RSS 改善 \(RSS_R-RSS_F\)，虛無假設下的 F 比是
-\[F=\frac{(RSS_R-RSS_F)/q}{RSS_F/(n-p_F-1)}=\frac{(R_F^2-R_R^2)/q}{(1-R_F^2)/(n-p_F-1)}.\]
-第二式用同一個 TSS 約掉。分母只能用完整模型的自由度與雜訊。若只拿到 RSE 而不是 RSS，兩模型要各自乘以自己的自由度恢復平方和。若受限模型是「只有截距」，就回到整體 F；若只加一個變數，部分 F 即該係數雙尾 t 檢定的平方。即：先確認比較的模型和限制是什麼，同一份資料換一把尺才有意義。</p><div class="related"><small>接著讀：<a class="concept" data-definition="以只猜樣本平均為基準，衡量迴歸減少了多少比例的平方誤差。" data-target="第 3 章 · 決定係數" href="ch03.html#s2">決定係數</a> · <a class="concept" data-definition="從候選解釋變數中選子集合，使模型在預測與簡潔間取得平衡。" data-target="第 7 章 · 子集選擇" href="ch07.html#s1">子集選擇</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q4-17">4.17</a><a href="#q4-18">4.18</a><a href="#q4-19">4.19</a><a href="#q4-20">4.20</a><a href="#q4-21">4.21</a><a href="#q4-22">4.22</a><a href="#q4-23">4.23</a><a href="#q4-24">4.24</a><a href="#q4-25">4.25</a><a href="#q4-26">4.26</a><a href="#q4-27">4.27</a><a href="#q4-29">4.29</a><a href="#q4-30">4.30</a><a href="#q4-31">4.31</a><a href="#q4-32">4.32</a></div></article><article class="exercise" id="q4-17"><button class="toggle" aria-controls="a-q4-17" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 4.17 · 講義 p.65</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-17">題目連結</a></small><p>五斜率完整模型 RSE 3.85、df 44；刪最後一項後 RSE 4.02。問部分 F。</p><div class="solution" id="a-q4-17"><strong class="label">參考解答</strong><p>\(RSS_F=44(3.85)^2=652.19,RSS_R=45(4.02)^2=727.218\)，\(F\approx5.062\)。</p><strong class="label">解析</strong><p>刪除一項使受限模型多出一個誤差自由度。</p></div></article><article class="exercise" id="q4-18"><button class="toggle" aria-controls="a-q4-18" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 4.18 · 講義 p.66</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-18">題目連結</a></small><p>20 筆、完整四斜率，RSS=8；刪除末兩項後 RSS=10。</p><div class="solution" id="a-q4-18"><strong class="label">參考解答</strong><p>\([(10-8)/2]/(8/15)=1.875\)。</p><strong class="label">解析</strong><p>同時刪兩項所以分子有兩個自由度。</p></div></article><article class="exercise" id="q4-26"><button class="toggle" aria-controls="a-q4-26" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 4.26 · 講義 p.68</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-26">題目連結</a></small><p>42 筆完整四斜率、兩項限制；兩模型 \(R^2\) 為 0.940、0.915。</p><div class="solution" id="a-q4-26"><strong class="label">參考解答</strong><p>\([(0.940-0.915)/2]/(0.060/37)=7.708\)。</p><strong class="label">解析</strong><p>用共同 TSS 抵銷後仍保留完整模型的未解釋比例。</p></div></article><article class="exercise" id="q4-27"><button class="toggle" aria-controls="a-q4-27" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 4.27 · 講義 p.69</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-27">題目連結</a></small><p>820 筆碰撞損失；五斜率完整 F=419，移除三個地區指標的二斜率模型整體 F=759。地區聯合 F？</p><div class="solution" id="a-q4-27"><strong class="label">參考解答</strong><p>反推兩模型 \(R^2\) 約 0.72018、0.65011，再算 \((0.72018-0.65011)/3\) 除以 \(0.27982/814\) 得約 67.95。</p><strong class="label">解析</strong><p>不能比較或相減兩個整體 F，必須改為部分檢定。</p></div></article><article class="exercise" id="q4-32"><button class="toggle" aria-controls="a-q4-32" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 4.32 · 講義 p.71</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-32">題目連結</a></small><p>15 筆、四斜率，含 \(x_4\) 的 RSS=123、移除後 177。其顯著性在哪兩個水準之間？</p><div class="solution" id="a-q4-32"><strong class="label">參考解答</strong><p>\(F=54/(123/10)=4.390\)；\(\lvert t\rvert=2.095\) 介於 10% 與 5% 雙尾臨界值，故只達 10%（B）。</p><strong class="label">解析</strong><p>單一限制可改查 t 分配；不要以 F 當 t 查表。</p></div></article><article class="unit" id="terms"><div class="kicker">TERMS</div><h2>本章中英術語</h2><table><thead><tr><th>中文</th><th>English</th><th>解題時的意思</th></tr></thead><tbody><tr><td>變異數分析</td><td>analysis of variance</td><td>將平方和依解釋與未解釋部分拆解。</td></tr><tr><td>巢狀模型</td><td>nested models</td><td>較簡單模型可由較大模型加限制得到。</td></tr><tr><td>部分 F 檢定</td><td>partial F test</td><td>比較解除一組限制後，每個新增自由度的改善。</td></tr></tbody></table></article><section class="panel" id="remaining"><h2>章末其餘習題 · 22 題</h2><p>按講義題號排列。做題前可用各題自己的按鈕隱藏解答。</p></section><article class="exercise" id="q4-3"><button class="toggle" aria-controls="a-q4-3" aria-expanded="true">隱藏解答</button><h3>練習 · 4.3 · 講義 p.62</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-3">題目連結</a></small><p>10 筆簡單迴歸，\(R^2=0.95\)，求 F。</p><div class="solution" id="a-q4-3"><strong class="label">參考解答</strong><p>\(8(0.95/0.05)=152\)。</p><strong class="label">解析</strong><p>簡單迴歸的分子自由度是 1。</p></div></article><article class="exercise" id="q4-4"><button class="toggle" aria-controls="a-q4-4" aria-expanded="true">隱藏解答</button><h3>練習 · 4.4 · 講義 p.62</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-4">題目連結</a></small><p>20 筆簡單迴歸，\(R^2=0.64\)。</p><div class="solution" id="a-q4-4"><strong class="label">參考解答</strong><p>\(18(0.64/0.36)=32\)（B）。</p><strong class="label">解析</strong><p>剩餘比例 0.36 是分母的一部分。</p></div></article><article class="exercise" id="q4-5"><button class="toggle" aria-controls="a-q4-5" aria-expanded="true">隱藏解答</button><h3>練習 · 4.5 · 講義 p.62</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-5">題目連結</a></small><p>13 筆、三斜率、\(R^2=0.838547\)；聯合檢定三個斜率為零。</p><div class="solution" id="a-q4-5"><strong class="label">參考解答</strong><p>\((0.838547/3)/[(1-0.838547)/9]=15.58\)（D）。</p><strong class="label">解析</strong><p>替代假設只需至少一個斜率非零。</p></div></article><article class="exercise" id="q4-6"><button class="toggle" aria-controls="a-q4-6" aria-expanded="true">隱藏解答</button><h3>練習 · 4.6 · 講義 p.62</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-6">題目連結</a></small><p>11 筆簡單迴歸 \(R^2=0.25\)，求 F。</p><div class="solution" id="a-q4-6"><strong class="label">參考解答</strong><p>\(9(0.25/0.75)=3\)（C）。</p><strong class="label">解析</strong><p>不要將 \(R^2\) 再平方。</p></div></article><article class="exercise" id="q4-7"><button class="toggle" aria-controls="a-q4-7" aria-expanded="true">隱藏解答</button><h3>練習 · 4.7 · 講義 p.63</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-7">題目連結</a></small><p>ANOVA 的迴歸 SS=12235、df=1，誤差 SS=3014、df=8，求 F。</p><div class="solution" id="a-q4-7"><strong class="label">參考解答</strong><p>\(12235/(3014/8)=32.48\)。</p><strong class="label">解析</strong><p>F 是均方比，不是兩個未校正的平方和之比。</p></div></article><article class="exercise" id="q4-9"><button class="toggle" aria-controls="a-q4-9" aria-expanded="true">隱藏解答</button><h3>練習 · 4.9 · 講義 p.63</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-9">題目連結</a></small><p>十筆簡單迴歸 \(RegSS=225,TSS=425\)，求檢定零斜率的 t 大小。</p><div class="solution" id="a-q4-9"><strong class="label">參考解答</strong><p>\(F=(225/1)/(200/8)=9\)；\(\lvert t\rvert=3\)（D）。</p><strong class="label">解析</strong><p>若未指定斜率方向，只能從 F 確定絕對值。</p></div></article><article class="exercise" id="q4-11"><button class="toggle" aria-controls="a-q4-11" aria-expanded="true">隱藏解答</button><h3>練習 · 4.11 · 講義 p.63</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-11">題目連結</a></small><p>47 筆簡單迴歸斜率為正，TSS=54、RegSS=7，求 t。</p><div class="solution" id="a-q4-11"><strong class="label">參考解答</strong><p>\(t=+\sqrt{7/(47/45)}=2.589\)（D）。</p><strong class="label">解析</strong><p>先找 RSS=47，再用誤差自由度 45。</p></div></article><article class="exercise" id="q4-12"><button class="toggle" aria-controls="a-q4-12" aria-expanded="true">隱藏解答</button><h3>練習 · 4.12 · 講義 p.64</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-12">題目連結</a></small><p>7 筆簡單迴歸 \(F=2.088,RSS=218.68\)，求決定係數。</p><div class="solution" id="a-q4-12"><strong class="label">參考解答</strong><p>\(RegSS=2.088(218.68/5)=91.32\)，故 \(R^2=0.295\)（A）。</p><strong class="label">解析</strong><p>先還原迴歸平方和再除總量。</p></div></article><article class="exercise" id="q4-13"><button class="toggle" aria-controls="a-q4-13" aria-expanded="true">隱藏解答</button><h3>練習 · 4.13 · 講義 p.64</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-13">題目連結</a></small><p>100 筆：只用平均的誤差平方和 490000，一個斜率的模型誤差 250000；求 F。</p><div class="solution" id="a-q4-13"><strong class="label">參考解答</strong><p>\([(490000-250000)/1]/[250000/98]=94.08\)（C）。</p><strong class="label">解析</strong><p>截距模型的 RSS 就是 TSS。</p></div></article><article class="exercise" id="q4-14"><button class="toggle" aria-controls="a-q4-14" aria-expanded="true">隱藏解答</button><h3>練習 · 4.14 · 講義 p.64</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-14">題目連結</a></small><p>18 筆、三斜率，TSS=1820、RegSS=1060，求整體 F。</p><div class="solution" id="a-q4-14"><strong class="label">參考解答</strong><p>\(RSS=760,F=(1060/3)/(760/14)=6.51\)。</p><strong class="label">解析</strong><p>迴歸與誤差自由度不同。</p></div></article><article class="exercise" id="q4-16"><button class="toggle" aria-controls="a-q4-16" aria-expanded="true">隱藏解答</button><h3>練習 · 4.16 · 講義 p.65</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-16">題目連結</a></small><p>20 筆、3 斜率，RegSS=2.65376、TSS=7.62956。問整體顯著性的 F。</p><div class="solution" id="a-q4-16"><strong class="label">參考解答</strong><p>\(RSS=4.9758\)；\((2.65376/3)/(4.9758/16)=2.8444\)（B）。</p><strong class="label">解析</strong><p>個別 t 值不必相加。</p></div></article><article class="exercise" id="q4-19"><button class="toggle" aria-controls="a-q4-19" aria-expanded="true">隱藏解答</button><h3>練習 · 4.19 · 講義 p.66</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-19">題目連結</a></small><p>20 筆相同觀察比較二斜率與四斜率模型，RSS 依序 13.47、10.53。</p><div class="solution" id="a-q4-19"><strong class="label">參考解答</strong><p>\([(13.47-10.53)/2]/(10.53/15)=2.094\)（E）。</p><strong class="label">解析</strong><p>虛無假設是兩個新增斜率都等於零。</p></div></article><article class="exercise" id="q4-20"><button class="toggle" aria-controls="a-q4-20" aria-expanded="true">隱藏解答</button><h3>練習 · 4.20 · 講義 p.66</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-20">題目連結</a></small><p>18 筆資料，完整模型含 5 斜率；受限模型移去交互與二次項共 3 個，RSS 由 78 變 102。</p><div class="solution" id="a-q4-20"><strong class="label">參考解答</strong><p>\([(102-78)/3]/(78/12)=1.231\)（A）。</p><strong class="label">解析</strong><p>二次項仍是線性模型的一欄，算一個係數。</p></div></article><article class="exercise" id="q4-21"><button class="toggle" aria-controls="a-q4-21" aria-expanded="true">隱藏解答</button><h3>練習 · 4.21 · 講義 p.67</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-21">題目連結</a></small><p>15 筆，完整五參數、受限三參數；各 RSS 為 22.8 與 57.4。</p><div class="solution" id="a-q4-21"><strong class="label">參考解答</strong><p>\([(57.4-22.8)/2]/(22.8/10)=7.588\)。</p><strong class="label">解析</strong><p>「五參數」已含截距，不應再減一次。</p></div></article><article class="exercise" id="q4-22"><button class="toggle" aria-controls="a-q4-22" aria-expanded="true">隱藏解答</button><h3>練習 · 4.22 · 講義 p.67</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-22">題目連結</a></small><p>30 筆、完整四斜率，檢定兩個限制；受限與完整 RSS 是 2781 和 2104。</p><div class="solution" id="a-q4-22"><strong class="label">參考解答</strong><p>\([(2781-2104)/2]/(2104/25)=4.022\)。</p><strong class="label">解析</strong><p>分母永遠使用完整模型的殘差。</p></div></article><article class="exercise" id="q4-23"><button class="toggle" aria-controls="a-q4-23" aria-expanded="true">隱藏解答</button><h3>練習 · 4.23 · 講義 p.67</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-23">題目連結</a></small><p>受限與完整 RSS=126471、76893，完整 df=18；一次檢驗六項。</p><div class="solution" id="a-q4-23"><strong class="label">參考解答</strong><p>\([(126471-76893)/6]/(76893/18)=1.934\)（D，約 1.9）。</p><strong class="label">解析</strong><p>限制數由虛無假設決定，而非總變數數。</p></div></article><article class="exercise" id="q4-24"><button class="toggle" aria-controls="a-q4-24" aria-expanded="true">隱藏解答</button><h3>練習 · 4.24 · 講義 p.68</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-24">題目連結</a></small><p>5 筆、完整模型兩斜率，移去一斜率後 RSS 由 4.35 變 5.85。</p><div class="solution" id="a-q4-24"><strong class="label">參考解答</strong><p>\([(5.85-4.35)/1]/(4.35/2)=0.690\)。</p><strong class="label">解析</strong><p>樣本極小，估雜訊只有 2 個自由度。</p></div></article><article class="exercise" id="q4-25"><button class="toggle" aria-controls="a-q4-25" aria-expanded="true">隱藏解答</button><h3>練習 · 4.25 · 講義 p.68</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-25">題目連結</a></small><p>11 筆、完整三斜率，刪兩項後 RSS 由 12.8156 變 27.7281。</p><div class="solution" id="a-q4-25"><strong class="label">參考解答</strong><p>\([(27.7281-12.8156)/2]/(12.8156/7)=4.073\)。</p><strong class="label">解析</strong><p>分子先算新增項平均少掉多少 RSS。</p></div></article><article class="exercise" id="q4-28"><button class="toggle" aria-controls="a-q4-28" aria-expanded="true">隱藏解答</button><h3>練習 · 4.28 · 講義 p.69</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q4-28">題目連結</a></small><p>105 個月基金報酬、四斜率加截距，整體 F=20。能否算 \(R^2\)？</p><div class="solution" id="a-q4-28"><strong class="label">參考解答</strong><p>可。\(R^2=4(20)/(4(20)+100)=0.4444\)（C）。</p><strong class="label">解析</strong><p>無須個別平方和亦可反推比例。</p></div></article><article class="exercise" id="q4-29"><button class="toggle" aria-controls="a-q4-29" aria-expanded="true">隱藏解答</button><h3>練習 · 4.29 · 講義 p.69</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-29">題目連結</a></small><p>10 筆資料 TSS=128，增第三斜率使 RegSS 從 61.3 到 65.6。求部分 F。</p><div class="solution" id="a-q4-29"><strong class="label">參考解答</strong><p>\((65.6-61.3)/[(128-65.6)/6]=0.4135\)（B）。</p><strong class="label">解析</strong><p>分子用平方和增量，分母不能使用 RegSS。</p></div></article><article class="exercise" id="q4-30"><button class="toggle" aria-controls="a-q4-30" aria-expanded="true">隱藏解答</button><h3>練習 · 4.30 · 講義 p.70</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-30">題目連結</a></small><p>3120 筆、完整六參數，TSS=15000、完整 \(R^2=0.38\)，受限 RegSS=5565，三項限制。</p><div class="solution" id="a-q4-30"><strong class="label">參考解答</strong><p>兩模型 RSS 分別為 9300、9435，\(F=(135/3)/(9300/3114)=15.068\)（D）。</p><strong class="label">解析</strong><p>即使 R² 改善小，大樣本也可能有統計證據。</p></div></article><article class="exercise" id="q4-31"><button class="toggle" aria-controls="a-q4-31" aria-expanded="true">隱藏解答</button><h3>練習 · 4.31 · 講義 p.70</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q4-31">題目連結</a></small><p>加上失業率後 RSS 由 12204 變 9286，完整 df 8。以 10% 雙尾檢定。</p><div class="solution" id="a-q4-31"><strong class="label">參考解答</strong><p>\(F=(12204-9286)/(9286/8)=2.514\)，\(\lvert t\rvert=1.586&lt;1.860\)，未拒絕零係數（E）。</p><strong class="label">解析</strong><p>未顯著不代表證實係數必為零。</p></div></article><section class="panel"><h2>用模擬考複習本章</h2><div class="chips"><a href="exams.html#exam1">第 1 回 · 題 19</a><a href="exams.html#exam2">第 2 回 · 題 15</a><a href="exams.html#exam3">第 3 回 · 題 8</a><a href="exams.html#exam4">第 4 回 · 題 23</a><a href="exams.html#exam6">第 6 回 · 題 10</a><a href="exams.html#exam6">第 6 回 · 題 23</a></div></section><div class="navfoot"><a href="ch03.html">← 上一章</a><a href="ch05.html">下一章 →</a></div><footer>SRM 精算考試中文研讀筆記 · 依所附第四版教材章序編寫，中文解析為參考解答。</footer></main></body></html>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 4 章　線性迴歸：F 檢定與巢狀模型｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
+<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html" selected>第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 4 章</div><h1>線性迴歸：F 檢定與巢狀模型</h1><p class="ch-sub">\(t\) 檢定一次只檢查一個係數。要問「整個模型有沒有用」或「這一組變數能不能一起拿掉」，要用 \(F\) 檢定。本章推導 \(F\) 統計量的兩種寫法（平方和與 \(R^2\)），以及 \(F\) 和 \(t\) 的關係。</p><div class="chips"><a href="pdf/ch04.pdf">下載本章 PDF</a><a href="#exercises">章末習題（32 題）</a></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">4.1 整體 \(F\) 檢定</a></li><li><a href="#s2">4.2 部分 \(F\) 檢定：比較巢狀模型</a></li></ol><p>本章對應講義第 4 課，讀本是 ISLR 3.2.2 節。考場不提供 \(F\) 分配表，所以題目幾乎都是「算出 \(F\) 統計量」；只有分子自由度是 1 時，可以把 \(F\) 開根號變成 \(t\)，用 \(t\) 表判斷顯著性。</p></section><section class="unit" id="s1"><h2>4.1 整體 \(F\) 檢定</h2><h3>一、要檢定什麼</h3>
+<p>整體 \(F\) 檢定問的是：<strong>所有斜率是否都等於 0</strong>。</p>
+<p>\[H_0:\ \beta_1=\beta_2=\cdots=\beta_k=0\qquad\text{對}\qquad H_1:\ \text{至少有一個 }\beta_j\ne0 .\]</p>
+<p>\(H_0\) 成立時，模型退化成只有截距的 \(y=\beta_0+\varepsilon\)，它的 Error SS 就是 Total SS（第 3 章 3.1 節）。所以檢定就是比較「只有截距」與「完整模型」兩者的誤差平方和差多少。</p>
+<h3>二、\(F\) 統計量</h3>
+<p>\[F_{k,\,n-k-1}=\frac{\text{Regression SS}/k}{\text{Error SS}/(n-k-1)}=\frac{\text{迴歸的均方}}{\text{誤差的均方 }s^2},\]</p>
+<p>分子自由度 \(k\)、分母自由度 \(n-k-1\)。多數教科書（但不是 SRM 的讀本）會在 ANOVA 表多放一欄 \(F\)：</p>
+<table>
+<thead>
+<tr>
+<th>來源</th>
+<th>平方和</th>
+<th>自由度</th>
+<th>均方</th>
+<th>\(F\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>迴歸</td>
+<td>Regression SS</td>
+<td>\(k\)</td>
+<td>Regression SS\(/k\)</td>
+<td>\(F_{k,n-k-1}\)</td>
+</tr>
+<tr>
+<td>誤差</td>
+<td>Error SS</td>
+<td>\(n-k-1\)</td>
+<td>Error SS\(/(n-k-1)\)</td>
+<td></td>
+</tr>
+<tr>
+<td>總和</td>
+<td>Total SS</td>
+<td>\(n-1\)</td>
+<td>Total SS\(/(n-1)\)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>\(F\) 越大，表示迴歸解釋掉的平方和相對於雜訊越大，越不像是 \(H_0\)（所有斜率為 0）下碰巧出現的。\(F\) 檢定只看<strong>右尾</strong>：\(F\) 大於臨界值 \(F_{\alpha;k,n-k-1}\) 就拒絕 \(H_0\)。</p>
+<div class="box derive">
+<div class="box-t">推導：為什麼這個比值在 \(H_0\) 下服從 \(F\) 分配</div>
+<p>常態誤差下可以證明三件事（證明用到投影矩陣的性質，這裡只說結論與直覺）：</p>
+<ol>
+<li>\(\text{Error SS}/\sigma^2\sim\chi^2_{n-k-1}\)。殘差落在一個 \(n-k-1\) 維的空間（和 \(X\) 的 \(k+1\) 個欄都垂直），所以是 \(n-k-1\) 個獨立標準常態的平方和。</li>
+<li>在 \(H_0\) 下，\(\text{Regression SS}/\sigma^2\sim\chi^2_k\)。配適值減去平均落在 \(k\) 維空間裡。</li>
+<li>兩者獨立，因為它們落在互相垂直的空間。</li>
+</ol>
+<p>\(F\) 分配的定義是 \(\dfrac{\chi^2_{d_1}/d_1}{\chi^2_{d_2}/d_2}\)（兩個獨立卡方各除以自由度）。所以
+\[\frac{(\text{Reg SS}/\sigma^2)/k}{(\text{Error SS}/\sigma^2)/(n-k-1)}=\frac{\text{Reg SS}/k}{\text{Error SS}/(n-k-1)}\sim F_{k,\,n-k-1},\]
+未知的 \(\sigma^2\) 剛好消掉。另外，\(E(\text{Error SS}/(n-k-1))=\sigma^2\)；\(H_0\) 下 \(E(\text{Reg SS}/k)=\sigma^2\)，所以 \(F\) 會在 1 附近，\(H_0\) 不成立時分子的期望值大於 \(\sigma^2\)，\(F\) 會偏大。</p>
+</div>
+<figure><img src="assets/fig/ch04-fdist.svg" alt="左： 分配。5% 檢定的拒絕域在右尾 ；若算出 ， 值是右邊紅色面積 0.104，不拒絕。右：分子自由度為 1 時， 的平方（模擬）和  的密度重合，臨界值也剛好是  臨界值的平方。" loading="lazy"><figcaption>左：\(F_{3,21}\) 分配。5% 檢定的拒絕域在右尾 \(F&gt;3.07\)；若算出 \(F=2.33\)，\(p\) 值是右邊紅色面積 0.104，不拒絕。右：分子自由度為 1 時，\(t_{10}\) 的平方（模擬）和 \(F_{1,10}\) 的密度重合，臨界值也剛好是 \(t\) 臨界值的平方。</figcaption></figure>
+
+<h3>三、為什麼不能只看每個 \(t\)</h3>
+<p>既然有每個係數的 \(t\) 檢定，只要有一個 \(t\) 顯著，模型就有用嗎？問題在於<strong>多重比較</strong>：變數很多時，即使全部無關，也會有一些 \(t\) 碰巧顯著。20 個無關的變數、每個用 5% 檢定，平均就有 1 個會「顯著」，至少一個顯著的機率是 \(1-0.95^{20}\approx64\%\)（若獨立）。\(F\) 檢定一次檢查全部，在 \(H_0\) 下誤判的機率就是設定的 5%，不受變數個數影響。</p>
+<figure><img src="assets/fig/ch04-multi-t.svg" alt="模擬 3,000 次：60 筆觀察、20 個和  完全無關的解釋變數。逐一做 5% 的  檢定，有 55% 的時候至少一個「顯著」；整體  檢定誤判（拒絕 ）的比例是 5%，和設定的顯著水準一致。" loading="lazy"><figcaption>模擬 3,000 次：60 筆觀察、20 個和 \(y\) 完全無關的解釋變數。逐一做 5% 的 \(t\) 檢定，有 55% 的時候至少一個「顯著」；整體 \(F\) 檢定誤判（拒絕 \(H_0\)）的比例是 5%，和設定的顯著水準一致。</figcaption></figure>
+
+<p>反過來也可能發生：每個 \(t\) 都不顯著，\(F\) 卻顯著。這通常是共線性造成的：幾個相關的變數「一起」很有解釋力，但個別的貢獻分不清楚，每個係數的標準誤都很大（第 5 章 5.3 節）。</p>
+<h3>四、\(F\) 和 \(R^2\) 的關係</h3>
+<p>分子分母同除以 Total SS：</p>
+<p>\[F_{k,\,n-k-1}=\frac{(\text{Reg SS}/\text{Total SS})/k}{(\text{Error SS}/\text{Total SS})/(n-k-1)}=\frac{n-k-1}{k}\cdot\frac{R^2}{1-R^2} .\]</p>
+<p>講義建議不要背這條式子，只要記住技巧：<strong>分子分母同除以 Total SS</strong>。反過來由 \(F\) 求 \(R^2\)：</p>
+<p>\[F\,k\,(1-R^2)=(n-k-1)R^2\ \Rightarrow\ R^2=\frac{kF}{kF+(n-k-1)} .\]</p>
+<p>所以知道 \(F\)、\(n\)、\(k\) 就能算 \(R^2\)，不需要任何平方和（章末 4.28 題）。\(F\) 是 \(R^2\) 的遞增函數：在 \(n\)、\(k\) 固定時，\(F\) 大等價於 \(R^2\) 大，但 \(F\) 有已知的抽樣分配，可以做檢定，這正好補上第 3 章說的 \(R^2\) 的缺點。</p>
+<h3>五、簡單迴歸：\(F=t^2\)</h3>
+<p>\(k=1\) 時，整體 \(F\) 檢定和斜率的 \(t\) 檢定是同一件事。</p>
+<div class="box derive">
+<div class="box-t">推導：\(k=1\) 時 \(F_{1,n-2}=t_{n-2}^2\)</div>
+<p>第 3 章已得 Regression SS \(=b_1^2S_{xx}\)、\(s_{b_1}^2=s^2/S_{xx}\)。所以
+\[F=\frac{\text{Reg SS}/1}{s^2}=\frac{b_1^2S_{xx}}{s^2}=\frac{b_1^2}{s^2/S_{xx}}=\left(\frac{b_1}{s_{b_1}}\right)^2=t^2 .\]</p>
+</div>
+<p>一般地，\(F_{1,d}\) 就是 \(t_d^2\)。因為 \(t\) 可正可負，\(P(F_{1,d}&gt;c^2)=P(|t_d|&gt;c)\)：<strong>\(F\) 的單尾對應 \(t\) 的雙尾</strong>。例如 5% 的 \(F_{1,d}\) 臨界值是 \(t_{0.025,d}^2\)。</p>
+<div class="box ex">
+<div class="box-t">例題 4-1（講義 4A 的算法）</div>
+<p>簡單迴歸 15 筆，\(b_1=3.1\)，標準誤 \(10/6\)。
+\(t=3.1/(10/6)=1.86\)，\(F=1.86^2=3.4596\)。
+\(R^2=\dfrac{1\times3.4596}{3.4596+13}=0.2102\)。</p>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q4-1"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.1 題</b><small>・講義 p.61・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>線性迴歸 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\varepsilon_i\)，已知 25 筆觀察、\(\sum(y_i-\hat y_i)^2=30\)、\(\sum(y_i-\bar y)^2=40\)。求模型的 \(F\) 統計量。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(F_{3,21}=2.333\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Error SS \(=30\)、Total SS \(=40\)，所以 Regression SS \(=10\)。\(k=3\)，誤差自由度 \(25-3-1=21\)。
+\[F_{3,21}=\frac{10/3}{30/21}=\frac{3.333}{1.4286}=2.333 .\]</p></div></div></article><article class="exercise" id="q4-2"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.2 題</b><small>・講義 p.62・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-82-94:10）以 20 筆樣本配適 \(y_i=\beta_0+\beta_1x_{i1}+\cdots+\beta_5x_{i5}+\varepsilon_i\)，檢定 \(H_0:\beta_1=\cdots=\beta_5=0\) 的 \(F\) 比為 21。求 \(R^2\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(R^2=15/17=0.882\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(k=5\)，誤差自由度 \(20-6=14\)。由 \(F=\dfrac{n-k-1}{k}\cdot\dfrac{R^2}{1-R^2}\)：
+\[21=\frac{14}{5}\cdot\frac{R^2}{1-R^2}\ \Rightarrow\ \frac{R^2}{1-R^2}=7.5\ \Rightarrow\ R^2=\frac{7.5}{8.5}=\frac{15}{17}=0.882 .\]
+也可以直接用 \(R^2=\dfrac{kF}{kF+n-k-1}=\dfrac{105}{105+14}=\dfrac{15}{17}\)。</p></div></div></article><article class="exercise" id="q4-8"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.8 題</b><small>・講義 p.63・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>以 22 筆觀察配適 \(\hat y_i=-2+2.5x_i\)，\(R^2=0.9\)。求 \(X\) 的係數 \(\beta_1\) 最短對稱 90% 信賴區間的寬度。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(0.643\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>題目沒有給標準誤，要從 \(R^2\) 經過 \(F\) 再到 \(t\) 反推。</p>
+<p><strong>第一步：\(F\)。</strong> \(F_{1,20}=\dfrac{20}{1}\cdot\dfrac{0.9}{0.1}=180\)。
+<strong>第二步：\(t\)。</strong> 簡單迴歸 \(F=t^2\)，\(|t|=\sqrt{180}=13.416\)。
+<strong>第三步：標準誤。</strong> \(t=b_1/s_{b_1}\)，所以 \(s_{b_1}=2.5/13.416=0.18634\)。
+<strong>第四步：區間寬度。</strong> 90% 雙尾用 \(t_{0.05,20}=1.725\)，寬度 \(=2\times1.725\times0.18634=0.643\)。</p></div></div></article><article class="exercise" id="q4-10"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.10 題</b><small>・講義 p.63・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-F89:4）研究產業平均銷售報酬率與廠商家數的關係，用 1969–88 年（20 年）資料做 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)。摘要統計：\(\sum x_i=4860\)、\(\sum y_i=2.452\)、\(\sum x_iy_i=539.309\)、\(\sum x_i^2=1{,}330{,}224\)、\(\sum y_i^2=0.341804\)，\(F\) 比為 19.45。求 \(\beta_1\) 最短 95% 信賴區間的上限。</p>
+<p>(A) \(-0.0010\)　(B) \(-0.0008\)　(C) \(-0.0006\)　(D) \(-0.0004\)　(E) \(-0.0002\)</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)，上限 \(-0.000198\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：斜率。</strong>
+\[S_{xy}=539.309-\frac{4860\times2.452}{20}=539.309-595.836=-56.527,\]
+\[S_{xx}=1{,}330{,}224-\frac{4860^2}{20}=149{,}244 .\]
+\(b_1=-56.527/149{,}244=-0.00037876\)。</p>
+<p><strong>第二步：由 \(F\) 得標準誤。</strong> \(|t|=\sqrt{19.45}=4.410\)，\(s_{b_1}=|b_1|/4.410=0.00008588\)。</p>
+<p><strong>第三步：區間。</strong> \(t_{0.025,18}=2.101\)，上限 \(=-0.00037876+2.101\times0.00008588=-0.000198\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>也可以用 \(\sum y_i^2\) 算 Error SS 再算標準誤，結果相同；用 \(F\) 反推比較快。</p></div></div></article><article class="exercise" id="q4-15"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.15 題</b><small>・講義 p.65・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>迴歸的 ANOVA 表節錄：迴歸自由度 4，\(F\) 值 20.79；總和自由度 22、平方和 14,230。求迴歸平方和。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(11{,}698\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>誤差自由度 \(=22-4=18\)。用 \(R^2=\dfrac{kF}{kF+(n-k-1)}\)：
+\[R^2=\frac{4\times20.79}{4\times20.79+18}=\frac{83.16}{101.16}=0.82206 .\]
+Regression SS \(=R^2\times\text{Total SS}=0.82206\times14{,}230=11{,}698\)。</p>
+<p>驗算：Error SS \(=14{,}230-11{,}698=2{,}532\)，\(F=\dfrac{11{,}698/4}{2{,}532/18}=\dfrac{2924.5}{140.67}=20.79\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>總和的自由度是 \(n-1=22\)，所以 \(n=23\)；誤差自由度用 \(22-4\)，不是 \(23-4\)。</p></div></div></article></div></section><section class="unit" id="s2"><h2>4.2 部分 \(F\) 檢定：比較巢狀模型</h2><h3>一、受限模型與完整模型</h3>
+<p>加入變數，Error SS 一定下降（第 3 章 3.2 節）。但如果下降得很少，新增的變數就不值得。要檢定「後面這 \(q\) 個變數能不能一起拿掉」：</p>
+<p>\[H_0:\ \beta_{k-q+1}=\beta_{k-q+2}=\cdots=\beta_k=0 .\]</p>
+<p>做兩次迴歸：</p>
+<ul>
+<li><strong>受限模型</strong>（restricted 或 reduced model，R）：把這 \(q\) 個係數強制設為 0，也就是不放這 \(q\) 個變數。它有 \(k-q\) 個斜率加截距，Error SS 較大，記為 \(\text{Error SS}_R\)。</li>
+<li><strong>完整模型</strong>（unrestricted 或 full model，UR）：\(k\) 個斜率加截距，Error SS 記為 \(\text{Error SS}_{UR}\)。</li>
+</ul>
+<p>受限模型是完整模型的特例，這種關係叫<strong>巢狀</strong>（nested）模型。</p>
+<h3>二、部分 \(F\) 統計量</h3>
+<p>\[F_{q,\,n-k-1}=\frac{(\text{Error SS}_R-\text{Error SS}_{UR})/q}{\text{Error SS}_{UR}/(n-k-1)} .\]</p>
+<ul>
+<li>\(q\) 是<strong>限制的個數</strong>（被強制為 0 的係數個數），也是兩個模型參數個數的差。</li>
+<li>分母一定用<strong>完整模型</strong>的 Error SS 與自由度 \(n-k-1\)，\(k\) 是完整模型的斜率個數。</li>
+</ul>
+<p>整體 \(F\) 是它的特例：\(q=k\)、受限模型只有截距，\(\text{Error SS}_R=\text{Total SS}\)，分子變成 Regression SS\(/k\)。</p>
+<figure><img src="assets/fig/ch04-nested.svg" alt="部分  檢定比較的東西。三個模型的 Total SS 相同；受限模型的誤差平方和 46，完整模型多放  個變數後降到 38。分子是這 8 的減少量除以 ，分母是完整模型的 。" loading="lazy"><figcaption>部分 \(F\) 檢定比較的東西。三個模型的 Total SS 相同；受限模型的誤差平方和 46，完整模型多放 \(q\) 個變數後降到 38。分子是這 8 的減少量除以 \(q\)，分母是完整模型的 \(s^2\)。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 4-2（講義 4B 的算法）</div>
+<p>60 筆觀察，完整模型 5 個斜率，檢定 \(\beta_2=\beta_3=\beta_4=\beta_5=0\)（\(q=4\)）。完整模型殘差標準誤 4,506，受限模型（只剩 \(x_1\)）10,321。
+Error SS \(=s^2\times\)自由度：
+\(\text{Error SS}_{UR}=4506^2\times54=1{,}096{,}417{,}944\)，\(\text{Error SS}_R=10321^2\times58=6{,}178{,}336{,}378\)。
+\[F_{4,54}=\frac{(6{,}178{,}336{,}378-1{,}096{,}417{,}944)/4}{1{,}096{,}417{,}944/54}=62.57 .\]</p>
+</div>
+<h3>三、用 \(R^2\) 寫的形式</h3>
+<p>兩個模型用同一份資料，Total SS 相同。分子分母同除以 Total SS，並用 \(\text{Error SS}/\text{Total SS}=1-R^2\)：</p>
+<p>\[F_{q,\,n-k-1}=\frac{\big[(1-R_R^2)-(1-R_{UR}^2)\big]/q}{(1-R_{UR}^2)/(n-k-1)}=\frac{(R_{UR}^2-R_R^2)/q}{(1-R_{UR}^2)/(n-k-1)} .\]</p>
+<p>迴歸輸出常常只給 \(R^2\)，這條式子就很好用（章末 4.26 題）。</p>
+<div class="box ex">
+<div class="box-t">例題 4-3（講義 Quiz 4-1 的資料）</div>
+<p>12 個解釋變數加截距、35 筆觀察，Regression SS \(=6520\)、Error SS \(=349\)。拿掉 3 個變數後 Regression SS \(=6410\)。</p>
+<p>Total SS \(=6520+349=6869\) 不變，所以受限模型 Error SS \(=6869-6410=459\)，\(q=3\)，分母自由度 \(35-13=22\)：
+\[F_{3,22}=\frac{(459-349)/3}{349/22}=\frac{36.67}{15.86}=2.31 .\]
+（也可直接用 Regression SS 的差：\(6520-6410=110\)，因為兩者的變化量相同。）</p>
+</div>
+<h3>四、一次檢定一個類別變數</h3>
+<p>一個 \(m\) 類的類別變數會產生 \(m-1\) 個指標變數。要問「這個類別變數有沒有作用」，應該把這 \(m-1\) 個指標<strong>當成一組</strong>做部分 \(F\) 檢定（\(q=m-1\)），而不是逐一看每個指標的 \(t\)：個別指標的 \(t\) 只是在比較「那一類 vs 基準類別」，會隨基準類別的選擇而改變；部分 \(F\) 檢定的結果不受基準類別影響。</p>
+<h3>五、只拿掉一個變數：部分 \(F=t^2\)</h3>
+<p>\(q=1\) 時，部分 \(F\) 統計量等於完整模型中那個係數的 \(t\) 比的平方，判斷結果完全一樣。所以考題若只拿掉一個變數，可以算 \(F\) 再開根號，用 \(t\) 表判斷顯著水準（章末 4.31、4.32 題）。</p>
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li>分母用<strong>完整模型</strong>的 Error SS 與自由度，不是受限模型的。</li>
+<li>\(q\) 是限制條件的個數。例如完整模型有 \(x_1,x_2,x_1x_2,x_1^2,x_2^2\)、受限模型只有 \(x_1,x_2\)，\(q=3\)。</li>
+<li>題目若給殘差標準誤，先平方再乘各自的自由度還原 Error SS；兩個模型的自由度不同。</li>
+<li>考場沒有 \(F\) 表。\(q\ge2\) 時題目只會要你算出統計量；\(q=1\) 時才可能問顯著水準。</li>
+</ul>
+</div>
+<div class="box key">
+<div class="box-t">本章公式總表（講義表 4.1）</div>
+<ul>
+<li>整體 \(F\)：\(F_{k,n-k-1}=\dfrac{\text{Reg SS}/k}{\text{Error SS}/(n-k-1)}=\dfrac{n-k-1}{k}\cdot\dfrac{R^2}{1-R^2}\)。</li>
+<li>由 \(F\) 求 \(R^2\)：\(R^2=\dfrac{kF}{kF+n-k-1}\)。</li>
+<li>部分 \(F\)：\(F_{q,n-k-1}=\dfrac{(\text{Error SS}_R-\text{Error SS}_{UR})/q}{\text{Error SS}_{UR}/(n-k-1)}=\dfrac{(R^2_{UR}-R^2_R)/q}{(1-R^2_{UR})/(n-k-1)}\)。</li>
+<li>分子自由度為 1：\(F_{1,d}=t_d^2\)，\(F\) 的單尾 \(\alpha\) 對應 \(t\) 的雙尾 \(\alpha\)。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q4-17"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.17 題</b><small>・講義 p.65・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>迴歸模型有 5 個變數 \(x_1,\ldots,x_5\) 與截距。輸出節錄：殘差標準誤 3.85，自由度 44；\(R^2=0.82\)。拿掉 \(x_5\) 重新迴歸，殘差標準誤為 4.02。求判斷 \(x_5\) 顯著性的 \(F\) 統計量。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(F_{1,44}=5.06\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>把殘差標準誤還原成 Error SS（各用自己的自由度）：
+- 完整模型：\(\text{Error SS}_{UR}=3.85^2\times44=652.19\)
+- 受限模型少一個參數，自由度 45：\(\text{Error SS}_R=4.02^2\times45=727.218\)</p>
+<p>\[F_{1,44}=\frac{(727.218-652.19)/1}{652.19/44}=\frac{75.028}{14.823}=5.06 .\]
+\(R^2\) 用不到。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>受限模型的自由度是 45，不是 44。兩個 \(s\) 不能直接相減。</p></div></div></article><article class="exercise" id="q4-18"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.18 題</b><small>・講義 p.66・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>以 20 筆觀察配適 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\beta_4x_{i4}+\varepsilon_i\)，Error SS \(=8\)。限制 \(\beta_3=\beta_4=0\) 重新迴歸，Error SS \(=10\)。求檢定 \(x_3\)、\(x_4\) 顯著性的 \(F\) 統計量。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(F_{2,15}=1.875\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(q=2\)，完整模型誤差自由度 \(20-5=15\)。
+\[F_{2,15}=\frac{(10-8)/2}{8/15}=\frac{1}{0.5333}=1.875 .\]</p></div></div></article><article class="exercise" id="q4-26"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.26 題</b><small>・講義 p.68・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 4-S01:5）教授在心理學課的三個班做實驗，說明數字位數越多越難記。變數：\(x_1\)＝數字位數；\(x_2=1\) 表示第 1 班、否則 0；\(x_3=1\) 表示第 2 班、否則 0；\(y\)＝正確記住的學生比例。共 42 位學生。迴歸 \(y=\beta_0+\beta_1x_1+\beta_2x_1^2+\beta_3x_2+\beta_4x_3+\varepsilon\) 的 \(R^2=0.940\)；迴歸 \(y=\beta_0+\beta_1x_1+\beta_2x_1^2+\varepsilon\) 的 \(R^2=0.915\)。求檢定班級是否顯著的 \(F\) 統計量。</p>
+<p>(A) 5.4　(B) 7.3　(C) 7.7　(D) 7.9　(E) 8.3</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 7.71</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>班級是三類的類別變數，用兩個指標表示，要一起檢定：\(q=2\)。完整模型 \(k=4\)，誤差自由度 \(42-5=37\)。
+\[F_{2,37}=\frac{(0.940-0.915)/2}{(1-0.940)/37}=\frac{0.0125}{0.0016216}=7.708 .\]</p></div></div></article><article class="exercise" id="q4-27"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.27 題</b><small>・講義 p.69・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>公司建立汽車碰撞損失模型。除了 \(x_1\)、\(x_2\)，還考慮地區這個類別變數，用三個二元變數 \(x_3,x_4,x_5\) 表示。共 820 筆觀察。含 5 個變數與截距的迴歸 \(F\) 統計量為 419；拿掉三個地區變數後的迴歸 \(F\) 統計量為 759。求檢定地區顯著性的 \(F\) 統計量。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(F_{3,814}\approx67.9\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>兩個整體 \(F\) 先各自換回 \(R^2\)，再用部分 \(F\) 的 \(R^2\) 形式。</p>
+<p><strong>完整模型：</strong> \(k=5\)，誤差自由度 \(820-6=814\)。
+\[R^2_{UR}=\frac{5\times419}{5\times419+814}=\frac{2095}{2909}=0.72018 .\]
+<strong>受限模型：</strong> \(k=2\)，誤差自由度 \(820-3=817\)。
+\[R^2_R=\frac{2\times759}{2\times759+817}=\frac{1518}{2335}=0.65011 .\]
+<strong>部分 \(F\)：</strong> \(q=3\)，
+\[F_{3,814}=\frac{(0.72018-0.65011)/3}{(1-0.72018)/814}=\frac{0.023357}{0.00034376}=67.95 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>兩個整體 \(F\) 的自由度不同，不能直接相減。受限模型的整體 \(F\) 比較大，只是因為它的分子自由度小，不代表模型比較好。</p></div></div></article><article class="exercise" id="q4-32"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.32 題</b><small>・講義 p.71・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>迴歸模型 \(y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3+\beta_4x_4+\varepsilon\) 基於 15 筆觀察：誤差平方和 123；拿掉 \(x_4\) 後誤差平方和 177。下列何者正確？</p>
+<p>(A) \(x_4\) 在 10% 不顯著　(B) 10% 顯著、5% 不顯著　(C) 5% 顯著、2% 不顯著　(D) 2% 顯著、1% 不顯著　(E) 1% 顯著</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(q=1\)，完整模型誤差自由度 \(15-5=10\)。
+\[F_{1,10}=\frac{177-123}{123/10}=\frac{54}{12.3}=4.390,\qquad |t|=\sqrt{4.390}=2.095 .\]
+雙尾臨界值：10% 為 \(t_{0.05,10}=1.812\)，5% 為 \(t_{0.025,10}=2.228\)。\(1.812&lt;2.095&lt;2.228\)，所以 10% 顯著、5% 不顯著。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>考場沒有 \(F\) 表，這種 \(q=1\) 的題目就是要你轉成 \(t\)。記得 \(F\) 的單尾對應 \(t\) 的雙尾。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（22 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q4-3"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.3 題</b><small>・講義 p.62・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>簡單線性迴歸 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，10 筆觀察，\(R^2=0.95\)。求迴歸的 \(F\) 統計量。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(F_{1,8}=152\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(F=\dfrac{n-k-1}{k}\cdot\dfrac{R^2}{1-R^2}=\dfrac{8}{1}\cdot\dfrac{0.95}{0.05}=152\)。</p></div></div></article><article class="exercise" id="q4-4"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.4 題</b><small>・講義 p.62・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 4-S00:1）以 20 筆觀察配適 \(y=\beta_0+\beta_1x+\varepsilon\)，\(R^2=0.64\)。求檢定線性關係的 \(F\) 統計量。</p>
+<p>(A) 小於 30　(B) \([30,33)\)　(C) \([33,36)\)　(D) \([36,39)\)　(E) 至少 39</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 32</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(F=\dfrac{18}{1}\cdot\dfrac{0.64}{0.36}=32\)。</p></div></div></article><article class="exercise" id="q4-5"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.5 題</b><small>・講義 p.62・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2018 春 #33）多元迴歸有截距、3 個解釋變數、13 筆觀察，\(R^2=0.838547\)。求檢定 \(H_0:\beta_1=\beta_2=\beta_3=0\) 的 \(F\) 統計量。</p>
+<p>(A) 小於 5　(B) \([5,10)\)　(C) \([10,15)\)　(D) \([15,20)\)　(E) 至少 20</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 15.58</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(k=3\)，誤差自由度 \(13-4=9\)。\(F=\dfrac{9}{3}\cdot\dfrac{0.838547}{0.161453}=3\times5.1938=15.58\)。</p></div></div></article><article class="exercise" id="q4-6"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.6 題</b><small>・講義 p.62・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（ST-S16:21）以 11 筆觀察配適 \(Y=\beta_0+\beta_1X+\varepsilon\)，\(R^2=0.25\)。求檢定線性關係的 \(F\) 統計量。</p>
+<p>(A) 小於 1.5　(B) \([1.5,2.5)\)　(C) \([2.5,3.5)\)　(D) \([3.5,4.5)\)　(E) 至少 4.5</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 3.0</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(F=\dfrac{9}{1}\cdot\dfrac{0.25}{0.75}=3\)。</p></div></div></article><article class="exercise" id="q4-7"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.7 題</b><small>・講義 p.63・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>線性迴歸 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 的 ANOVA 表：迴歸平方和 12,235、自由度 1；誤差平方和 3,014、自由度 8。求判斷模型顯著性的 \(F\) 統計量。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(F_{1,8}=32.48\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(F=\dfrac{12{,}235/1}{3{,}014/8}=\dfrac{12{,}235}{376.75}=32.48\)。（等價地，斜率的 \(|t|=\sqrt{32.48}=5.70\)。）</p></div></div></article><article class="exercise" id="q4-9"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.9 題</b><small>・講義 p.63・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 3-F84:6）配適 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，10 筆，已知 \(\sum(x_i-\bar x)^2=400\)、\(\sum(y_i-\bar y)^2=425\)、\(\sum(\hat y_i-\bar y)^2=225\)。求檢定 \(H_0:\beta_1=0\) 的 \(t\) 統計量。</p>
+<p>(A) 1.5　(B) 2.0　(C) 2.5　(D) 3.0　(E) 3.5</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 3.0</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Regression SS \(=225\)，Error SS \(=425-225=200\)，自由度 8。
+\(F=\dfrac{225}{200/8}=9\)，\(|t|=\sqrt9=3\)。</p>
+<p>直接驗算：\(b_1^2S_{xx}=225\)，\(b_1=\pm0.75\)；\(s^2=25\)，\(s_{b_1}=\sqrt{25/400}=0.25\)；\(|t|=0.75/0.25=3\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>由 \(F\) 只能得到 \(|t|\)；正負號要看斜率的方向。</p></div></div></article><article class="exercise" id="q4-11"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.11 題</b><small>・講義 p.63・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-81-98:2）以 47 筆觀察配適簡單迴歸 \(\hat y_i=1.0+1.2x_i\)。校正平均後的 Total SS 為 54，Regression SS 為 7。求檢定 \(H_0:\beta_1=0\) 對 \(H_1:\beta_1\ne0\) 的 \(t\) 統計量。</p>
+<p>(A) 0.4　(B) 1.2　(C) 2.2　(D) 2.6　(E) 6.7</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 2.59</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Error SS \(=54-7=47\)，自由度 45，\(s^2=47/45=1.0444\)。
+\(F=7/1.0444=6.702\)，\(t=+\sqrt{6.702}=2.589\)（斜率 1.2 為正，取正號）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>(E) 6.7 是 \(F\)，題目問的是 \(t\)。</p></div></div></article><article class="exercise" id="q4-12"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.12 題</b><small>・講義 p.64・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-83-98:3）以 7 筆觀察配適一個變數加截距的迴歸，Error SS \(=218.680\)、\(F=2.088\)。求 \(R^2\)。</p>
+<p>(A) 0.3　(B) 0.4　(C) 0.5　(D) 0.6　(E) 0.7</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A) 0.295</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>誤差自由度 5。由 \(F=\dfrac{\text{Reg SS}/1}{218.68/5}\)，Regression SS \(=2.088\times43.736=91.32\)。
+\(R^2=\dfrac{91.32}{91.32+218.68}=0.295\)。（或 \(R^2=\dfrac{F}{F+5}=\dfrac{2.088}{7.088}=0.295\)。）</p></div></div></article><article class="exercise" id="q4-13"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.13 題</b><small>・講義 p.64・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（SRM 樣題 #44）兩位精算師分析 100 位參加者的牙科理賠，預測變數是性別（0 或 1）。精算師 1 用 \(Y=\beta+\varepsilon\)，精算師 2 用 \(Y=\beta_0+\beta_1\cdot\text{Gender}+\varepsilon\)。精算師 2 的殘差平方和 250,000，總平方和 490,000。求檢定精算師 2 的模型是否顯著優於精算師 1 的 \(F\) 統計量。</p>
+<p>(A) 92　(B) 93　(C) 94　(D) 95　(E) 96</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 94.08</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>精算師 1 的模型只有截距，它的 Error SS 就是 Total SS \(=490{,}000\)。兩者是巢狀模型，\(q=1\)，完整模型的誤差自由度 \(100-2=98\)：
+\[F_{1,98}=\frac{(490{,}000-250{,}000)/1}{250{,}000/98}=\frac{240{,}000}{2551.02}=94.08 .\]</p></div></div></article><article class="exercise" id="q4-14"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.14 題</b><small>・講義 p.64・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>公司分析業務員的銷售，解釋變數為年資 \(x_1\)、轄區人口 \(x_2\)、年度進修時數 \(x_3\)，\(y\) 為年銷售額。用 18 位業務員配適 \(y=\beta_0+\sum_{i=1}^3\beta_ix_i+\varepsilon\)：\(\sum(\hat y_i-\bar y)^2=1060\)、\(\sum(y_i-\bar y)^2=1820\)。求 \(F\) 統計量。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(F_{3,14}=6.51\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Regression SS \(=1060\)，Error SS \(=1820-1060=760\)，自由度 \(18-4=14\)。
+\(F=\dfrac{1060/3}{760/14}=\dfrac{353.33}{54.29}=6.51\)。</p></div></div></article><article class="exercise" id="q4-16"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.16 題</b><small>・講義 p.65・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2018 秋 #32）以收入、教育、儲蓄估計廚房設備支出，20 筆觀察：</p>
+<table>
+<thead>
+<tr>
+<th>係數</th>
+<th>估計值</th>
+<th>標準誤</th>
+<th>\(t\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>截距</td>
+<td>0.15085</td>
+<td>0.73776</td>
+<td>0.20447</td>
+</tr>
+<tr>
+<td>收入</td>
+<td>0.26528</td>
+<td>0.10127</td>
+<td>2.61953</td>
+</tr>
+<tr>
+<td>教育</td>
+<td>6.64357</td>
+<td>2.01212</td>
+<td>3.30178</td>
+</tr>
+<tr>
+<td>儲蓄</td>
+<td>7.31450</td>
+<td>2.73977</td>
+<td>2.66975</td>
+</tr>
+</tbody>
+</table>
+<p>迴歸平方和 2.65376，總平方和 7.62956。檢定 \(H_0:\beta_1=\beta_2=\beta_3=0\) 的 \(F\) 統計量是多少？</p>
+<p>(A) 小於 1　(B) \([1,3)\)　(C) \([3,5)\)　(D) 至少 5　(E) 無法算出</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 2.84</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Error SS \(=7.62956-2.65376=4.97580\)，自由度 \(20-4=16\)。
+\[F_{3,16}=\frac{2.65376/3}{4.97580/16}=\frac{0.88459}{0.31099}=2.84 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>三個 \(t\) 都大於 2.6，個別看都顯著，整體 \(F\) 卻只有 2.84（\(F_{3,16}\) 的 5% 臨界值約 3.24，不顯著）。這種組合在實務上很少見，題目只要求算出 \(F\)，照定義算即可。</p></div></div></article><article class="exercise" id="q4-19"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.19 題</b><small>・講義 p.66・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（ST-S15:21）以 20 筆觀察配適兩個模型：</p>
+<ul>
+<li>模型 1：\(Y=\beta_0+\beta_1X_1+\beta_2X_2+\varepsilon\)，誤差平方和 13.47、迴歸平方和 22.75</li>
+<li>模型 2：\(Y=\beta_0+\beta_1X_1+\beta_2X_2+\beta_3X_3+\beta_4X_4+\varepsilon\)，誤差平方和 10.53</li>
+</ul>
+<p>\(H_0:\beta_3=\beta_4=0\)。求檢定統計量。</p>
+<p>(A) 小於 1.70　(B) \([1.70,1.80)\)　(C) \([1.80,1.90)\)　(D) \([1.90,2.00)\)　(E) 至少 2.00</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E) 2.094</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(q=2\)，完整模型 \(k=4\)，誤差自由度 \(20-5=15\)。
+\[F_{2,15}=\frac{(13.47-10.53)/2}{10.53/15}=\frac{1.47}{0.702}=2.094 .\]</p></div></div></article><article class="exercise" id="q4-20"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.20 題</b><small>・講義 p.66・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（ST-S16:22）以 18 筆觀察配適：</p>
+<ul>
+<li>模型 1：\(Y=\beta_0+\beta_1X_1+\beta_2X_2+\varepsilon\)，誤差平方和 102</li>
+<li>模型 2：\(Y=\beta_0+\beta_1X_1+\beta_2X_2+\beta_3X_1X_2+\beta_4X_1^2+\beta_5X_2^2+\varepsilon\)，誤差平方和 78</li>
+</ul>
+<p>（題目另列兩個模型的迴歸平方和，本題用不到。）求檢定 \(\beta_3=\beta_4=\beta_5=0\) 的 \(F\) 統計量。</p>
+<p>(A) 小於 1.30　(B) \([1.30,1.40)\)　(C) \([1.40,1.50)\)　(D) \([1.50,1.60)\)　(E) 至少 1.60</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A) 1.23</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(q=3\)（交互作用與兩個平方項），完整模型 \(k=5\)，誤差自由度 \(18-6=12\)。
+\[F_{3,12}=\frac{(102-78)/3}{78/12}=\frac{8}{6.5}=1.231 .\]</p></div></div></article><article class="exercise" id="q4-21"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.21 題</b><small>・講義 p.67・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>以 15 筆觀察比較兩個模型：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>誤差平方和</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_1^2+\beta_4x_2^2+\varepsilon\)</td>
+<td>22.8</td>
+</tr>
+<tr>
+<td>\(y=\gamma_0+\gamma_1x_1+\gamma_2x_2+\varepsilon\)</td>
+<td>57.4</td>
+</tr>
+</tbody>
+</table>
+<p>求檢定 \(\beta_3=\beta_4=0\) 的 \(F\) 比。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(F_{2,10}=7.59\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平方項只是另外兩個解釋變數，不影響做法。完整模型有 5 個參數、受限模型 3 個，\(q=2\)；完整模型誤差自由度 \(15-5=10\)。
+\[F_{2,10}=\frac{(57.4-22.8)/2}{22.8/10}=\frac{17.3}{2.28}=7.588 .\]</p></div></div></article><article class="exercise" id="q4-22"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.22 題</b><small>・講義 p.67・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（S-F17:35）兩個模型以普通最小平方配適同一組 30 筆觀察：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>模型 1</th>
+<th>模型 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SS Total</td>
+<td>19,851</td>
+<td>19,851</td>
+</tr>
+<tr>
+<td>SS Error</td>
+<td>2,781</td>
+<td>2,104</td>
+</tr>
+<tr>
+<td>參數</td>
+<td>截距、\(X_1\)、\(X_2\)</td>
+<td>截距、\(X_1\)、\(X_2\)、\(X_3\)、\(X_4\)</td>
+</tr>
+</tbody>
+</table>
+<p>檢定 \(H_0:\beta_3=\beta_4=0\) 對「至少一個不為 0」。求 \(F\) 統計量。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(F_{2,25}=4.02\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(q=2\)，完整模型誤差自由度 \(30-5=25\)。
+\[F_{2,25}=\frac{(2781-2104)/2}{2104/25}=\frac{338.5}{84.16}=4.022 .\]
+係數估計值（題目也列了）用不到。</p></div></div></article><article class="exercise" id="q4-23"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.23 題</b><small>・講義 p.67・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-81-98:6）用 27 筆觀察、8 個變數 \(x_1,\ldots,x_8\) 與截距預測保險銷售。兩個模型的 ANOVA 表：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>模型 A（8 個變數）</th>
+<th></th>
+<th></th>
+<th>模型 B（只有 \(x_1,x_2\)）</th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td>SS</td>
+<td>df</td>
+<td>MS</td>
+<td>SS</td>
+<td>df</td>
+<td>MS</td>
+</tr>
+<tr>
+<td>迴歸</td>
+<td>115,175</td>
+<td>8</td>
+<td>14,397</td>
+<td>65,597</td>
+<td>2</td>
+<td>32,798</td>
+</tr>
+<tr>
+<td>誤差</td>
+<td>76,893</td>
+<td>18</td>
+<td>4,272</td>
+<td>126,471</td>
+<td>24</td>
+<td>5,270</td>
+</tr>
+<tr>
+<td>總和</td>
+<td>192,068</td>
+<td>26</td>
+<td></td>
+<td>192,068</td>
+<td>26</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>求檢定 \(H_0:\beta_3=\beta_4=\cdots=\beta_8=0\) 的 \(F\) 比。</p>
+<p>(A) 5.8　(B) 4.5　(C) 2.6　(D) 1.9　(E) 1.6</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 1.93</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(q=6\)，分母用模型 A 的誤差均方 4,272（自由度 18）。
+\[F_{6,18}=\frac{(126{,}471-76{,}893)/6}{76{,}893/18}=\frac{8263.0}{4271.8}=1.934 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>(A) 5.8 是兩個迴歸均方相除之類的錯誤；部分 \(F\) 的分子是 Error SS 的<strong>差</strong>除以 \(q\)。</p></div></div></article><article class="exercise" id="q4-24"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.24 題</b><small>・講義 p.68・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-82-97:4）五筆觀察、三個解釋變數加截距，配適所有可能的模型，得各模型的 Error SS：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>變數</th>
+<th>Error SS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I</td>
+<td>\(x_1\)</td>
+<td>5.85</td>
+</tr>
+<tr>
+<td>II</td>
+<td>\(x_2\)</td>
+<td>8.45</td>
+</tr>
+<tr>
+<td>III</td>
+<td>\(x_3\)</td>
+<td>6.15</td>
+</tr>
+<tr>
+<td>IV</td>
+<td>\(x_1,x_2\)</td>
+<td>5.12</td>
+</tr>
+<tr>
+<td>V</td>
+<td>\(x_1,x_3\)</td>
+<td>4.35</td>
+</tr>
+<tr>
+<td>VI</td>
+<td>\(x_2,x_3\)</td>
+<td>1.72</td>
+</tr>
+<tr>
+<td>VII</td>
+<td>\(x_1,x_2,x_3\)</td>
+<td>0.07</td>
+</tr>
+</tbody>
+</table>
+<p>另知 \(y\) 的變異數估計為 2.2。求把 \(x_3\) 加進模型 \(y=\beta_0+\beta_1x_1+\varepsilon\) 的顯著性 \(F\) 統計量。</p>
+<p>(A) 0.3　(B) 0.7　(C) 1.0　(D) 1.4　(E) 1.7</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 0.69</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>受限模型是 I（只有 \(x_1\)），完整模型是 V（\(x_1,x_3\)）。\(q=1\)，完整模型誤差自由度 \(5-3=2\)。
+\[F_{1,2}=\frac{(5.85-4.35)/1}{4.35/2}=\frac{1.5}{2.175}=0.690 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>分母要用模型 V 的 Error SS，不是有三個變數的模型 VII。\(y\) 的變異數是干擾資訊。</p></div></div></article><article class="exercise" id="q4-25"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.25 題</b><small>・講義 p.68・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-81-98:5）研究薪資 \(y\) 與年資 \(x_1\) 的關係，男性 \(x_2=1\)、女性 \(x_2=0\)。配適 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i1}x_{i2}+\varepsilon_i\)：11 筆觀察，Regression SS \(=330.0117\)、Error SS \(=12.8156\)。對模型 \(y_i=\beta_0+\beta_1x_{i1}+\varepsilon_i\)，Regression SS \(=315.0992\)、Error SS \(=27.7281\)。求檢定「男女的薪資與年資線性關係相同」的 \(F\) 統計量。</p>
+<p>(A) 0.6　(B) 2.0　(C) 3.5　(D) 4.1　(E) 6.2</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 4.07</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>「男女的線性關係相同」表示截距與斜率都相同：\(\beta_2=\beta_3=0\)，\(q=2\)。完整模型 \(k=3\)，誤差自由度 \(11-4=7\)。
+\[F_{2,7}=\frac{(27.7281-12.8156)/2}{12.8156/7}=\frac{7.45625}{1.83080}=4.073 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>只檢定 \(\beta_3=0\)（斜率相同）是另一個問題。「線性關係相同」指整條線，包括截距。</p></div></div></article><article class="exercise" id="q4-28"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.28 題</b><small>・講義 p.69・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（SRM 樣題 #24）Sarah 用 105 個月的月報酬，將共同基金報酬 \(y\) 對四個預測變數加截距做迴歸。軟體算出 \(F=20.0\) 後當機，還沒算出 \(R^2\)。她想用 \(F\) 統計量算 \(R^2\)。下列何者正確？</p>
+<p>(A) 資訊不足，若有殘差平方和（RSS）就能算
+(B) 資訊不足，若有 TSS 與 RSS 就能算
+(C) \(R^2=0.44\)
+(D) \(R^2=0.56\)
+(E) \(R^2=0.80\)</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(F\)、\(n\)、\(k\) 就足以決定 \(R^2\)。\(k=4\)，誤差自由度 \(105-5=100\)：
+\[R^2=\frac{kF}{kF+(n-k-1)}=\frac{80}{80+100}=0.444 .\]</p></div></div></article><article class="exercise" id="q4-29"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.29 題</b><small>・講義 p.69・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-83-98:8）以 10 筆觀察配適 \(y=\beta_0+\beta_1x_1+\beta_2x_2+\varepsilon\)：Regression SS \(=61.3\)、Total SS \(=128\)。再加入 \(x_3\)：Regression SS \(=65.6\)、Total SS \(=128\)。求檢定 \(H_0:\beta_3=0\) 的 \(F\) 統計量。</p>
+<p>(A) 0.01　(B) 0.41　(C) 1.76　(D) 4.30　(E) 10.40</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 0.41</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Error SS 的減少量等於 Regression SS 的增加量：\(65.6-61.3=4.3\)。
+完整模型 Error SS \(=128-65.6=62.4\)，自由度 \(10-4=6\)。
+\[F_{1,6}=\frac{4.3/1}{62.4/6}=\frac{4.3}{10.4}=0.413 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>(D) 4.30 只算了分子；(E) 10.40 是分母。</p></div></div></article><article class="exercise" id="q4-30"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.30 題</b><small>・講義 p.70・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 4-F02:27）多元迴歸 \(y=\beta_0+\beta_1x_1+\cdots+\beta_5x_5+\varepsilon\)：3,120 筆觀察；總平方和 15,000；\(H_0:\beta_3=\beta_4=\beta_5=0\)；完整模型的 \(R^2=0.38\)；受限模型的迴歸平方和 5,565。求檢定 \(H_0\) 的 \(F\) 統計量。</p>
+<p>(A) 小於 10　(B) \([10,12)\)　(C) \([12,14)\)　(D) \([14,16)\)　(E) 至少 16</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 15.07</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
+<li>完整模型 Error SS \(=(1-0.38)\times15{,}000=9{,}300\)，自由度 \(3120-6=3114\)。</li>
+<li>受限模型 Error SS \(=15{,}000-5{,}565=9{,}435\)。</li>
+</ul>
+<p>\[F_{3,3114}=\frac{(9435-9300)/3}{9300/3114}=\frac{45}{2.9865}=15.07 .\]</p></div></div></article><article class="exercise" id="q4-31"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.31 題</b><small>・講義 p.70・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>房屋銷售量是常態模型的連續反應變數，11 筆觀察，解釋變數為利率與失業率。模型 I 只有利率，模型 II 有利率與失業率，兩者都有截距：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>模型 I</th>
+<th>模型 II</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>迴歸平方和</td>
+<td>14,429</td>
+<td>17,347</td>
+</tr>
+<tr>
+<td>誤差平方和</td>
+<td>12,204</td>
+<td>9,286</td>
+</tr>
+</tbody>
+</table>
+<p>用 \(t\) 檢定評估失業率的顯著性。失業率在哪個顯著水準下應納入模型？</p>
+<p>(A) 1% 納入　(B) 2% 納入、1% 不納入　(C) 5% 納入、2% 不納入　(D) 10% 納入、5% 不納入　(E) 10% 也不納入</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>只加入一個變數，\(q=1\)，部分 \(F\) 等於失業率係數 \(t\) 比的平方。完整模型（II）誤差自由度 \(11-3=8\)。
+\[F_{1,8}=\frac{12{,}204-9{,}286}{9{,}286/8}=\frac{2918}{1160.75}=2.514,\qquad |t|=\sqrt{2.514}=1.586 .\]
+10% 雙尾臨界值 \(t_{0.05,8}=1.860&gt;1.586\)，所以 10% 也不顯著。</p></div></div></article></section><div class="navfoot"><a href="ch03.html">← 第 3 章</a><a href="ch05.html">第 5 章 →</a></div></main></body></html>

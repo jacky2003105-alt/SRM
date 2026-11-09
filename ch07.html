@@ -1,11 +1,1129 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第 7 章　線性迴歸：選擇預測變數｜SRM 精算筆記</title><link rel="stylesheet" href="assets/site.css"><link rel="stylesheet" href="assets/katex/katex.min.css"><script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/site.js"></script></head><body><nav aria-label="課程導覽"><a class="brand" href="index.html">SRM 精算筆記</a><label for="chapter">章節</label><select id="chapter"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html" selected>第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題與參考解答</option></select><a href="practice.html">題庫</a></nav><main><header><div class="kicker">SRM · 第 07 章</div><h1>線性迴歸：選擇預測變數</h1><p>每多加一個變數，訓練誤差幾乎只降不升；那該在哪裡停下來？</p><div class="chips"><a href="pdf/ch07.pdf">下載本章 PDF</a><a href="practice.html#chapter7">習題索引</a></div></header><section class="panel"><h2>本章閱讀順序</h2><ol><li><a href="#s1">子集合搜尋：先固定大小，再比較不同大小</a></li><li><a href="#s2">模型大小與泛化誤差：Cp、AIC、BIC、調整 R²</a></li></ol><div class="minititle">優先練習 · 10 題</div><div class="chips"><a href="#q7-1">7.1</a><a href="#q7-3">7.3</a><a href="#q7-5">7.5</a><a href="#q7-7">7.7</a><a href="#q7-8">7.8</a><a href="#q7-11">7.11</a><a href="#q7-15">7.15</a><a href="#q7-16">7.16</a><a href="#q7-23">7.23</a><a href="#q7-34">7.34</a></div></section><article class="unit" id="s1"><div class="kicker">概念 01</div><h2>子集合搜尋：先固定大小，再比較不同大小</h2><p>保費模型多放一個因子，訓練誤差不會上升：即使該因子沒用，也能令係數為零，回到原模型。但在未來保單中，對訓練雜訊估出的係數會使預測更不穩。因此應把兩個問題分開：在同樣大小的候選模型中找訓練 RSS 最小者，再用外部驗證或複雜度懲罰選大小。</p>
-<p><strong>最佳子集合（best subset）</strong>考慮每個預測欄位選或不選。若有 \(k\) 欄且截距固定，模型總數為 \(2^k\)，含零斜率模型與完整模型。每個大小 \(d\) 有 \(\binom{k}{d}\) 種。這能找到該大小的最小 RSS，卻隨 \(k\) 指數成長。</p>
-<p><strong>向前逐步選擇（forward stepwise）</strong>從空模型逐次加入一個變數，每步在目前路徑可加入者中選 RSS 最低的模型。<strong>向後逐步選擇（backward stepwise）</strong>從完整模型逐次刪一個，每步保留刪除後 RSS 最低者。兩者走完整條路會擬合 \(1+k+(k-1)+\cdots+1=1+k(k+1)/2\) 個模型，只留下每個大小的一個候選。這是局部搜尋；前一步最好的變數可能擋住下一步更佳組合，例如單獨的腰圍預測效果好，不代表腰圍一定在最佳三變數模型中。</p>
-<p>向後法須能擬合完整模型，欄數超過樣本時傳統 OLS 不可行；向前法可先在低維開始，但若模型已飽和就沒有殘差自由度估變異。混合逐步法容許新加入一欄後重新淘汰舊欄。對多類別因子可按題意逐個虛擬欄選，也可基於業務意義整組加入。自動搜尋忽略未納入的模型、共同效果、異常年份與資料品質；反覆嘗試會使最後一個普通 p 值看來過於樂觀。<strong>即：找到訓練表中最好的路徑不等於找到未來一定最好的模型。</strong></p><div class="related"><small>接著讀：<a class="concept" data-definition="比較巢狀模型：用解除限制後的平方和改善，相對於完整模型的雜訊。" data-target="第 4 章 · 部分 F 檢定" href="ch04.html#s2">部分 F 檢定</a> · <a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="對係數大小加懲罰，用一些偏差換取較低的估計變異。" data-target="第 8 章 · 收縮" href="ch08.html#s1">收縮</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q7-1">7.1</a><a href="#q7-2">7.2</a><a href="#q7-3">7.3</a><a href="#q7-4">7.4</a><a href="#q7-5">7.5</a><a href="#q7-6">7.6</a><a href="#q7-7">7.7</a><a href="#q7-8">7.8</a><a href="#q7-9">7.9</a><a href="#q7-10">7.10</a></div></article><article class="exercise" id="q7-1"><button class="toggle" aria-controls="a-q7-1" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 7.1 · 講義 p.115</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q7-1">題目連結</a></small><p>62 筆、22 個預測欄位，以向後法從完整模型走到空模型。共擬合幾個？</p><div class="solution" id="a-q7-1"><strong class="label">參考解答</strong><p>\(1+22(23)/2=254\)。</p><strong class="label">解析</strong><p>起始完整模型也要算一次。</p></div></article><article class="exercise" id="q7-3"><button class="toggle" aria-controls="a-q7-3" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 7.3 · 講義 p.115</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q7-3">題目連結</a></small><p>30 人有五級年齡、二元性別、血壓、子女人數，逐虛擬欄作完整向前搜尋；求模型數。</p><div class="solution" id="a-q7-3"><strong class="label">參考解答</strong><p>欄數 \(4+1+1+1=7\)，共 \(1+7(8)/2=29\)。</p><strong class="label">解析</strong><p>有截距時五個年齡組用四個欄位。</p></div></article><article class="exercise" id="q7-5"><button class="toggle" aria-controls="a-q7-5" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 7.5 · 講義 p.116</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q7-5">題目連結</a></small><p>26 筆、100 欄，向前搜尋到含截距的最大可識別模型，最多擬合幾個？</p><div class="solution" id="a-q7-5"><strong class="label">參考解答</strong><p>最多 25 斜率，共 \(1+(100+99+\cdots+76)=2201\)。</p><strong class="label">解析</strong><p>最後一個飽和模型無剩餘自由度估變異；可插值不表示可做通常 t 推論。</p></div></article><article class="exercise" id="q7-7"><button class="toggle" aria-controls="a-q7-7" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 7.7 · 講義 p.116</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q7-7">題目連結</a></small><p>四個三變數模型 123、124、134、234 的 RSS 分別 110、105、101、107，最佳子集選誰？</p><div class="solution" id="a-q7-7"><strong class="label">參考解答</strong><p>選 134，其 RSS=101 最小。</p><strong class="label">解析</strong><p>所有候選的大小相同，直接以訓練 RSS 排序。</p></div></article><article class="exercise" id="q7-8"><button class="toggle" aria-controls="a-q7-8" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 7.8 · 講義 p.116</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q7-8">題目連結</a></small><p>單欄 1–4 的 RSS 為 152、145、160、138；含 4 的二欄 14、24、34 為 129、122、135；124、234 為 105、107。向前選三欄。</p><div class="solution" id="a-q7-8"><strong class="label">參考解答</strong><p>先 4，再 24，最後 124。</p><strong class="label">解析</strong><p>每步必含前一步所保留的全部欄位，所以不會選到 134。</p></div></article><article class="unit" id="s2"><div class="kicker">概念 02</div><h2>模型大小與泛化誤差：Cp、AIC、BIC、調整 R²</h2><p>指定目前模型有 \(d\) 個斜率、共同完整模型的殘差變異估計為 \(s_F^2\)。若在相同設計位置以一組獨立新觀察評分，真實預測誤差比訓練誤差多多少？設 \(\hat y=Hy\)，新舊 y 的雜訊獨立；展開新、舊平方損失後，期望差為 \(2\sum_i\operatorname{Cov}(y_i,\hat y_i)/n=2\sigma^2\operatorname{tr}(H)/n\)。因此訓練 RSS 應加約兩倍的參數數乘雜訊變異，抵銷在訓練資料選出係數帶來的樂觀偏差。模型比較若都含截距，其懲罰為共同常數，可依講義慣例省略。講義採兩種 <strong>Mallows 型準則（Mallows’ Cp）</strong>：\(C_{J}=(RSS_d+2ds_F^2)/n\) 或 \(C_F=RSS_d/s_F^2-n+2d\)。兩者是正線性轉換，數值不同但同樣選最低者。若課本將截距也算作一參數，需全程使用同一口徑。</p>
-<p>赤池資訊準則與貝氏資訊準則的一般形式為 \(AIC=-2\ell_{max}+2K\)、\(BIC=-2\ell_{max}+K\log n\)，\(K\) 是所有估計參數數目。比較同一資料、同一反應和可比的概似時，值越小越好；不要求模型巢狀。若 \(n\ge8\)，BIC 對每個新參數懲罰較大。在變異固定為同一 \(s_F^2\) 的常態線性模型，\(-2\ell\) 的模型相依部分是 \(RSS_d/s_F^2\)；每筆無量綱尺度可寫
-\[A_* = \frac{RSS_d/s_F^2+2d}{n},\qquad B_* = \frac{RSS_d/s_F^2+d\log n}{n}.\]
-也可整體乘 \(s_F^2\)，得到平方誤差尺度；若試題要求準則數值，必須標出是哪個尺度。不可跨尺度直接比數字。</p>
-<p>若各模型各自估常態變異，一般最大概似用 \(RSS/n\)；代入 \(-2\ell=n\log(2\pi\sigma^2)+RSS/\sigma^2\) 即可得到標準 Gaussian AIC。講義另有題目指定 Frees 的 \(s^2=RSS/(n-d-1)\) 代入法；此時 \(K=d+2\) 包含截距與變異，簡化得 \(AIC_F=n\log s^2+n\log(2\pi)+n+d+3\)。這個指定公式與用最大概似估計變異的 AIC 不可混用。</p>
-<p>調整判定係數以兩種均方而非平方和相比：
-\[R^2_{adj}=1-\frac{RSS_d/(n-d-1)}{TSS/(n-1)}=1-(1-R^2)\frac{n-1}{n-d-1}.\]
-它越大越好，可能小於零，代表模型剩餘均方比用平均預測高。新增一欄必須使殘差均方下降，\(R^2_{adj}\) 才會提高；不是新增變數後一定變好。交叉驗證則直接在留出觀察評分；挑過模型後應保留獨立測試資料，避免把選模型時最佳的驗證誤差當成無偏的新資料表現。</p><div class="related"><small>接著讀：<a class="concept" data-definition="比較巢狀模型：用解除限制後的平方和改善，相對於完整模型的雜訊。" data-target="第 4 章 · 部分 F 檢定" href="ch04.html#s2">部分 F 檢定</a> · <a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="對係數大小加懲罰，用一些偏差換取較低的估計變異。" data-target="第 8 章 · 收縮" href="ch08.html#s1">收縮</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q7-11">7.11</a><a href="#q7-12">7.12</a><a href="#q7-13">7.13</a><a href="#q7-14">7.14</a><a href="#q7-15">7.15</a><a href="#q7-16">7.16</a><a href="#q7-17">7.17</a><a href="#q7-18">7.18</a><a href="#q7-19">7.19</a><a href="#q7-20">7.20</a><a href="#q7-21">7.21</a><a href="#q7-22">7.22</a><a href="#q7-23">7.23</a><a href="#q7-24">7.24</a><a href="#q7-25">7.25</a><a href="#q7-26">7.26</a><a href="#q7-27">7.27</a><a href="#q7-28">7.28</a><a href="#q7-29">7.29</a><a href="#q7-30">7.30</a><a href="#q7-31">7.31</a><a href="#q7-32">7.32</a><a href="#q7-33">7.33</a><a href="#q7-34">7.34</a><a href="#q7-35">7.35</a></div></article><article class="exercise" id="q7-11"><button class="toggle" aria-controls="a-q7-11" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 7.11 · 講義 p.118</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-11">題目連結</a></small><p>兩 GLM 用同一批客戶，非巢狀，參數數 10、8，對數概似 −11565、−11562。如何比較？</p><div class="solution" id="a-q7-11"><strong class="label">參考解答</strong><p>比較 AIC（D）：23150 對 23140，第二模型較低。</p><strong class="label">解析</strong><p>巢狀模型的概似比檢定不適用於這兩種解釋結構。</p></div></article><article class="exercise" id="q7-15"><button class="toggle" aria-controls="a-q7-15" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 7.15 · 講義 p.119</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-15">題目連結</a></small><p>60 筆、0 至 4 斜率模型最低 RSS 為 326、314、303、293、284；用 Cp 選大小。</p><div class="solution" id="a-q7-15"><strong class="label">參考解答</strong><p>\(s_F^2=284/55=5.164\)；Cp 約 5.433、5.405、5.394、5.400、5.422，選二斜率。</p><strong class="label">解析</strong><p>多加一變數須讓 RSS 改善超過兩倍誤差變異才有利。</p></div></article><article class="exercise" id="q7-16"><button class="toggle" aria-controls="a-q7-16" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 7.16 · 講義 p.119</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-16">題目連結</a></small><p>100 筆、15 斜率完整 RSS=252；五斜率 RSS=474。六斜率 RSS 低於多少才勝過五斜率？</p><div class="solution" id="a-q7-16"><strong class="label">參考解答</strong><p>\(s_F^2=252/84=3\)，RSS 需下降超過 6，故低於 468（E）。</p><strong class="label">解析</strong><p>只比較相差一個參數的懲罰即可。</p></div></article><article class="exercise" id="q7-23"><button class="toggle" aria-controls="a-q7-23" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 7.23 · 講義 p.122</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-23">題目連結</a></small><p>在題 7.21 的資料再用向後法。全搜尋、向前、向後的最低 AIC 排序？</p><div class="solution" id="a-q7-23"><strong class="label">參考解答</strong><p>全搜尋 0（10 號）、向前 0.2（13 號）、向後 0.4（14 號），依此遞增（A）。</p><strong class="label">解析</strong><p>向後由 32→27→23→14，不能跳到從前未保留的變數組合。</p></div></article><article class="exercise" id="q7-34"><button class="toggle" aria-controls="a-q7-34" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 7.34 · 講義 p.124</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-34">題目連結</a></small><p>9 筆、四斜率，\(s^2=20\)，擬合值為 1 到 9。調整 \(R^2\) 是多少？</p><div class="solution" id="a-q7-34"><strong class="label">參考解答</strong><p>\(RSS=20(9-5)=80,RegSS=60,TSS=140\)；\(1-20/(140/8)=-1/7\)。</p><strong class="label">解析</strong><p>可為負；模型的誤差均方反而比只估平均的均方大。</p></div></article><article class="unit" id="terms"><div class="kicker">TERMS</div><h2>本章中英術語</h2><table><thead><tr><th>中文</th><th>English</th><th>解題時的意思</th></tr></thead><tbody><tr><td>最佳子集</td><td>best subset selection</td><td>每種模型大小比較所有候選子集。</td></tr><tr><td>逐步選擇</td><td>stepwise selection</td><td>每一步增減變數，沿有限路徑搜尋。</td></tr><tr><td>懲罰準則</td><td>penalized criterion</td><td>用模型適配改善交換額外複雜度的代價。</td></tr></tbody></table></article><section class="panel" id="remaining"><h2>章末其餘習題 · 25 題</h2><p>按講義題號排列。做題前可用各題自己的按鈕隱藏解答。</p></section><article class="exercise" id="q7-2"><button class="toggle" aria-controls="a-q7-2" aria-expanded="true">隱藏解答</button><h3>練習 · 7.2 · 講義 p.115</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q7-2">題目連結</a></small><p>以 10% 門檻逐步向後刪除，高校背景與大城市 p 值分別為 0.676、0.217，其餘更小。先刪誰？</p><div class="solution" id="a-q7-2"><strong class="label">參考解答</strong><p>先刪高校背景，重新擬合後再判斷大城市（C）。</p><strong class="label">解析</strong><p>每次只刪一欄；刪除後其他係數與標準誤也會改。</p></div></article><article class="exercise" id="q7-4"><button class="toggle" aria-controls="a-q7-4" aria-expanded="true">隱藏解答</button><h3>練習 · 7.4 · 講義 p.115</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q7-4">題目連結</a></small><p>橘子大小、品種、州別各三類，季節四類；逐虛擬欄用向後法。</p><div class="solution" id="a-q7-4"><strong class="label">參考解答</strong><p>\(k=2+2+2+3=9\)，模型數 \(1+9(10)/2=46\)。</p><strong class="label">解析</strong><p>若改成整組加入或刪除，搜尋單位會不同。</p></div></article><article class="exercise" id="q7-6"><button class="toggle" aria-controls="a-q7-6" aria-expanded="true">隱藏解答</button><h3>練習 · 7.6 · 講義 p.116</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q7-6">題目連結</a></small><p>10 欄時向前法擬合數與最佳子集擬合數的比例？</p><div class="solution" id="a-q7-6"><strong class="label">參考解答</strong><p>\(56/1024=0.05469\)（D）。</p><strong class="label">解析</strong><p>最佳子集為 \(2^{10}\)，向前法只在前一步候選上擴充。</p></div></article><article class="exercise" id="q7-9"><button class="toggle" aria-controls="a-q7-9" aria-expanded="true">隱藏解答</button><h3>練習 · 7.9 · 講義 p.116</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q7-9">題目連結</a></small><p>同上，完整模型先刪至最佳三欄 134；其可達二欄 13、14、34 的 RSS 為 144、129、135。選誰？</p><div class="solution" id="a-q7-9"><strong class="label">參考解答</strong><p>選 14，RSS=129。</p><strong class="label">解析</strong><p>全體二欄最佳不一定能從目前三欄模型刪一項取得。</p></div></article><article class="exercise" id="q7-10"><button class="toggle" aria-controls="a-q7-10" aria-expanded="true">隱藏解答</button><h3>練習 · 7.10 · 講義 p.117</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q7-10">題目連結</a></small><p>已含 \(X_1,X_2\)，下一步另加 3、4、5 的 RSS 為 7070、6678、4800；全五欄為 3475。下一步加誰？</p><div class="solution" id="a-q7-10"><strong class="label">參考解答</strong><p>加 \(X_5\)（D）。</p><strong class="label">解析</strong><p>只能增加一欄；即使全模型 RSS 更低，也不是本步候選。</p></div></article><article class="exercise" id="q7-12"><button class="toggle" aria-controls="a-q7-12" aria-expanded="true">隱藏解答</button><h3>練習 · 7.12 · 講義 p.118</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-12">題目連結</a></small><p>25 筆、四斜率，RSS=132，共用變異估計 8。依平方誤差尺度計算 Cp。</p><div class="solution" id="a-q7-12"><strong class="label">參考解答</strong><p>\([132+2(4)(8)]/25=7.84\)。</p><strong class="label">解析</strong><p>此口徑懲罰四個斜率，不另加共通截距。</p></div></article><article class="exercise" id="q7-13"><button class="toggle" aria-controls="a-q7-13" aria-expanded="true">隱藏解答</button><h3>練習 · 7.13 · 講義 p.118</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-13">題目連結</a></small><p>同上，依 Frees 尺度計算 Cp。</p><div class="solution" id="a-q7-13"><strong class="label">參考解答</strong><p>\(132/8-25+2(4)=-0.5\)。</p><strong class="label">解析</strong><p>Cp 可為負；不能與前題的數值直接比較。</p></div></article><article class="exercise" id="q7-14"><button class="toggle" aria-controls="a-q7-14" aria-expanded="true">隱藏解答</button><h3>練習 · 7.14 · 講義 p.118</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-14">題目連結</a></small><p>20 筆、五斜率完整模型 RSS=84。依 James 尺度求 Cp。</p><div class="solution" id="a-q7-14"><strong class="label">參考解答</strong><p>\(s_F^2=84/(20-6)=6\)，\([84+2(5)(6)]/20=7.2\)。</p><strong class="label">解析</strong><p>完整模型也須扣掉截距與所有斜率才得誤差自由度。</p></div></article><article class="exercise" id="q7-17"><button class="toggle" aria-controls="a-q7-17" aria-expanded="true">隱藏解答</button><h3>練習 · 7.17 · 講義 p.119</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-17">題目連結</a></small><p>29 筆，0 至 4 斜率的 RSS 為 162、145、140、136、132。Cp 選幾個？</p><div class="solution" id="a-q7-17"><strong class="label">參考解答</strong><p>\(s_F^2=132/24=5.5\)。各 Cp 為 5.586、5.379、5.586、5.828、6.069，選一個。</p><strong class="label">解析</strong><p>完整模型 RSS 最低，卻不是最低懲罰後誤差。</p></div></article><article class="exercise" id="q7-18"><button class="toggle" aria-controls="a-q7-18" aria-expanded="true">隱藏解答</button><h3>練習 · 7.18 · 講義 p.119</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-18">題目連結</a></small><p>100 筆、10 欄、RSS=64.8、共用變異 5.5，求兩種懲罰分數。</p><div class="solution" id="a-q7-18"><strong class="label">參考解答</strong><p>取平方誤差尺度，AIC 型為 \((64.8+110)/100=1.748\)；BIC 型為 \((64.8+55\log100)/100=3.181\)。無量綱尺度各除以 5.5。</p><strong class="label">解析</strong><p>兩種尺度在同一候選集合內排序相同，報分數時需註明尺度。</p></div></article><article class="exercise" id="q7-19"><button class="toggle" aria-controls="a-q7-19" aria-expanded="true">隱藏解答</button><h3>練習 · 7.19 · 講義 p.120</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-19">題目連結</a></small><p>AIC/BIC 是否直接量測新資料誤差？同參數數目是否排序一致？\(n&gt;7\) 時 BIC 是否較偏小模型？</p><div class="solution" id="a-q7-19"><strong class="label">參考解答</strong><p>依序否、是、是，故 II、III（D）。</p><strong class="label">解析</strong><p>兩法從樣本內擬合加懲罰間接衡量；\(\log n&gt;2\) 時 BIC 每欄懲罰更大。</p></div></article><article class="exercise" id="q7-20"><button class="toggle" aria-controls="a-q7-20" aria-expanded="true">隱藏解答</button><h3>練習 · 7.20 · 講義 p.120</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-20">題目連結</a></small><p>八斜率完整 RSS=82.8，四斜率子集 RSS=116.2。題給 AIC 型指標 105.2458，按題給數值尺度求 BIC 型指標。</p><div class="solution" id="a-q7-20"><strong class="label">參考解答</strong><p>以題目數值對應的共同倍數尺度 \(A_c=[116.2(n-9)+8(82.8)]/n=105.2458\)，解得 \(n\approx35\)；同尺度 \(B_c=[26(116.2)+4(82.8)\log35]/35\approx110.9638\)。</p><strong class="label">解析</strong><p>這裡的尺度是無量綱分數再乘完整模型 RSS=82.8。若固定使用每筆無量綱公式，對應數值分別約 1.2711、1.3401，不能把 105.2458 直接代入該公式。</p></div></article><article class="exercise" id="q7-21"><button class="toggle" aria-controls="a-q7-21" aria-expanded="true">隱藏解答</button><h3>練習 · 7.21 · 講義 p.121</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-21">題目連結</a></small><p>五變數所有子集合按大小選最高 \(R^2\)，跨大小改看 AIC。比較全搜尋與向前搜尋的最佳 AIC 差。</p><div class="solution" id="a-q7-21"><strong class="label">參考解答</strong><p>全搜尋的大小代表模型依序 1、3、10、22、27、32，AIC 最低 0；向前路徑 1、3、13、25、29、32，最低 0.2；差 0.2（B）。</p><strong class="label">解析</strong><p>貪婪搜尋首步一旦加入第 2 欄，就不能在下一步選不含它的第 10 號模型。</p></div></article><article class="exercise" id="q7-22"><button class="toggle" aria-controls="a-q7-22" aria-expanded="true">隱藏解答</button><h3>練習 · 7.22 · 講義 p.121</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-22">題目連結</a></small><p>三個有競爭力模型的 (對數概似,參數數) 為 (−15.785,4)、(−13.015,5)、(−12.021,6)；其餘同大小模型概似較差。用 AIC 選擇。</p><div class="solution" id="a-q7-22"><strong class="label">參考解答</strong><p>AIC 為 39.570、36.030、36.042，選 \((\ell,K)=(-13.015,5)\) 的模型。</p><strong class="label">解析</strong><p>最後一個多估一參數的改善不足抵過 2 的懲罰。</p></div></article><article class="exercise" id="q7-24"><button class="toggle" aria-controls="a-q7-24" aria-expanded="true">隱藏解答</button><h3>練習 · 7.24 · 講義 p.122</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-24">題目連結</a></small><p>70 筆、五候選模型對數概似 −120.1、−119.5、−118.2、−116.6、−113.8；斜率數 2、3、3、4、5，BIC 選誰？</p><div class="solution" id="a-q7-24"><strong class="label">參考解答</strong><p>令 \(K=d+2\)。第一模型 BIC 約 257.194，另外具競爭力者約 257.642、258.691、257.339，第一模型最低。</p><strong class="label">解析</strong><p>相同大小只需保留概似較大者；更大模型不一定勝出。</p></div></article><article class="exercise" id="q7-25"><button class="toggle" aria-controls="a-q7-25" aria-expanded="true">隱藏解答</button><h3>練習 · 7.25 · 講義 p.123</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-25">題目連結</a></small><p>50 筆、3 個解釋變數、殘差標準誤 82.4。依指定 Frees 代入公式求 AIC。</p><div class="solution" id="a-q7-25"><strong class="label">參考解答</strong><p>\(50\log(82.4^2)+50\log(2\pi)+50+3+3\approx589.05\)。</p><strong class="label">解析</strong><p>82.4 是標準誤，對數中使用平方。</p></div></article><article class="exercise" id="q7-26"><button class="toggle" aria-controls="a-q7-26" aria-expanded="true">隱藏解答</button><h3>練習 · 7.26 · 講義 p.123</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-26">題目連結</a></small><p>28 筆、四斜率含截距且估變異，通常 AIC=111.03。換成同一概似的 BIC。</p><div class="solution" id="a-q7-26"><strong class="label">參考解答</strong><p>\(K=4+2=6\)，\(111.03-12+6\log28=119.02\)。</p><strong class="label">解析</strong><p>同一概似直接替換懲罰即可。</p></div></article><article class="exercise" id="q7-27"><button class="toggle" aria-controls="a-q7-27" aria-expanded="true">隱藏解答</button><h3>練習 · 7.27 · 講義 p.123</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-27">題目連結</a></small><p>五模型的 \(R^2\) 為 0.0162、0.0230、0.0390、0.0755、0.0762；AIC 為 7532、7524、7508、7469、7471；BIC 為 7899、7865、7885、7645、7659。各選誰？</p><div class="solution" id="a-q7-27"><strong class="label">參考解答</strong><p>\(R^2\) 選 5，AIC 與 BIC 都選 4；題列正確敘述為 D。</p><strong class="label">解析</strong><p>看清指標是取大或取小，不能把準則名稱互換。</p></div></article><article class="exercise" id="q7-28"><button class="toggle" aria-controls="a-q7-28" aria-expanded="true">隱藏解答</button><h3>練習 · 7.28 · 講義 p.123</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-28">題目連結</a></small><p>迴歸 SS=348、df=3；誤差 SS=21、df=12。求調整 \(R^2\)。</p><div class="solution" id="a-q7-28"><strong class="label">參考解答</strong><p>\(1-(21/12)/(369/15)=0.9289\)。</p><strong class="label">解析</strong><p>分母用總均方而非總平方和。</p></div></article><article class="exercise" id="q7-29"><button class="toggle" aria-controls="a-q7-29" aria-expanded="true">隱藏解答</button><h3>練習 · 7.29 · 講義 p.123</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-29">題目連結</a></small><p>迴歸 SS=1115.11、df=2；誤差 SS=138.89、df=5。求調整 \(R^2\)。</p><div class="solution" id="a-q7-29"><strong class="label">參考解答</strong><p>\(1-(138.89/5)/[(1115.11+138.89)/7]=0.8449\)（A）。</p><strong class="label">解析</strong><p>總自由度為 7。</p></div></article><article class="exercise" id="q7-30"><button class="toggle" aria-controls="a-q7-30" aria-expanded="true">隱藏解答</button><h3>練習 · 7.30 · 講義 p.123</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-30">題目連結</a></small><p>11 筆簡單迴歸、\(R^2=0.85\)。求調整值。</p><div class="solution" id="a-q7-30"><strong class="label">參考解答</strong><p>\(1-(1-0.85)(10/9)=0.8333\)（E）。</p><strong class="label">解析</strong><p>調整值量化剩餘的均方而非單純扣常數。</p></div></article><article class="exercise" id="q7-31"><button class="toggle" aria-controls="a-q7-31" aria-expanded="true">隱藏解答</button><h3>練習 · 7.31 · 講義 p.124</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-31">題目連結</a></small><p>12 斜率、殘差自由度 493、\(R^2=0.7406\)。求調整值。</p><div class="solution" id="a-q7-31"><strong class="label">參考解答</strong><p>\(n=506\)，\(1-(1-0.7406)505/493=0.7343\)（C）。</p><strong class="label">解析</strong><p>不要將殘差自由度當作樣本數。</p></div></article><article class="exercise" id="q7-32"><button class="toggle" aria-controls="a-q7-32" aria-expanded="true">隱藏解答</button><h3>練習 · 7.32 · 講義 p.124</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-32">題目連結</a></small><p>48 筆、三斜率，迴歸 SS=103658，誤差 SS=69204。求調整 \(R^2\)。</p><div class="solution" id="a-q7-32"><strong class="label">參考解答</strong><p>\(1-(69204/44)/[(69204+103658)/47]=0.5724\)（A）。</p><strong class="label">解析</strong><p>含截距使總自由度為 47。</p></div></article><article class="exercise" id="q7-33"><button class="toggle" aria-controls="a-q7-33" aria-expanded="true">隱藏解答</button><h3>練習 · 7.33 · 講義 p.124</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-33">題目連結</a></small><p>兩斜率，F=96，調整 \(R^2=0.95\)，RegSS=1000，逆設計矩陣第一斜率對角項 2；求該斜率的 95% 區間寬。</p><div class="solution" id="a-q7-33"><strong class="label">參考解答</strong><p>聯立 F 與調整式得 \(n=11,R^2=0.96\)；\(s^2=[1000(0.04/0.96)]/8=5.2083\)。寬 \(2(2.306)\sqrt{2s^2}=14.885\)。</p><strong class="label">解析</strong><p>兩個配適摘要先反解自由度，再做係數推論。</p></div></article><article class="exercise" id="q7-35"><button class="toggle" aria-controls="a-q7-35" aria-expanded="true">隱藏解答</button><h3>練習 · 7.35 · 講義 p.125</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q7-35">題目連結</a></small><p>將同一含截距迴歸的所有反應乘 2，RSE、調整 \(R^2\) 和 F 是否不變？</p><div class="solution" id="a-q7-35"><strong class="label">參考解答</strong><p>RSE 乘 2；調整 \(R^2\) 與 F 不變（II、III）。</p><strong class="label">解析</strong><p>各平方和均乘 4，形成比值時尺度抵銷。</p></div></article><section class="panel"><h2>用模擬考複習本章</h2><div class="chips"><a href="exams.html#exam1">第 1 回 · 題 11</a><a href="exams.html#exam1">第 1 回 · 題 14</a><a href="exams.html#exam2">第 2 回 · 題 14</a><a href="exams.html#exam2">第 2 回 · 題 24</a><a href="exams.html#exam3">第 3 回 · 題 5</a><a href="exams.html#exam4">第 4 回 · 題 30</a><a href="exams.html#exam5">第 5 回 · 題 30</a></div></section><div class="navfoot"><a href="ch06.html">← 上一章</a><a href="ch08.html">下一章 →</a></div><footer>SRM 精算考試中文研讀筆記 · 依所附第四版教材章序編寫，中文解析為參考解答。</footer></main></body></html>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 7 章　線性迴歸：選擇預測變數｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
+<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html" selected>第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 7 章</div><h1>線性迴歸：選擇預測變數</h1><p class="ch-sub">候選的解釋變數很多時，全部放進模型會過度配適。本章介紹三種挑選變數子集的方法（最佳子集、向前逐步、向後逐步，以及混合法），以及在不同大小的模型之間做選擇的五種工具：交叉驗證、Mallows 的 \(C_p\)、AIC、BIC 與調整 \(R^2\)。每個準則都會推導它從哪裡來、懲罰有多重。</p><div class="chips"><a href="pdf/ch07.pdf">下載本章 PDF</a><a href="#exercises">章末習題（35 題）</a></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">7.1 子集選擇</a></li><li><a href="#s2">7.2 選擇最佳模型</a></li></ol><p>本章對應講義第 7 課，讀本是 Frees 5.1～5.2 節與 ISLR 6.1 節。計算題集中在三類：(1) 各種搜尋方法要配適幾個模型；(2) 給一張 RSS 或 \(R^2\) 表，走出每種方法選到的模型；(3) 算 \(C_p\)、AIC、BIC、調整 \(R^2\)。</p>
+<p><strong>記號。</strong> \(n\) 是觀察筆數，\(k\) 是候選解釋變數的總數，\(d\) 是某個候選模型裡的解釋變數個數（不含截距；講義表 7.1 與 ISLR 把它寫成 \(p\)，有時寫成 \(d\)），所以這個模型有 \(d+1\) 個迴歸係數。RSS（residual sum of squares）就是前幾章的 Error SS。</p>
+<p>現代的資料常有非常多的預測變數，甚至多於觀察筆數。變數越多，訓練資料上的誤差越小（變數夠多時甚至為 0），但預測新資料會很差。機械地配出係數並不保證變數和反應真的有關，必須挑出真正有影響的變數。下一章介紹另外兩類減少變數的方法（收縮與降維）。</p></section><section class="unit" id="s1"><h2>7.1 子集選擇</h2><h3>一、最佳子集選擇</h3>
+<p>\(k\) 個候選變數，每個可以放或不放，共有 \(2^k\) 個模型。全部配適一遍，再挑最好的，叫做<strong>最佳子集選擇</strong>（best subset selection）。「最好」怎麼判斷，要看比較的模型變數個數是否相同：</p>
+<ul>
+<li><strong>變數個數相同</strong>：RSS 較小（等價地，\(R^2\) 較大）的較好。</li>
+<li><strong>變數個數不同</strong>：不能直接比 RSS，要用交叉驗證，或 \(C_p\)、AIC、BIC、調整 \(R^2\) 這四個統計量之一（7.2 節）。</li>
+</ul>
+<div class="box derive">
+<div class="box-t">為什麼變數個數不同時不能比 RSS</div>
+<p>設模型 B 包含模型 A 的所有變數再多幾個（A <strong>巢狀</strong>於 B 之中）。B 的最小平方是在比較大的參數集合上求最小值：把 B 多出來的係數設為 0，就得到 A 的任何一組配適，所以
+\[\text{RSS}_B=\min_{\text{B 的參數}}\sum_i(y_i-\hat y_i)^2\le\min_{\text{A 的參數}}\sum_i(y_i-\hat y_i)^2=\text{RSS}_A .\]
+不管新變數多麼不相干，RSS 都不會增加，而且幾乎一定會減少。所以比 RSS 一定是「越大的模型越好」，無法反映預測能力。</p>
+<p>（講義註腳：兩個<strong>不巢狀</strong>的模型，\(d+1\) 個變數的那個 RSS 有可能比 \(d\) 個變數的大。但只要巢狀時 RSS 必然下降，就足以說明 RSS 不是比較不同大小模型的好指標。）</p>
+</div>
+<p>ISLR 把最佳子集選擇寫成兩階段：</p>
+<ol>
+<li>令 \(\mathcal M_0\) 為只有截距的模型（預測值都是 \(\bar y\)）。</li>
+<li>對 \(d=1,2,\dots,k\)：在 \(\binom kd\) 個恰有 \(d\) 個變數的模型中，取 RSS 最小者為 \(\mathcal M_d\)。</li>
+<li>用交叉驗證或 \(C_p\)、AIC、BIC、調整 \(R^2\)，從 \(\mathcal M_0,\dots,\mathcal M_k\) 中選一個。</li>
+</ol>
+<p>Frees 也提到「best regressions」程序：找出指定變數個數的最佳模型，也就是第 2 步。</p>
+<p>\(k\) 大時 \(2^k\) 個模型配不完：\(k=20\) 就超過一百萬（\(2^{20}=1{,}048{,}576\)）。這時需要啟發式（heuristic）的方法：向前逐步與向後逐步。</p>
+<h3>二、向前逐步選擇</h3>
+<p><strong>向前逐步選擇</strong>（forward stepwise selection）：</p>
+<ol>
+<li>從空模型（只有截距，\(\hat y=\bar y\)）開始。</li>
+<li>把 \(k\) 個變數各自加入，配出 \(k\) 個模型，取 RSS 最小者。</li>
+<li>在這個模型上，把剩下 \(k-1\) 個變數各自加入，配出 \(k-1\) 個模型，取 RSS 最小者。</li>
+<li>重複，直到 \(k\) 個變數都進入模型。</li>
+<li>得到每種大小各一個模型，共 \(k+1\) 個，用交叉驗證或四個統計量之一選出最後的模型。</li>
+</ol>
+<div class="box derive">
+<div class="box-t">要配適幾個模型</div>
+<p>空模型 1 個；第一步 \(k\) 個；第二步 \(k-1\) 個；……；最後一步 1 個。
+\[1+\sum_{i=0}^{k-1}(k-i)=1+(k+(k-1)+\cdots+1)=1+\frac{k(k+1)}{2} .\]
+\(k=20\) 時是 211 個，遠少於最佳子集的 1,048,576 個。</p>
+</div>
+<p>向前逐步是<strong>貪婪</strong>（greedy）的演算法：每一步只挑眼前最好的，不考慮「現在選一個次好的，之後可能得到更好的模型」。所以不保證選到最佳模型。講義的例子：</p>
+<table>
+<thead>
+<tr>
+<th>變數</th>
+<th>RSS</th>
+<th>變數</th>
+<th>RSS</th>
+<th>變數</th>
+<th>RSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>無</td>
+<td>875</td>
+<td>\(X_1\)</td>
+<td>472</td>
+<td>\(X_1,X_2\)</td>
+<td>420</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>\(X_2\)</td>
+<td>500</td>
+<td>\(X_1,X_3\)</td>
+<td>432</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>\(X_3\)</td>
+<td>491</td>
+<td>\(X_2,X_3\)</td>
+<td>412</td>
+</tr>
+</tbody>
+</table>
+<p>一個變數時 \(X_1\) 最好，向前法接著只會考慮含 \(X_1\) 的 \(\{X_1,X_2\}\) 與 \(\{X_1,X_3\}\)，選到 RSS 420 的 \(\{X_1,X_2\}\)。\(\{X_2,X_3\}\) 的 RSS 412 更低，卻永遠不會被看到。</p>
+<p><strong>\(n&lt;k\) 時仍可使用</strong>：只是最多只能做到 \(n-1\) 個變數的模型 \(\mathcal M_{n-1}\)（\(n-1\) 個變數加截距共 \(n\) 個係數，剛好把 \(n\) 筆資料配到殘差全為 0；再多就無法唯一估計）。</p>
+<h3>三、向後逐步選擇</h3>
+<p><strong>向後逐步選擇</strong>（backward stepwise selection）：</p>
+<ol>
+<li>從包含全部 \(k\) 個變數的完整模型開始。</li>
+<li>對每個變數，配出拿掉它、只用其他 \(k-1\) 個變數的模型，共 \(k\) 個，取 RSS 最小者。</li>
+<li>在這個模型上重複：每次拿掉一個變數，配出 \(k-1\)、\(k-2\)、……個模型。</li>
+<li>直到沒有變數為止。得到每種大小各一個模型，共 \(k+1\) 個，再用交叉驗證或統計量選擇。</li>
+</ol>
+<p>配適的模型數同樣是 \(1+k(k+1)/2\)。同樣不保證選到最佳模型。和向前法不同，<strong>\(k&gt;n\) 時不能使用</strong>：第一步的完整模型參數比資料還多，算不出有意義的結果。</p>
+<figure><img src="assets/fig/ch07-paths.svg" alt="習題 7.7～7.9 的資料：四個變數的 16 個子集，橫軸是變數個數、縱軸是 RSS。綠線是最佳子集（每個大小 RSS 最小的模型）：、、。藍線是向前逐步：先選 ，之後只能在含  的模型裡挑，兩個變數時選 （122），錯過了最佳的 （118），三個變數時選 （105），也錯過了 （101）。紅線是向後逐步：從全模型拿掉  得到最佳的 ，但再拿掉一個只能在  的子集裡選，得到 （129），同樣錯過 。" loading="lazy"><figcaption>習題 7.7～7.9 的資料：四個變數的 16 個子集，橫軸是變數個數、縱軸是 RSS。綠線是最佳子集（每個大小 RSS 最小的模型）：\(X_4\)、\(X_1X_2\)、\(X_1X_3X_4\)。藍線是向前逐步：先選 \(X_4\)，之後只能在含 \(X_4\) 的模型裡挑，兩個變數時選 \(X_2X_4\)（122），錯過了最佳的 \(X_1X_2\)（118），三個變數時選 \(X_1X_2X_4\)（105），也錯過了 \(X_1X_3X_4\)（101）。紅線是向後逐步：從全模型拿掉 \(X_2\) 得到最佳的 \(X_1X_3X_4\)，但再拿掉一個只能在 \(\{X_1,X_3,X_4\}\) 的子集裡選，得到 \(X_1X_4\)（129），同樣錯過 \(X_1X_2\)。</figcaption></figure>
+
+<h3>四、混合法</h3>
+<p><strong>混合法</strong>（mixed selection，或 hybrid）：像向前法一樣一次加入一個變數，但加入後若有變數不再有幫助，就把它拿掉。步驟：</p>
+<ol>
+<li>從只有截距的模型開始。</li>
+<li>對每個尚未使用的變數，配出加入它的模型，選 RSS 最好的。</li>
+<li>檢查模型中的每個變數。若有變數的 \(t\) 比值低於事先設定的門檻，拿掉 \(t\) 比值最低的那一個。這是 Frees 的版本；ISLR 的版本是：若有變數的 \(p\) 值高於事先設定的門檻，拿掉 \(p\) 值最高的那一個。兩者相似但不完全相同，因為 \(t\) 比值換成 \(p\) 值還要看自由度。</li>
+<li>重複第 2、3 步，直到沒有變數符合加入或刪除的門檻。</li>
+</ol>
+<p>Frees 的逐步迴歸就是這種混合法：加入的門檻是 \(|t|\) 超過某個值（例如 2），刪除的門檻是 \(|t|\) 低於某個值。有些軟體改用 \(F\) 檢定，一次只考慮一個變數時 \(F=t^2\)，兩者等價。</p>
+<h3>五、類別變數</h3>
+<p>所有子集選擇方法都是<strong>一次加入或刪除一個參數</strong>。有兩類以上的類別變數，一個類別的指標就是一個參數，所以最後的模型可能只包含<strong>部分</strong>類別的指標；沒被選入的類別，實際上就被併入基準類別（第 2 章的<a class="concept" href="ch02.html#s3" data-definition="把有 c 類的類別變數換成 c−1 個 0／1 變數；沒有指標的那一類是基準類別。" data-target="指標變數">指標變數</a>）。</p>
+<p>例：「車型」有雙門跑車、轎車、休旅車、廂型車四類，以轎車為基準類別，有三個指標。向前逐步第一步選入了「休旅車」的指標，這個模型實際上把雙門跑車和廂型車都當成基準類別（和轎車同一組）。</p>
+<p>計算模型個數時，要先把類別變數換算成指標個數（習題 7.3、7.4）。</p>
+<h3>六、逐步迴歸的七個缺點（Frees）</h3>
+<ol>
+<li><strong>資料窺探</strong>（data snooping）：對同一份資料配適大量模型，總有一些碰巧看起來很好。統計上常用 95% 信賴水準，所以每 20 個錯誤的模型就有 1 個會被接受；試過 100 個模型，大約會找到 5 個看起來不錯的假模型。</li>
+<li>忽略了「所有模型都不對」的可能：真正的關係可能是非線性的，資料也可能有離群值或高槓桿點。</li>
+<li>只考慮了 \(2^k\) 個模型中的一部分，沒被考慮的模型可能更好。</li>
+<li>只用 \(t\) 比值決定加入或刪除，沒有考慮 \(s\)、\(R^2\)、調整 \(R^2\) 等其他統計量。</li>
+<li>這是一連串的檢定，最後模型的真正顯著水準比單次 \(t\) 檢定的顯著水準差。若每次加入都有 95% 的把握是對的，兩次都對的機率就低於 95%。</li>
+<li>變數一個一個加入，沒有考慮兩個變數<strong>一起</strong>加入的效果（例如第 5 章的抑制變數）。向後法因為一開始所有變數都在模型裡，比較能顧到聯合效果。</li>
+<li>自動化程序不會用到研究者的額外知識。例如研究者可能知道 2015 年發生了特殊事件，那一年的資料不尋常。</li>
+</ol>
+<figure><img src="assets/fig/ch07-snooping.svg" alt="資料窺探的模擬： 筆， 和 30 個候選變數**完全無關**。(a) 2,000 次模擬中，把 30 個變數各自和  做簡單迴歸，取最顯著的那一個，它的  值有 79% 的時候小於 0.05（若變數彼此獨立，理論值 ）。(b) 用向前逐步一路選入 12 個變數：訓練資料的  一路升到 0.5，調整  也升到 0.35，但模型在新資料上的  一路變負，比直接猜平均還差。" loading="lazy"><figcaption>資料窺探的模擬：\(n=50\) 筆，\(y\) 和 30 個候選變數**完全無關**。(a) 2,000 次模擬中，把 30 個變數各自和 \(y\) 做簡單迴歸，取最顯著的那一個，它的 \(p\) 值有 79% 的時候小於 0.05（若變數彼此獨立，理論值 \(1-0.95^{30}=79\%\)）。(b) 用向前逐步一路選入 12 個變數：訓練資料的 \(R^2\) 一路升到 0.5，調整 \(R^2\) 也升到 0.35，但模型在新資料上的 \(R^2\) 一路變負，比直接猜平均還差。</figcaption></figure><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q7-1"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 7.1 題</b><small>・講義 p.115・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>以 62 筆觀察配適最小平方模型，考慮 22 個不同的預測變數，用向後逐步選擇挑出最佳的預測變數。求共配適幾個模型。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>254 個</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>先配適完整模型（1 個），接著拿掉 1 個變數的模型 22 個、再拿掉 1 個的 21 個、……，最後只剩一個變數時拿掉它得到只有截距的模型（1 個）：
+\[1+\sum_{i=1}^{22}i=1+\frac{22(23)}{2}=1+253=254 .\]
+\(n=62&gt;k=22\)，完整模型可以配適，向後法可行。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>別忘了起點的那 1 個模型（完整模型）。</p></div></div></article><article class="exercise" id="q7-3"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 7.3 題</b><small>・講義 p.115・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>以 30 筆觀察配適常態線性模型，預測變數為：AGE（類別：未滿 30、30～39、40～49、50～59、60 以上）、SEX（男或女）、BLOOD PRESSURE（實數）、NUMBER OF CHILDREN（整數）。用向前逐步選擇挑出最佳預測變數。求共配適幾個模型。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>29 個</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：換算成參數個數。</strong> AGE 有 5 類，需要 4 個指標；SEX 1 個；血壓 1 個；子女數 1 個；共 \(k=7\)。</p>
+<p><strong>第二步：計數。</strong> 只有截距的模型 1 個，接著依序考慮 7、6、5、4、3、2、1 個加入的候選：
+\[1+\sum_{j=0}^{6}(7-j)=1+\frac{7(8)}{2}=29 .\]
+\(n=30\) 足夠配適全部 7 個變數。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>把 AGE 當成 1 個變數會得到 \(1+4(5)/2=11\)。逐步法一次加入一個<strong>參數</strong>（指標），不是一整個類別變數。</p></div></div></article><article class="exercise" id="q7-5"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 7.5 題</b><small>・講義 p.116・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>常態線性模型以 26 筆觀察為基礎，考慮 100 個預測變數，用向前逐步選擇。求共配適幾個模型。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>2,201 個</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>最多能做到幾個變數。</strong> 有截距時，26 筆觀察最多支撐 26 個係數，也就是 25 個預測變數（\(\mathcal M_{n-1}=\mathcal M_{25}\)）；再多，\(X\) 的欄就不可能線性獨立。</p>
+<p><strong>計數。</strong> 只有截距 1 個；第 1 步 100 個候選；第 2 步 99 個；……；第 25 步 \(100-24=76\) 個。等差數列的和是首末項平均乘項數：
+\[1+\sum_{j=0}^{24}(100-j)=1+\frac{(100+76)(25)}{2}=1+2200=2201 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不能套 \(1+k(k+1)/2=5051\)；\(n&lt;k\) 時向前法在 \(n-1\) 個變數就停了。</p></div></div></article><article class="exercise" id="q7-7"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 7.7 題</b><small>・講義 p.116・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（7.7～7.9 共用）以四個變數 \(\{X_1,X_2,X_3,X_4\}\) 的子集建立最小平方模型，各模型的 RSS：</p>
+<table>
+<thead>
+<tr>
+<th>變數</th>
+<th>RSS</th>
+<th>變數</th>
+<th>RSS</th>
+<th>變數</th>
+<th>RSS</th>
+<th>變數</th>
+<th>RSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(X_1\)</td>
+<td>152</td>
+<td>\(X_1,X_2\)</td>
+<td>118</td>
+<td>\(X_2,X_4\)</td>
+<td>122</td>
+<td>\(X_1,X_3,X_4\)</td>
+<td>101</td>
+</tr>
+<tr>
+<td>\(X_2\)</td>
+<td>145</td>
+<td>\(X_1,X_3\)</td>
+<td>144</td>
+<td>\(X_3,X_4\)</td>
+<td>135</td>
+<td>\(X_2,X_3,X_4\)</td>
+<td>107</td>
+</tr>
+<tr>
+<td>\(X_3\)</td>
+<td>160</td>
+<td>\(X_1,X_4\)</td>
+<td>129</td>
+<td>\(X_1,X_2,X_3\)</td>
+<td>110</td>
+<td>\(X_1,X_2,X_3,X_4\)</td>
+<td>85</td>
+</tr>
+<tr>
+<td>\(X_4\)</td>
+<td>138</td>
+<td>\(X_2,X_3\)</td>
+<td>131</td>
+<td>\(X_1,X_2,X_4\)</td>
+<td>105</td>
+<td>無</td>
+<td>258</td>
+</tr>
+</tbody>
+</table>
+<p>最佳子集選擇選出的三變數模型是哪一個？</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\{X_1,X_3,X_4\}\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>最佳子集直接比較所有三變數模型的 RSS：\(\{X_1,X_2,X_3\}\) 110、\(\{X_1,X_2,X_4\}\) 105、\(\{X_1,X_3,X_4\}\) 101、\(\{X_2,X_3,X_4\}\) 107。最小的是 101。三種方法的路徑見 7.1 節的圖。</p></div></div></article><article class="exercise" id="q7-8"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 7.8 題</b><small>・講義 p.116・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（接 7.7）向前逐步選擇選出的三變數模型是哪一個？</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\{X_1,X_2,X_4\}\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
+<li>一個變數：RSS 最小的是 \(X_4\)（138）。</li>
+<li>兩個變數，必須含 \(X_4\)：\(\{X_1,X_4\}\) 129、\(\{X_2,X_4\}\) 122、\(\{X_3,X_4\}\) 135，選 \(\{X_2,X_4\}\)。</li>
+<li>三個變數，必須含 \(X_2,X_4\)：\(\{X_1,X_2,X_4\}\) 105、\(\{X_2,X_3,X_4\}\) 107，選 \(\{X_1,X_2,X_4\}\)。</li>
+</ul>
+<p>它不是最佳的三變數模型（101），因為向前法第一步選了 \(X_4\) 之後，第二步沒選到含 \(X_1,X_3\) 的組合。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>第二步不能直接選全部兩變數模型中最好的 \(\{X_1,X_2\}\)（118）：它不含已經選入的 \(X_4\)。</p></div></div></article></div></section><section class="unit" id="s2"><h2>7.2 選擇最佳模型</h2><p>上面每種方法都替每個變數個數選出一個模型，接著要在這些大小不同的模型之間做選擇。有兩條路：</p>
+<ol>
+<li><strong>交叉驗證</strong>（第 6 章）：直接估計測試誤差。計算量大，但最準確，而且幾乎不需要假設。</li>
+<li><strong>調整訓練誤差</strong>：訓練資料上的 RSS 低估了測試誤差，用一個隨參數個數增加的懲罰把它「加回來」。\(C_p\)、AIC、BIC、調整 \(R^2\) 都屬於這一類。用這些統計量時，RSS 是用<strong>全部資料</strong>算的，不需要留出測試資料。</li>
+</ol>
+<h3>一、訓練誤差低估了多少</h3>
+<div class="box derive">
+<div class="box-t">推導：期望的測試誤差平方和比 RSS 多 \(2(d+1)\sigma^2\)</div>
+<p>固定 \(X\)，設 \(\mathbf y=\boldsymbol\mu+\boldsymbol\varepsilon\)，\(\operatorname{Var}(\boldsymbol\varepsilon)=\sigma^2I\)。用 \(d\) 個變數加截距配適，帽子矩陣 \(H\) 的跡是 \(d+1\)（第 5 章）。\(\boldsymbol\mu\) 不必在模型的欄位空間裡，也就是模型可以有偏差。</p>
+<p><strong>訓練誤差。</strong> \(\mathbf y-\hat{\mathbf y}=(I-H)\boldsymbol\mu+(I-H)\boldsymbol\varepsilon\)，交叉項期望值為 0，
+\[E(\text{RSS})=\|(I-H)\boldsymbol\mu\|^2+\sigma^2\operatorname{tr}(I-H)=\|(I-H)\boldsymbol\mu\|^2+(n-d-1)\sigma^2 .\]
+<strong>測試誤差。</strong> 在同樣的 \(X\) 上重新抽一組獨立的反應 \(\mathbf y^*=\boldsymbol\mu+\boldsymbol\varepsilon^*\)，用原來的配適值預測：
+\[\mathbf y^*-\hat{\mathbf y}=\boldsymbol\varepsilon^*+(I-H)\boldsymbol\mu-H\boldsymbol\varepsilon,\]
+三項兩兩的交叉期望值都是 0，
+\[E\|\mathbf y^*-\hat{\mathbf y}\|^2=n\sigma^2+\|(I-H)\boldsymbol\mu\|^2+\sigma^2\operatorname{tr}(H)=\|(I-H)\boldsymbol\mu\|^2+(n+d+1)\sigma^2 .\]
+<strong>相減。</strong> 偏差項 \(\|(I-H)\boldsymbol\mu\|^2\) 剛好消掉：
+\[E(\text{測試 SSE})-E(\text{RSS})=2(d+1)\sigma^2 .\]
+所以 \(\dfrac1n\big(\text{RSS}+2(d+1)\hat\sigma^2\big)\) 是測試 MSE 的不偏估計（\(\hat\sigma^2\) 不偏時）。每多一個參數，訓練誤差就多低估 \(2\sigma^2\)，這就是 \(C_p\) 與 AIC 懲罰項的來源。ISLR 的公式用 \(2d\hat\sigma^2\)（不算截距），只差一個所有模型共同的常數 \(2\hat\sigma^2/n\)，不影響比較。</p>
+</div>
+<h3>二、Mallows 的 \(C_p\)</h3>
+<p>設完整模型有 \(k\) 個變數，用它估計誤差變異數：</p>
+<p>\[\hat\sigma^2=s^2=\frac{\text{RSS}_k}{n-k-1} .\]</p>
+<p>考慮一個 \(d\) 個變數（\(d&lt;k\)）的子模型，殘差平方和 \(\text{RSS}_d\)。ISLR 的定義：</p>
+<p>\[C_p=\frac1n\big(\text{RSS}_d+2d\hat\sigma^2\big)\qquad(7.2)\]</p>
+<p>Frees 的定義（講義的寫法）：</p>
+<p>\[C_p=\frac{\text{RSS}_d}{s^2}-n+2d\qquad(7.1)\]</p>
+<p>兩者看起來很不一樣，但選出的模型相同：(7.1) 去掉與模型無關的 \(-n\)，把 \(2d\) 併進分數得 \(\dfrac{\text{RSS}_d+2ds^2}{s^2}\)；再把分母從 \(s^2\) 換成 \(n\)（兩者都與模型無關）就是 (7.2)。精確地說，\(C_p^{\text{Frees}}=\dfrac{n}{s^2}C_p^{\text{ISLR}}-n\)，是遞增的線性轉換，排序完全一樣。\(C_p\) <strong>越小越好</strong>。</p>
+<div class="box warn">
+<div class="box-t">\(C_p\) 裡的「\(p\)」數不數截距</div>
+<p>Mallows 原始的定義是 \(C_p=\text{RSS}/s^2-n+2p\)，\(p\) 是係數個數（含截距），模型沒有偏差時 \(E(C_p)\approx p\)，所以常說「好的模型 \(C_p\) 接近 \(p\)」。講義與它的習題解答把 \(p\) 當成<strong>解釋變數個數</strong>（習題 7.13 算出 \(-0.5\)）；若含截距則每個模型都多 2（變成 1.5）。兩種算法選出的模型一樣，只有數值不同。考試若要算數值，照題目指定的教科書公式。</p>
+</div>
+<p>若 \(\hat\sigma^2\) 是 \(\sigma^2\) 的不偏估計，ISLR 的 \(C_p\) 是測試 MSE 的不偏估計（上一小節的推導）。</p>
+<h3>三、AIC 與 BIC</h3>
+<p>線性迴歸最大化資料的概似。加入變數後，最大概似不可能下降（把新係數設為 0 就回到原模型的概似），幾乎一定會上升，不管新變數有沒有意義。所以直接比概似不行。後面會學到<strong>概似比檢定</strong>，它替「加入變數」設門檻，但只能比較<strong>巢狀</strong>模型。</p>
+<p><strong>赤池資訊準則</strong>（Akaike information criterion，AIC）與<strong>貝氏資訊準則</strong>（Bayesian information criterion，BIC）是加上懲罰的負對數概似，可以比較<strong>任何</strong>模型，不論是否巢狀。令 \(l\) 為最大對數概似、\(p\) 為估計的參數個數：</p>
+<p>\[\text{AIC}=-2l+2p,\qquad\text{BIC}=-2l+p\ln n .\]</p>
+<p>兩者都<strong>越小越好</strong>。BIC 每個參數的懲罰 \(\ln n\) 在 \(n\ge8\) 時就大於 AIC 的 2（\(e^2\approx7.39\)），所以 BIC 選出的模型通常變數比較少。</p>
+<div class="box derive">
+<div class="box-t">推導：Frees 的線性迴歸 AIC（7.3）</div>
+<p>\(k\) 個解釋變數、常態誤差 \(N(0,\sigma^2)\) 的線性迴歸，\(n\) 筆觀察的概似是
+\[L=\prod_{i=1}^n\frac{1}{\sigma\sqrt{2\pi}}\exp\left(-\frac{(y_i-\sum_j\beta_jx_{ij})^2}{2\sigma^2}\right).\]
+取對數：
+\[l=\ln L=-\frac{\sum_i(y_i-\sum_j\beta_jx_{ij})^2}{2\sigma^2}-n\ln\sigma-n\ln\sqrt{2\pi} .\]
+在最小平方估計處，分子就是 RSS，所以
+\[-2l=\frac{\text{RSS}}{\sigma^2}+2n\ln\sigma+2n\ln\sqrt{2\pi}=\frac{\text{RSS}}{\sigma^2}+n\ln\sigma^2+n\ln(2\pi) .\]
+用通常的 \(s^2=\text{RSS}/(n-k-1)\) 代替 \(\sigma^2\)，第一項變成 \(n-k-1\)：
+\[-2l=n\ln s^2+n\ln(2\pi)+n-k-1 .\]
+參數有 \(k+1\) 個 \(\beta\)，再加上 \(\sigma^2\)，共 \(k+2\) 個，所以加上 \(2(k+2)\)：
+\[\text{AIC}=n\ln s^2+n\ln(2\pi)+n+k+3\qquad(7.3)\]
+比較模型時 \(n\ln(2\pi)\) 與 \(n+3\) 都是常數，剩下 \(n\ln s^2+k\)：AIC 在「\(s^2\) 下降」與「變數增加」之間取捨。對應的 BIC 只要把懲罰 \(2(k+2)\) 換成 \((k+2)\ln n\)（習題 7.26）。</p>
+</div>
+<p>ISLR 的做法不同：它不用每個模型自己的 \(s^2\)，而是像 \(C_p\) 一樣用<strong>完整模型</strong>的 \(\hat\sigma^2\) 當作已知的 \(\sigma^2\)。這樣 \(n\ln\hat\sigma^2\)、\(n\ln(2\pi)\) 都是常數，可以丟掉，剩下 \(\text{RSS}/\hat\sigma^2\)。加上每個參數 2（AIC）或 \(\ln n\)（BIC）的懲罰，ISLR 用變數個數 \(d\) 代替參數個數，再整個乘上 \(\hat\sigma^2/n\)：</p>
+<p>\[\text{AIC}=\frac1n\big(\text{RSS}+2d\hat\sigma^2\big)\qquad(7.4)\]
+\[\text{BIC}=\frac1n\big(\text{RSS}+(\ln n)\,d\hat\sigma^2\big)\qquad(7.5)\]</p>
+<p>所以 ISLR 的 AIC 和它的 \(C_p\) <strong>完全相同</strong>，選出的模型也相同；BIC 對加入參數的懲罰較重。講義認為考題若要算 AIC 或 BIC，會說明用哪個公式；最可能考的是「\(-2l\) 加上 \(2p\) 或 \(p\ln n\)」。</p>
+<h3>四、調整 \(R^2\)</h3>
+<p>\[\text{調整 }R^2=1-\frac{\text{RSS}_d/(n-d-1)}{\text{TSS}/(n-1)}\qquad(7.6)\]</p>
+<p>有時記為 \(R_a^2\)。分母 \(\text{TSS}/(n-1)\) 和模型無關，分子就是模型的 \(s^2\)，所以<strong>調整 \(R^2\) 最大，等價於 \(s^2\) 最小</strong>。\(d\) 增加時 \(n-d-1\) 變小，分子變大，調整 \(R^2\) 變小，所以 RSS 必須下降得夠多，才值得多加一個變數。用 \(R^2\) 表示：</p>
+<p>\[\text{調整 }R^2=1-\left(\frac{\text{RSS}_d}{\text{TSS}}\right)\left(\frac{n-1}{n-d-1}\right)=1-(1-R^2)\left(\frac{n-1}{n-d-1}\right)\qquad(7.7)\]</p>
+<p>調整 \(R^2\) 可能是負的（習題 7.34），而且 <strong>越大越好</strong>，和 \(C_p\)、AIC、BIC 相反。\(C_p\)、AIC、BIC 都有以大樣本為基礎的理論根據；調整 \(R^2\) 則是比較隨意（ad hoc）的指標，沒有強的理論支持。</p>
+<div class="box derive">
+<div class="box-t">推導：每個準則「多加一個變數」的門檻</div>
+<p>在 \(d\) 個變數的模型上多加一個變數，RSS 減少 \(\Delta=\text{RSS}_d-\text{RSS}_{d+1}\)。新變數的 \(t\) 統計量滿足（第 4 章的部分 \(F\)，分子自由度 1）
+\[t^2=F=\frac{\Delta}{\text{RSS}_{d+1}/(n-d-2)}=\frac{\Delta}{s_{d+1}^2} .\]
+<strong>調整 \(R^2\)</strong>：上升 \(\Leftrightarrow\) \(s^2\) 下降 \(\Leftrightarrow\dfrac{\text{RSS}_{d+1}}{n-d-2}&lt;\dfrac{\text{RSS}_{d+1}+\Delta}{n-d-1}\)。兩邊乘開：\((n-d-1)\text{RSS}_{d+1}&lt;(n-d-2)\text{RSS}_{d+1}+(n-d-2)\Delta\)，即 \(\text{RSS}_{d+1}&lt;(n-d-2)\Delta\)，也就是
+\[t^2&gt;1 .\]
+<strong>\(C_p\) 與 ISLR 的 AIC</strong>：下降 \(\Leftrightarrow\Delta&gt;2\hat\sigma^2\)。<strong>BIC</strong>：下降 \(\Leftrightarrow\Delta&gt;(\ln n)\hat\sigma^2\)。若 \(\hat\sigma^2\approx s_{d+1}^2\)，這兩個條件分別約等於 \(t^2&gt;2\) 與 \(t^2&gt;\ln n\)。</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>準則</th>
+<th>加入一個變數的條件（約略）</th>
+<th>方向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>調整 \(R^2\)</td>
+<td>\(t^2&gt;1\)</td>
+<td>越大越好，最寬鬆，傾向選大模型</td>
+</tr>
+<tr>
+<td>\(C_p\)／AIC</td>
+<td>\(\Delta\text{RSS}&gt;2\hat\sigma^2\)，約 \(t^2&gt;2\)</td>
+<td>越小越好</td>
+</tr>
+<tr>
+<td>BIC</td>
+<td>\(\Delta\text{RSS}&gt;(\ln n)\hat\sigma^2\)，約 \(t^2&gt;\ln n\)</td>
+<td>越小越好，\(n=100\) 時約 \(t^2&gt;4.6\)，最嚴格</td>
+</tr>
+<tr>
+<td>5% 的 \(t\) 檢定</td>
+<td>\(t^2&gt;t_{0.025}^2\approx4\)</td>
+<td>作為對照</td>
+</tr>
+</tbody>
+</table>
+<div class="box ex">
+<div class="box-t">例題 7A（講義）</div>
+<p>30 筆觀察、5 個參數（含截距）的線性模型，RSS 為 100，反應變數的不偏樣本變異數為 40，迴歸的殘差變異數為 10。用 ISLR 的公式求 \(C_p\)、AIC、BIC 與調整 \(R^2\)。</p>
+<p>\(d=4\) 個變數，\(\hat\sigma^2=10\)。
+\[C_p=\frac1{30}\big(100+2(4)(10)\big)=\frac{180}{30}=6,\qquad\text{AIC}=C_p=6,\]
+\[\text{BIC}=\frac1{30}\big(100+(\ln30)(4)(10)\big)=\frac{100+136.05}{30}=7.868 .\]
+TSS\(/(n-1)\) 就是反應的樣本變異數 40，所以
+\[\text{調整 }R^2=1-\frac{100/(30-4-1)}{40}=1-\frac{4}{40}=0.9 .\]</p>
+</div>
+<h3>五、用哪一個</h3>
+<figure><img src="assets/fig/ch07-criteria.svg" alt="模擬：、10 個候選變數（彼此有相關），真正有用的只有 3 個。對每個大小做最佳子集選擇，再用各準則挑大小。訓練 MSE（灰虛線）隨變數個數一路下降。10 折 CV 選 4 個、（即 ISLR 的 AIC）與 BIC 都選 3 個、調整  選 5 個。調整  的曲線在 3 到 7 個變數之間非常平，懲罰最輕，所以傾向選比較大的模型。" loading="lazy"><figcaption>模擬：\(n=100\)、10 個候選變數（彼此有相關），真正有用的只有 3 個。對每個大小做最佳子集選擇，再用各準則挑大小。訓練 MSE（灰虛線）隨變數個數一路下降。10 折 CV 選 4 個、\(C_p\)（即 ISLR 的 AIC）與 BIC 都選 3 個、調整 \(R^2\) 選 5 個。調整 \(R^2\) 的曲線在 3 到 7 個變數之間非常平，懲罰最輕，所以傾向選比較大的模型。</figcaption></figure>
+
+<ul>
+<li>\(C_p\)、AIC、BIC 都要估計 \(\sigma^2\)，而且要知道模型的參數個數；交叉驗證兩者都不需要，適用範圍最廣，也最準確，只是計算量大。</li>
+<li>交叉驗證曲線常常在最低點附近很平。ISLR 建議<strong>一個標準誤法則</strong>：先算出每個大小的 CV 估計與它的標準誤，在「CV 值不超過最低點加一個標準誤」的模型中，選最簡單的那個。</li>
+</ul>
+<div class="box exam">
+<div class="box-t">考試技巧</div>
+<ul>
+<li><strong>方向</strong>：\(C_p\)、AIC、BIC 越小越好；\(R^2\)、調整 \(R^2\) 越大越好。</li>
+<li><strong>同樣大小的模型</strong>比 RSS 或 \(R^2\) 就夠了，所有準則的懲罰都相同（習題 7.19 的 II、7.21、7.23）。</li>
+<li><strong>AIC／BIC 的參數個數</strong>：線性迴歸照 Frees 要算截距與 \(\sigma^2\)，\(p=k+2\)；題目直接給「參數個數」或「使用的自由度」時照題目。</li>
+<li>從 AIC 換算 BIC：減掉 \(2p\)、加上 \(p\ln n\)。</li>
+<li>調整 \(R^2\) 的 \(n-1\) 可以從 ANOVA 表的自由度相加得到：迴歸自由度 \(+\) 誤差自由度 \(=n-1\)。</li>
+<li>計算模型個數時，先把類別變數換成指標個數；最佳子集 \(2^k\)，逐步法 \(1+k(k+1)/2\)；\(n\) 不夠大時向前法只能做到 \(n-1\) 個變數。</li>
+</ul>
+</div>
+<div class="box key">
+<div class="box-t">本章公式總表（講義表 7.1）</div>
+<ul>
+<li>向前／向後逐步的模型個數：\(1+k(k+1)/2\)；最佳子集：\(2^k\)。</li>
+<li>\(C_p\)（ISLR）：\(\dfrac1n\big(\text{RSS}_d+2d\hat\sigma^2\big)\)　(7.2)；\(C_p\)（Frees）：\(\dfrac{\text{RSS}_d}{s^2}-n+2d\)　(7.1)。\(\hat\sigma^2=s^2\) 取自完整模型。</li>
+<li>一般的 AIC：\(-2l+2p\)；一般的 BIC：\(-2l+p\ln n\)（\(p\) 為參數個數）。</li>
+<li>線性迴歸的 AIC（ISLR）：\(\dfrac1n\big(\text{RSS}_d+2d\hat\sigma^2\big)\)　(7.4)；（Frees）：\(n\ln s^2+n\ln(2\pi)+n+k+3\)　(7.3)。</li>
+<li>線性迴歸的 BIC（ISLR）：\(\dfrac1n\big(\text{RSS}_d+(\ln n)d\hat\sigma^2\big)\)　(7.5)。</li>
+<li>調整 \(R^2\)：\(1-\dfrac{\text{RSS}_d/(n-d-1)}{\text{TSS}/(n-1)}=1-(1-R^2)\dfrac{n-1}{n-d-1}\)　(7.6)(7.7)。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q7-11"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 7.11 題</b><small>・講義 p.118・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2018 秋 #31）精算師對同一份資料配適兩個 GLM，\(M_1\) 與 \(M_2\)，預測顧客購買汽車保險的機率：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>解釋變數</th>
+<th>使用的自由度</th>
+<th>對數概似</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(M_1\)</td>
+<td>報價、車輛數、主被保險人年齡、前一家保險公司</td>
+<td>10</td>
+<td>\(-11{,}565\)</td>
+</tr>
+<tr>
+<td>\(M_2\)</td>
+<td>報價、車輛數、主被保險人年齡、主被保險人性別、主被保險人信用分數</td>
+<td>8</td>
+<td>\(-11{,}562\)</td>
+</tr>
+</tbody>
+</table>
+<p>精算師想判斷哪個模型較好。最好的做法是：</p>
+<p>(A) 概似比檢定　(B) 算 \(F\) 統計量做 \(F\) 檢定　(C) 計算並比較兩個模型的離差（deviance）　(D) 計算並比較兩個模型的 AIC　(E) 算卡方統計量做卡方檢定</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>兩個模型<strong>不巢狀</strong>：\(M_2\) 沒有 \(M_1\) 的「前一家保險公司」，又多了 \(M_1\) 沒有的兩個變數。概似比檢定與離差的比較只適用於巢狀模型，(A)、(C) 不行；\(F\) 檢定是線性模型用的，(B) 不行；(E) 與此無關。AIC 可以比較任何模型。</p>
+<p>順便算出來：\(\text{AIC}_1=2(11{,}565)+2(10)=23{,}150\)，\(\text{AIC}_2=2(11{,}562)+2(8)=23{,}140\)，\(M_2\) 較好（對數概似較高、參數又較少）。</p></div></div></article><article class="exercise" id="q7-15"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 7.15 題</b><small>・講義 p.119・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>以 60 筆觀察配適多個常態線性模型。每個固定解釋變數個數下 RSS 最低的模型：</p>
+<table>
+<thead>
+<tr>
+<th>解釋變數個數</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最低 RSS</td>
+<td>326</td>
+<td>314</td>
+<td>303</td>
+<td>293</td>
+<td>284</td>
+</tr>
+</tbody>
+</table>
+<p>Mallows 的 \(C_p\) 選出的模型有幾個解釋變數？</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>2 個</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>完整模型</strong>是 4 個變數的那個：\(\hat\sigma^2=\dfrac{284}{60-5}=5.163636\)。用 ISLR 的 \(C_p=\frac1{60}(\text{RSS}_d+2d\hat\sigma^2)\)：</p>
+<table>
+<thead>
+<tr>
+<th>\(d\)</th>
+<th>\(\text{RSS}_d+2d\hat\sigma^2\)</th>
+<th>\(C_p\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>\(326\)</td>
+<td>5.4333</td>
+</tr>
+<tr>
+<td>1</td>
+<td>\(314+10.327=324.327\)</td>
+<td>5.4055</td>
+</tr>
+<tr>
+<td>2</td>
+<td>\(303+20.655=323.655\)</td>
+<td>5.3942</td>
+</tr>
+<tr>
+<td>3</td>
+<td>\(293+30.982=323.982\)</td>
+<td>5.3997</td>
+</tr>
+<tr>
+<td>4</td>
+<td>\(284+41.309=325.309\)</td>
+<td>5.4218</td>
+</tr>
+</tbody>
+</table>
+<p>最小的是 \(d=2\)。</p>
+<p><strong>捷徑</strong>：多加一個變數的懲罰是 \(2\hat\sigma^2=10.33\)，RSS 下降超過 10.33 才值得。RSS 的下降依序是 12、11、10、9，前兩次超過、第三次（10）不到，所以停在 2。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(\hat\sigma^2\) 要用最大的模型，而且自由度是 \(60-4-1=55\)。</p></div></div></article><article class="exercise" id="q7-16"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 7.16 題</b><small>・講義 p.119・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>有截距的線性模型用子集選擇挑變數，以 100 筆觀察為基礎。總平方和為 4184，15 個預測變數全部放入時 RSS 為 252。用 Mallows 的 \(C_p\) 在不同變數個數的模型中選擇。5 個預測變數的最佳模型 RSS 為 474；6 個預測變數的最佳模型 RSS 小於 \(x\)；結果選中 6 個預測變數的模型。求 \(x\) 最大可能值。</p>
+<p>(A) 422　(B) 430　(C) 442　(D) 454　(E) 468</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E) 468</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>用哪個 \(C_p\) 公式都一樣。用 Frees 的 \(C_p=\text{RSS}_d/s^2-n+2d\)：\(d\) 加 1，懲罰項增加 2，所以 \(\text{RSS}/s^2\) 必須減少超過 2，即 RSS 必須減少超過 \(2s^2\)。</p>
+<p>\(s^2\) 來自全部 15 個變數的模型：\(s^2=\dfrac{252}{100-15-1}=3\)，所以 RSS 必須減少超過 6：
+\[\text{RSS}_6&lt;474-6=468 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>總平方和 4184 用不到；\(s^2\) 用完整模型而不是 5 或 6 個變數的模型。</p></div></div></article><article class="exercise" id="q7-23"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 7.23 題</b><small>・講義 p.122・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2019 春 #39）同 7.21 的設定，但多了精算師 C 用向後逐步迴歸。三人都用 \(R^2\) 比較參數個數相同的模型、用 AIC 比較參數個數不同的模型。所有模型的 \(R^2\) 與 7.21 相同，AIC 如下：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+<th>12</th>
+<th>13</th>
+<th>14</th>
+<th>15</th>
+<th>16</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AIC</td>
+<td>1.9</td>
+<td>1.4</td>
+<td>1.2</td>
+<td>1.6</td>
+<td>1.7</td>
+<td>1.8</td>
+<td>1.0</td>
+<td>0.5</td>
+<td>0.8</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>0.9</td>
+<td>0.2</td>
+<td>0.4</td>
+<td>0.5</td>
+<td>1.4</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>17</th>
+<th>18</th>
+<th>19</th>
+<th>20</th>
+<th>21</th>
+<th>22</th>
+<th>23</th>
+<th>24</th>
+<th>25</th>
+<th>26</th>
+<th>27</th>
+<th>28</th>
+<th>29</th>
+<th>30</th>
+<th>31</th>
+<th>32</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AIC</td>
+<td>1.3</td>
+<td>1.5</td>
+<td>1.4</td>
+<td>1.0</td>
+<td>0.8</td>
+<td>0.2</td>
+<td>0.6</td>
+<td>1.2</td>
+<td>1.1</td>
+<td>1.3</td>
+<td>1.6</td>
+<td>2.1</td>
+<td>1.8</td>
+<td>2.0</td>
+<td>1.9</td>
+<td>3.5</td>
+</tr>
+</tbody>
+</table>
+<p>\(\text{AIC}_j\) 是精算師 \(j\) 所選模型的 AIC。三個 AIC 的正確排序是：</p>
+<p>(A) \(\text{AIC}_A&lt;\text{AIC}_B&lt;\text{AIC}_C\)　(B) \(\text{AIC}_A=\text{AIC}_B&lt;\text{AIC}_C\)　(C) \(\text{AIC}_A&lt;\text{AIC}_C&lt;\text{AIC}_B\)　(D) \(\text{AIC}_A=\text{AIC}_C&lt;\text{AIC}_B\)　(E) 以上皆非</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A) \(0&lt;0.2&lt;0.4\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>A（最佳子集）</strong>：各大小 \(R^2\) 最高的模型 1、3、10、22、27、32，AIC 1.9、1.2、0.0、0.2、1.6、3.5，選模型 10，\(\text{AIC}_A=0\)。</p>
+<p><strong>B（向前）</strong>：路徑 1 → 3 → 13 → 25 → 29 → 32（同 7.21），AIC 1.9、1.2、0.2、1.1、1.8、3.5，選模型 13，\(\text{AIC}_B=0.2\)。</p>
+<p><strong>C（向後）</strong>：從模型 32 開始。
+- 拿掉一個：四變數模型 27～31 中 \(R^2\) 最高的是 27（I,1,2,3,4，0.88），即拿掉 5。
+- 在 \(\{1,2,3,4\}\) 中拿掉一個：模型 17（0.73）、18（0.71）、20（0.75）、23（0.78），選 23（I,2,3,4），即拿掉 1。
+- 在 \(\{2,3,4\}\) 中拿掉一個：模型 11（0.61）、12（0.62）、14（0.66），選 14（I,3,4）。
+- 在 \(\{3,4\}\) 中拿掉一個：模型 4（0.55）、5（0.52），選 4。
+- 最後模型 1。</p>
+<p>路徑 32 → 27 → 23 → 14 → 4 → 1 的 AIC 為 3.5、1.6、0.6、0.4、1.6、1.9，選模型 14，\(\text{AIC}_C=0.4\)。</p>
+<figure><img src="assets/fig/ch07-ex23.svg" alt="三條路徑在各大小選到的代表模型及其 AIC。三人都在兩個非截距參數的地方停下，但因為路徑不同，選到的是三個不同的模型：A 的模型 10（I,1,5）、B 的模型 13（I,2,5）、C 的模型 14（I,3,4）。" loading="lazy"><figcaption>三條路徑在各大小選到的代表模型及其 AIC。三人都在兩個非截距參數的地方停下，但因為路徑不同，選到的是三個不同的模型：A 的模型 10（I,1,5）、B 的模型 13（I,2,5）、C 的模型 14（I,3,4）。</figcaption></figure></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>向後法每一步只能從<strong>目前模型</strong>拿掉一個變數，不能跳到別的組合；在每一步比的是 \(R^2\) 不是 AIC。</p></div></div></article><article class="exercise" id="q7-34"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 7.34 題</b><small>・講義 p.124・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>9 筆觀察的線性迴歸 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\beta_4x_{i4}+\varepsilon_i\)，已知 \(s^2=20\)，配適值 \(\hat y_i\) 為 1、2、3、4、5、6、7、8、9。求調整 \(R^2\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>調整 \(R^2=-1/7=-0.1429\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>Error SS</strong>：\(d=4\)，誤差自由度 \(9-5=4\)，Error SS \(=20(4)=80\)。</p>
+<p><strong>Regression SS</strong>：有截距時 \(\bar{\hat y}=\bar y\)（殘差和為 0），\(\bar{\hat y}=5\)，所以
+\[\text{Regression SS}=\sum(\hat y_i-\bar y)^2=16+9+4+1+0+1+4+9+16=60 .\]
+TSS \(=140\)，\(R^2=60/140=3/7\)。
+\[\text{調整 }R^2=1-\left(1-\frac37\right)\frac{9-1}{9-4-1}=1-\frac47\cdot2=-\frac17 .\]
+調整 \(R^2\) 可以是負的：模型的 \(s^2=20\) 比反應本身的樣本變異數 \(140/8=17.5\) 還大，表示這 4 個變數比直接用 \(\bar y\) 預測還差。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>Regression SS 是配適值對<strong>平均</strong>的離差平方和，不是 \(\sum\hat y_i^2\)；不要以為調整 \(R^2\) 一定在 0 與 1 之間。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（25 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q7-2"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.2 題</b><small>・講義 p.115・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（SRM 樣題 #54）高階主管薪酬的迴歸模型：</p>
+<table>
+<thead>
+<tr>
+<th>係數</th>
+<th>估計值</th>
+<th>標準誤</th>
+<th>\(t\) 統計量</th>
+<th>\(p\) 值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>截距</td>
+<td>\(-28{,}595.5\)</td>
+<td>220.5</td>
+<td>\(-129.7\)</td>
+<td>\(&lt;0.001\)</td>
+</tr>
+<tr>
+<td>AGEMINUS35</td>
+<td>7,366.3</td>
+<td>12.5</td>
+<td>588.1</td>
+<td>\(&lt;0.001\)</td>
+</tr>
+<tr>
+<td>TOPSCHOOL</td>
+<td>50.0</td>
+<td>119.7</td>
+<td>0.4</td>
+<td>0.676</td>
+</tr>
+<tr>
+<td>LARGECITY</td>
+<td>147.9</td>
+<td>119.7</td>
+<td>1.2</td>
+<td>0.217</td>
+</tr>
+<tr>
+<td>MBA</td>
+<td>2,490.9</td>
+<td>119.7</td>
+<td>20.8</td>
+<td>\(&lt;0.001\)</td>
+</tr>
+<tr>
+<td>YEARSEXP</td>
+<td>15,286.6</td>
+<td>7.2</td>
+<td>2132.8</td>
+<td>\(&lt;0.001\)</td>
+</tr>
+</tbody>
+</table>
+<p>可接受的顯著水準為 \(\alpha=0.10\)。重新配適模型之前，應先移除哪個（些）變數？</p>
+<p>(A) 截距　(B) AGEMINUS35、MBA、YEARSEXP　(C) TOPSCHOOL　(D) TOPSCHOOL 與 LARGECITY　(E) YEARSEXP</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) TOPSCHOOL</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>TOPSCHOOL（0.676）與 LARGECITY（0.217）的 \(p\) 值都超過 0.10。但向後刪除<strong>一次只移除一個</strong>，移除 \(p\) 值最大的 TOPSCHOOL，然後重新配適。一個看似不顯著的變數，可能在另一個變數移除後變得顯著（兩者相關時，係數與標準誤都會改變）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>(D) 一次刪兩個是常見的錯誤；截距通常不在刪除考慮之列。</p></div></div></article><article class="exercise" id="q7-4"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.4 題</b><small>・講義 p.115・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>用常態線性模型估計柳橙的銷售量，解釋變數為柳橙的特徵：SIZE（小、中、大）、TYPE（臍橙、坦普橙、果汁橙）、STATE（佛羅里達、亞利桑那、加州）、SEASON（秋、冬、春、夏）。用向後逐步選擇挑出最佳解釋變數。求共配適幾個模型。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>46 個</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>SIZE、TYPE、STATE 各 3 類，各需 2 個指標；SEASON 4 類需 3 個；共 \(k=2+2+2+3=9\)。
+\[1+\sum_{j=0}^{8}(9-j)=1+\frac{9(10)}{2}=46 .\]</p></div></div></article><article class="exercise" id="q7-6"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.6 題</b><small>・講義 p.116・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2019 秋 #40）有 \(p=10\) 個自變數，要用以下兩種程序選擇線性模型：最佳子集選擇（BSS）與向前逐步選擇（FSS）。令 \(N_i\) 為程序 \(i\) 最多要配適的模型數。求 \(N_{\text{FSS}}/N_{\text{BSS}}\)。</p>
+<p>(A) 小於 0.005　(B) \([0.005,0.010)\)　(C) \([0.010,0.050)\)　(D) \([0.050,0.100)\)　(E) 至少 0.100</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 0.0547</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>BSS 考慮所有子集：每個變數放或不放，\(2^{10}=1024\) 個。FSS：\(1+10+9+\cdots+1=1+55=56\) 個。比值 \(56/1024=0.0547\)。</p></div></div></article><article class="exercise" id="q7-9"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.9 題</b><small>・講義 p.116・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（接 7.7）向後逐步選擇選出的兩變數模型是哪一個？</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\{X_1,X_4\}\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
+<li>從四個變數（85）開始，拿掉一個：三變數模型中 RSS 最小的是 \(\{X_1,X_3,X_4\}\)（101），也就是拿掉 \(X_2\)。</li>
+<li>從 \(\{X_1,X_3,X_4\}\) 再拿掉一個：\(\{X_1,X_3\}\) 144、\(\{X_1,X_4\}\) 129、\(\{X_3,X_4\}\) 135，選 \(\{X_1,X_4\}\)。</li>
+</ul>
+<p>最佳的兩變數模型其實是 \(\{X_1,X_2\}\)（118），但 \(X_2\) 第一步就被拿掉了。三種方法在兩變數時選到三個不同的模型：最佳子集 \(\{X_1,X_2\}\)、向前 \(\{X_2,X_4\}\)、向後 \(\{X_1,X_4\}\)。</p></div></div></article><article class="exercise" id="q7-10"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.10 題</b><small>・講義 p.117・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2019 秋 #39）精算師的資料有一個應變數 \(Y\) 與五個自變數 \(\{X_1,\dots,X_5\}\)，用沒有停止規則的向前逐步選擇找最佳子集。部分候選模型：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>RSS</th>
+<th>自變數（\(p\) 值）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>9,823</td>
+<td>\(X_1\) (0.0430)、\(X_2\) (0.0096)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>7,070</td>
+<td>\(X_1\) (0.0464)、\(X_2\) (0.0183)、\(X_3\) (0.0456)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>6,678</td>
+<td>\(X_1\) (0.0412)、\(X_2\) (0.0138)、\(X_4\) (0.0254)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>4,800</td>
+<td>\(X_1\) (0.0444)、\(X_2\) (0.0548)、\(X_5\) (0.0254)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>3,475</td>
+<td>\(X_1,\dots,X_5\)</td>
+</tr>
+</tbody>
+</table>
+<p>程序剛選了模型 1 作為新的候選模型。下一步會加入哪個（些）自變數？</p>
+<p>(A) 不加入　(B) 只有 \(X_3\)　(C) 只有 \(X_4\)　(D) 只有 \(X_5\)　(E) \(X_3,X_4,X_5\)</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 只有 \(X_5\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>向前逐步一次只加一個變數，(A)、(E) 都不對（題目說沒有停止規則，所以一定會加）。在模型 1 上分別加入 \(X_3,X_4,X_5\) 得到模型 2、3、4，選 RSS 最小的模型 4（4,800），也就是加入 \(X_5\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(p\) 值與這一步無關：模型 4 中 \(X_2\) 的 \(p\) 值 0.0548 雖然變大，向前逐步仍然只看 RSS。模型 5 一次加了三個變數，不是這一步的候選。</p></div></div></article><article class="exercise" id="q7-12"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.12 題</b><small>・講義 p.118・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（7.12、7.13 共用）以 25 筆觀察配適常態線性模型，有 4 個解釋變數與截距，RSS 為 132，迴歸的估計殘差變異數為 8。用 James 等人（ISLR）的公式求 Mallows 的 \(C_p\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(C_p=7.84\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(d=4\)，\(\hat\sigma^2=8\)（模型自己就是完整模型）：
+\[C_p=\frac1n\big(\text{RSS}+2d\hat\sigma^2\big)=\frac1{25}\big(132+2(4)(8)\big)=\frac{196}{25}=7.84 .\]
+檢查：\(s^2=132/(25-5)=6.6\)，題目給的 8 和它不同，表示 8 來自另一個更大的完整模型；依題目用 8。</p></div></div></article><article class="exercise" id="q7-13"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.13 題</b><small>・講義 p.118・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（接 7.12）用 Frees 的公式求 Mallows 的 \(C_p\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(C_p=-0.5\)（講義的算法）</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\[C_p=\frac{\text{RSS}}{s^2}-n+2d=\frac{132}{8}-25+2(4)=16.5-25+8=-0.5 .\]
+若依 Mallows 原始定義、\(p\) 算入截距（\(p=5\)），則 \(16.5-25+10=1.5\)。兩種算法對所有模型差一樣的常數 2，選模型的結果相同（7.2 節的說明）。</p></div></div></article><article class="exercise" id="q7-14"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.14 題</b><small>・講義 p.118・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>以 20 筆觀察配適線性迴歸，模型有 5 個解釋變數與截距，RSS 為 84。用 James 等人的公式求完整模型的 Mallows \(C_p\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(C_p=7.2\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>完整模型自己估計 \(\hat\sigma^2\)：\(s^2=\dfrac{84}{20-5-1}=6\)。
+\[C_p=\frac1{20}\big(84+2(5)(6)\big)=\frac{144}{20}=7.2 .\]</p></div></div></article><article class="exercise" id="q7-17"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.17 題</b><small>・講義 p.119・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>以 29 筆觀察配適多個常態線性模型。每個固定解釋變數個數下 RSS 最低的模型：</p>
+<table>
+<thead>
+<tr>
+<th>解釋變數個數</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最低 RSS</td>
+<td>162</td>
+<td>145</td>
+<td>140</td>
+<td>136</td>
+<td>132</td>
+</tr>
+</tbody>
+</table>
+<p>Mallows 的 \(C_p\) 選出的模型有幾個解釋變數？</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>1 個</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat\sigma^2=\dfrac{132}{29-5}=5.5\)，懲罰 \(2\hat\sigma^2=11\)。</p>
+<table>
+<thead>
+<tr>
+<th>\(d\)</th>
+<th>\(C_p=\frac1{29}(\text{RSS}_d+11d)\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>\(162/29=5.586\)</td>
+</tr>
+<tr>
+<td>1</td>
+<td>\(156/29=5.379\)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>\(162/29=5.586\)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>\(169/29=5.828\)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>\(176/29=6.069\)</td>
+</tr>
+</tbody>
+</table>
+<p>最小在 \(d=1\)。捷徑：RSS 的下降 17、5、4、4，只有第一次超過 11。</p></div></div></article><article class="exercise" id="q7-18"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.18 題</b><small>・講義 p.119・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>100 筆觀察的線性迴歸模型，有 10 個變數與截距，RSS 為 64.8，殘差項的估計變異數為 5.5。用 James 等人的公式求 AIC 與 BIC。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>AIC \(=1.748\)，BIC \(=3.181\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\[\text{AIC}=\frac1n\big(\text{RSS}+2d\hat\sigma^2\big)=\frac{64.8+2(10)(5.5)}{100}=\frac{174.8}{100}=1.748,\]
+\[\text{BIC}=\frac1n\big(\text{RSS}+(\ln n)d\hat\sigma^2\big)=\frac{64.8+4.6052(10)(5.5)}{100}=\frac{64.8+253.28}{100}=3.181 .\]</p></div></div></article><article class="exercise" id="q7-19"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.19 題</b><small>・講義 p.120・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（SRM 樣題 #61）對含六個預測變數 F、G、H、I、J、K 的資料配適線性模型。以下關於用 AIC 或 BIC 挑選最佳預測變數集合的敘述，哪些正確？</p>
+<p>I. AIC 與 BIC 直接估計測試誤差。
+II. 在子集 \(\{F,G,H\}\) 與 \(\{I,J,K\}\) 之間選擇時，AIC 與 BIC 一定選同一個。
+III. 樣本大（\(n&gt;7\)）時，BIC 選出的變數個數小於或等於 AIC 選出的個數。</p>
+<p>(A) 都不對　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I. 錯。AIC、BIC 是<strong>間接</strong>估計：對訓練誤差加上懲罰。直接估計測試誤差的是驗證集與交叉驗證。</p>
+<p>II. 對。兩個子集的變數個數都是 3，AIC 對兩者加相同的懲罰，BIC 也是，所以兩者都只比較概似（或 RSS），結果一樣。</p>
+<p>III. 對。BIC 每個參數罰 \(\ln n\)；\(n&gt;7\) 即 \(n\ge8\) 時 \(\ln n\ge\ln8=2.08&gt;2\)，比 AIC 的 2 重，所以 BIC 選的模型不會比 AIC 選的大。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>III 的推理需要「BIC 選的模型不比 AIC 大」：若 BIC 選了比 AIC 更大的模型 \(B\)，則 AIC 在 \(B\) 與 AIC 自己選的 \(A\) 之間會更偏好 \(B\)（懲罰差較小），矛盾。</p></div></div></article><article class="exercise" id="q7-20"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.20 題</b><small>・講義 p.120・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>線性迴歸模型有 \(n\) 筆觀察與 8 個預測變數。你在測試一個用其中 4 個預測變數的子模型。已知：兩個模型都有截距；原模型的訓練 RSS 為 82.8；子模型的訓練 RSS 為 116.2；殘差的變異數用原模型估計；子模型的 AIC 與 BIC 用 James 等人的公式計算；子模型的 AIC 為 105.2458。求子模型的 BIC。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>講義解答印 110.9638；依講義自己的算式應為 119.96（見解析）</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat\sigma^2=\dfrac{82.8}{n-9}\)（8 個變數加截距）。</p>
+<p><strong>題目本身的問題。</strong> 照 (7.4) 的 \(\text{AIC}=\frac1n(116.2+8\hat\sigma^2)\)，數值大約是 \(116.2/n\)，對任何合理的 \(n\) 都遠小於 105.2458，所以這組數字和 (7.4) 不相容。講義的解答其實用的是
+\[\text{AIC}=\frac{n-9}{n}\left(116.2+\frac{2(4)(82.8)}{n-9}\right)=\frac{116.2(n-9)+8(82.8)}{n},\]
+也就是 (7.4) 再乘上 \(n-9\)。</p>
+<p><strong>照講義的算式解 \(n\)。</strong>
+\[105.2458n=116.2n-1045.8+662.4=116.2n-383.4\ \Rightarrow\ n=\frac{383.4}{10.9542}=35 .\]
+<strong>BIC。</strong> 同一個寫法把懲罰的 2 換成 \(\ln35=3.5553\)：
+\[\text{BIC}=\frac{26}{35}\left(116.2+\frac{(\ln35)(4)(82.8)}{26}\right)=\frac{26}{35}(116.2+45.289)=119.96 .\]
+也可以只算差額：\(\text{BIC}-\text{AIC}=\dfrac{(\ln n-2)(4)(82.8)}{n}=\dfrac{1.5553(331.2)}{35}=14.718\)，\(105.2458+14.718=119.964\)。講義印的 110.9638 與這個值只差一個數字，應是誤植。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>這題的重點是：AIC 與 BIC 只差在懲罰係數（2 對 \(\ln n\)），由 AIC 求出 \(n\) 後，加上懲罰的差額就得到 BIC。</p></div></div></article><article class="exercise" id="q7-21"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.21 題</b><small>・講義 p.121・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2018 秋 #39）兩位精算師要用 5 個自變數 \(\{1,2,3,4,5\}\) 與截距 \(\{I\}\) 建立理賠頻率模型。精算師 A 用最佳子集選擇，精算師 B 用向前逐步迴歸。兩人都用 \(R^2\) 比較參數個數相同的模型、用 AIC 比較參數個數不同的模型。所有候選模型的統計量（第二欄是非截距參數個數）：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>個數</th>
+<th>參數</th>
+<th>\(R^2\)</th>
+<th>對數概似</th>
+<th>模型</th>
+<th>個數</th>
+<th>參數</th>
+<th>\(R^2\)</th>
+<th>對數概似</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>I</td>
+<td>0</td>
+<td>0.05</td>
+<td>17</td>
+<td>3</td>
+<td>I,1,2,3</td>
+<td>0.73</td>
+<td>3.35</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>I,1</td>
+<td>0.56</td>
+<td>1.3</td>
+<td>18</td>
+<td>3</td>
+<td>I,1,2,4</td>
+<td>0.71</td>
+<td>3.25</td>
+</tr>
+<tr>
+<td>3</td>
+<td>1</td>
+<td>I,2</td>
+<td>0.57</td>
+<td>1.4</td>
+<td>19</td>
+<td>3</td>
+<td>I,1,2,5</td>
+<td>0.72</td>
+<td>3.3</td>
+</tr>
+<tr>
+<td>4</td>
+<td>1</td>
+<td>I,3</td>
+<td>0.55</td>
+<td>1.2</td>
+<td>20</td>
+<td>3</td>
+<td>I,1,3,4</td>
+<td>0.75</td>
+<td>3.5</td>
+</tr>
+<tr>
+<td>5</td>
+<td>1</td>
+<td>I,4</td>
+<td>0.52</td>
+<td>1.15</td>
+<td>21</td>
+<td>3</td>
+<td>I,1,3,5</td>
+<td>0.76</td>
+<td>3.6</td>
+</tr>
+<tr>
+<td>6</td>
+<td>1</td>
+<td>I,5</td>
+<td>0.51</td>
+<td>1.1</td>
+<td>22</td>
+<td>3</td>
+<td>I,1,4,5</td>
+<td>0.79</td>
+<td>3.9</td>
+</tr>
+<tr>
+<td>7</td>
+<td>2</td>
+<td>I,1,2</td>
+<td>0.61</td>
+<td>2.5</td>
+<td>23</td>
+<td>3</td>
+<td>I,2,3,4</td>
+<td>0.78</td>
+<td>3.7</td>
+</tr>
+<tr>
+<td>8</td>
+<td>2</td>
+<td>I,1,3</td>
+<td>0.64</td>
+<td>2.75</td>
+<td>24</td>
+<td>3</td>
+<td>I,2,3,5</td>
+<td>0.74</td>
+<td>3.4</td>
+</tr>
+<tr>
+<td>9</td>
+<td>2</td>
+<td>I,1,4</td>
+<td>0.63</td>
+<td>2.6</td>
+<td>25</td>
+<td>3</td>
+<td>I,2,4,5</td>
+<td>0.75</td>
+<td>3.45</td>
+</tr>
+<tr>
+<td>10</td>
+<td>2</td>
+<td>I,1,5</td>
+<td>0.69</td>
+<td>3</td>
+<td>26</td>
+<td>3</td>
+<td>I,3,4,5</td>
+<td>0.73</td>
+<td>3.35</td>
+</tr>
+<tr>
+<td>11</td>
+<td>2</td>
+<td>I,2,3</td>
+<td>0.61</td>
+<td>2.5</td>
+<td>27</td>
+<td>4</td>
+<td>I,1,2,3,4</td>
+<td>0.88</td>
+<td>4.2</td>
+</tr>
+<tr>
+<td>12</td>
+<td>2</td>
+<td>I,2,4</td>
+<td>0.62</td>
+<td>2.55</td>
+<td>28</td>
+<td>4</td>
+<td>I,1,2,3,5</td>
+<td>0.8</td>
+<td>3.95</td>
+</tr>
+<tr>
+<td>13</td>
+<td>2</td>
+<td>I,2,5</td>
+<td>0.68</td>
+<td>2.9</td>
+<td>29</td>
+<td>4</td>
+<td>I,1,2,4,5</td>
+<td>0.87</td>
+<td>4.1</td>
+</tr>
+<tr>
+<td>14</td>
+<td>2</td>
+<td>I,3,4</td>
+<td>0.66</td>
+<td>2.8</td>
+<td>30</td>
+<td>4</td>
+<td>I,1,3,4,5</td>
+<td>0.83</td>
+<td>4</td>
+</tr>
+<tr>
+<td>15</td>
+<td>2</td>
+<td>I,3,5</td>
+<td>0.64</td>
+<td>2.75</td>
+<td>31</td>
+<td>4</td>
+<td>I,2,3,4,5</td>
+<td>0.85</td>
+<td>4.05</td>
+</tr>
+<tr>
+<td>16</td>
+<td>2</td>
+<td>I,4,5</td>
+<td>0.6</td>
+<td>2.45</td>
+<td>32</td>
+<td>5</td>
+<td>I,1,2,3,4,5</td>
+<td>0.9</td>
+<td>4.25</td>
+</tr>
+</tbody>
+</table>
+<p>\(\text{AIC}_j\) 是精算師 \(j\) 所選模型的 AIC。求 \(|\text{AIC}_A-\text{AIC}_B|\)。</p>
+<p>(A) 小於 0.15　(B) \([0.15,0.30)\)　(C) \([0.30,0.45)\)　(D) \([0.45,0.60)\)　(E) 至少 0.60</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 0.2</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>AIC \(=-2l+2p\)，\(p\) 是參數個數（非截距個數加 1）。</p>
+<p><strong>精算師 A（最佳子集）</strong>：每個大小取 \(R^2\) 最高者：模型 1、3（0.57）、10（0.69）、22（0.79）、27（0.88）、32。AIC：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>1</th>
+<th>3</th>
+<th>10</th>
+<th>22</th>
+<th>27</th>
+<th>32</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(2p-2l\)</td>
+<td>\(2-0.1\)</td>
+<td>\(4-2.8\)</td>
+<td>\(6-6\)</td>
+<td>\(8-7.8\)</td>
+<td>\(10-8.4\)</td>
+<td>\(12-8.5\)</td>
+</tr>
+<tr>
+<td>AIC</td>
+<td>1.9</td>
+<td>1.2</td>
+<td><strong>0</strong></td>
+<td>0.2</td>
+<td>1.6</td>
+<td>3.5</td>
+</tr>
+</tbody>
+</table>
+<p>最小 0（模型 10）。</p>
+<p><strong>精算師 B（向前逐步）</strong>：從 I 開始；一個變數時 \(R^2\) 最高的是 2（模型 3）；含 2 的兩變數模型 7、11、12、13 中最高的是 13（I,2,5，0.68）；含 2,5 的三變數模型 19、24、25 中最高的是 25（0.75）；含 2,4,5 的四變數模型 29、31 中最高的是 29（0.87）；最後 32。AIC：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>1</th>
+<th>3</th>
+<th>13</th>
+<th>25</th>
+<th>29</th>
+<th>32</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(2p-2l\)</td>
+<td>\(2-0.1\)</td>
+<td>\(4-2.8\)</td>
+<td>\(6-5.8\)</td>
+<td>\(8-6.9\)</td>
+<td>\(10-8.2\)</td>
+<td>\(12-8.5\)</td>
+</tr>
+<tr>
+<td>AIC</td>
+<td>1.9</td>
+<td>1.2</td>
+<td><strong>0.2</strong></td>
+<td>1.1</td>
+<td>1.8</td>
+<td>3.5</td>
+</tr>
+</tbody>
+</table>
+<p>最小 0.2（模型 13）。</p>
+<p>差 \(|0-0.2|=0.2\)。B 第一步選了 2，就永遠到不了不含 2 的模型 10。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不要對所有 32 個模型直接比 AIC：題目規定同樣大小先用 \(R^2\) 篩選。（這題剛好兩者的結果一樣，但 7.23 的 B、C 就不同了。）</p></div></div></article><article class="exercise" id="q7-22"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.22 題</b><small>・講義 p.121・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>用線性迴歸配適了 5 個模型，對數概似如下：</p>
+<table>
+<thead>
+<tr>
+<th>模型中的變數</th>
+<th>對數概似</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(X_1,X_2\)</td>
+<td>\(-15.785\)</td>
+</tr>
+<tr>
+<td>\(X_1,X_2,X_4\)</td>
+<td>\(-14.472\)</td>
+</tr>
+<tr>
+<td>\(X_1,X_3,X_4\)</td>
+<td>\(-13.015\)</td>
+</tr>
+<tr>
+<td>\(X_1,X_3,X_4,X_5\)</td>
+<td>\(-12.500\)</td>
+</tr>
+<tr>
+<td>\(X_2,X_3,X_4,X_5\)</td>
+<td>\(-12.021\)</td>
+</tr>
+</tbody>
+</table>
+<p>依 AIC，哪個模型較好？</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\{X_1,X_3,X_4\}\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>用 Frees 的 AIC \(=-2l+2p\)，線性迴歸的參數個數 \(p=\) 變數個數 \(+\) 截距 \(+\sigma^2\)。參數個數相同時，對數概似高的 AIC 一定較小，所以第 2 個模型輸給第 3 個、第 4 個輸給第 5 個，只需比較三個：
+\[\{X_1,X_2\}:\ 2(15.785)+2(4)=39.570\]
+\[\{X_1,X_3,X_4\}:\ 2(13.015)+2(5)=36.030\]
+\[\{X_2,X_3,X_4,X_5\}:\ 2(12.021)+2(6)=36.042\]
+第三個模型最小。用 ISLR 的算法參數個數少 1 或 2，但對所有模型相同，結論一樣。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(\{X_1,X_3,X_4\}\) 與 \(\{X_2,X_3,X_4,X_5\}\) 只差 0.012：後者多一個參數，對數概似只高 0.994，不到 AIC 要求的 1（\(-2l\) 要降超過 2 才抵得過懲罰）。</p></div></div></article><article class="exercise" id="q7-24"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.24 題</b><small>・講義 p.122・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>以 70 筆觀察用線性迴歸配適了 5 個模型，對數概似如下：</p>
+<table>
+<thead>
+<tr>
+<th>模型中的變數</th>
+<th>對數概似</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(X_1,X_2\)</td>
+<td>\(-120.1\)</td>
+</tr>
+<tr>
+<td>\(X_1,X_2,X_4\)</td>
+<td>\(-119.5\)</td>
+</tr>
+<tr>
+<td>\(X_1,X_3,X_4\)</td>
+<td>\(-118.2\)</td>
+</tr>
+<tr>
+<td>\(X_1,X_3,X_4,X_5\)</td>
+<td>\(-116.6\)</td>
+</tr>
+<tr>
+<td>\(X_1,X_2,X_3,X_4,X_5\)</td>
+<td>\(-113.8\)</td>
+</tr>
+</tbody>
+</table>
+<p>依 BIC，哪個模型較好？</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\{X_1,X_2\}\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Frees 的 BIC \(=-2l+p\ln n\)，\(p=\) 變數個數 \(+2\)（截距與 \(\sigma^2\)），\(\ln70=4.2485\)。第 2 個模型和第 3 個參數一樣多但概似較低，可以略過。
+\[\{X_1,X_2\}:\ 240.2+4(4.2485)=257.194\]
+\[\{X_1,X_3,X_4\}:\ 236.4+5(4.2485)=257.642\]
+\[\{X_1,X_3,X_4,X_5\}:\ 233.2+6(4.2485)=258.691\]
+\[\{X_1,\dots,X_5\}:\ 227.6+7(4.2485)=257.339\]
+最小的是 \(\{X_1,X_2\}\)（257.194）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>若用 AIC（每個參數罰 2），全模型 \(227.6+14=241.6\) 最小；BIC 的懲罰重得多，選了最小的模型。</p></div></div></article><article class="exercise" id="q7-25"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.25 題</b><small>・講義 p.123・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>以 50 筆觀察為基礎的迴歸模型：(i) 有 3 個變數與截距；(ii) 殘差標準誤為 82.4。用 Frees 的公式求 AIC。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>AIC \(=589.05\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>由 (7.3)，\(n=50\)、\(k=3\)：
+\[\text{AIC}=n\ln s^2+n\ln(2\pi)+n+k+3=50\ln(82.4^2)+50\ln(2\pi)+50+3+3\]
+\[=50(8.82317)+50(1.83788)+56=441.159+91.894+56=589.05 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>是 \(\ln s^2\)，不是 \(\ln s\)；\(82.4\) 是標準誤，要先平方。</p></div></div></article><article class="exercise" id="q7-26"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.26 題</b><small>・講義 p.123・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>以 28 筆觀察做迴歸 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\beta_4x_{i4}+\varepsilon_i\)。用 Frees 的公式算出的 AIC 為 111.03。求 BIC。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>BIC \(=119.02\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>AIC \(=-2l+2p\)、BIC \(=-2l+p\ln n\)，兩者的 \(-2l\) 相同。參數個數 \(p=5\) 個係數 \(+\sigma^2=6\)：
+\[\text{BIC}=\text{AIC}-2p+p\ln n=111.03-12+6\ln28=99.03+6(3.3322)=119.02 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(\sigma^2\) 也算一個參數；只算 5 個會得到 \(111.03-10+5\ln28=117.69\)。</p></div></div></article><article class="exercise" id="q7-27"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.27 題</b><small>・講義 p.123・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（SRM 2015 秋 #39）五個候選模型的結果：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>包含的參數</th>
+<th>\(R^2\)</th>
+<th>AIC</th>
+<th>BIC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Gender</td>
+<td>0.0162</td>
+<td>7532</td>
+<td>7899</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Age</td>
+<td>0.0230</td>
+<td>7524</td>
+<td>7865</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Age + Gender</td>
+<td>0.0390</td>
+<td>7508</td>
+<td>7885</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Age + Gender + Income</td>
+<td>0.0755</td>
+<td>7469</td>
+<td>7645</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Age + Gender + Income + Uninsured</td>
+<td>0.0762</td>
+<td>7471</td>
+<td>7659</td>
+</tr>
+</tbody>
+</table>
+<p>依上述準則，哪個敘述正確？</p>
+<p>(A) 依 \(R^2\) 模型 1 最好　(B) 依 AIC 模型 1 最好　(C) 依 \(R^2\) 模型 4 最好　(D) 依 AIC 模型 4 最好　(E) 依 BIC 模型 5 最好</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(R^2\) 越大越好：模型 5（0.0762）最好，(A)、(C) 錯。AIC、BIC 越小越好：AIC 最小 7469、BIC 最小 7645，都是模型 4，(B)、(E) 錯，(D) 對。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(R^2\) 在巢狀模型間只增不減，所以永遠是最大的模型最好，不能用來選模型大小。</p></div></div></article><article class="exercise" id="q7-28"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.28 題</b><small>・講義 p.123・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>迴歸的 ANOVA 表：迴歸平方和 348、自由度 3；誤差平方和 21、自由度 12。求調整 \(R^2\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>調整 \(R^2=0.9289\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(n-1=3+12=15\)，TSS \(=348+21=369\)。
+\[\text{調整 }R^2=1-\frac{\text{RSS}/(n-d-1)}{\text{TSS}/(n-1)}=1-\frac{21/12}{369/15}=1-\frac{1.75}{24.6}=0.9289 .\]
+對照 \(R^2=348/369=0.9431\)。</p></div></div></article><article class="exercise" id="q7-29"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.29 題</b><small>・講義 p.123・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（120-81-98:9）迴歸平方和 1115.11、自由度 2；誤差平方和 138.89、自由度 5。求調整 \(R^2\)。</p>
+<p>(A) 0.84　(B) 0.89　(C) 0.93　(D) 0.97　(E) 1.00</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A) 0.845</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(n-1=2+5=7\)，TSS \(=1254\)：
+\[\text{調整 }R^2=1-\frac{138.89/5}{1254/7}=1-\frac{27.778}{179.143}=1-0.15506=0.845 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(R^2=1115.11/1254=0.889\) 是選項 (B)。</p></div></div></article><article class="exercise" id="q7-30"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.30 題</b><small>・講義 p.123・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（120-83-98:4）以 11 筆觀察配適 \(Y_i=\alpha+\beta X_i+\varepsilon_i\)，\(R^2=0.85\)。求調整 \(R^2\)。</p>
+<p>(A) 0.77　(B) 0.79　(C) 0.80　(D) 0.81　(E) 0.83</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E) 0.8333</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(d=1\)，由 (7.7)：
+\[\text{調整 }R^2=1-(1-0.85)\cdot\frac{11-1}{11-1-1}=1-0.15\cdot\frac{10}{9}=0.8333 .\]</p></div></div></article><article class="exercise" id="q7-31"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.31 題</b><small>・講義 p.124・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2018 秋 #30）以統計軟體做房價中位數對 12 個預測變數加截距的迴歸，部分輸出：殘差標準誤 4.74，自由度 493；Multiple R-squared 0.7406；\(F\) 統計量 117.3，自由度 12 與 493；\(p\) 值 \(&lt;2.2\times10^{-16}\)。求調整 \(R^2\)。</p>
+<p>(A) 小於 0.70　(B) \([0.70,0.72)\)　(C) \([0.72,0.74)\)　(D) \([0.74,0.76)\)　(E) 至少 0.76</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 0.7343</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>誤差自由度 \(n-d-1=493\)，\(d=12\)，所以 \(n=506\)、\(n-1=505\)：
+\[\text{調整 }R^2=1-(1-0.7406)\cdot\frac{505}{493}=1-0.2594(1.02434)=0.7343 .\]</p></div></div></article><article class="exercise" id="q7-32"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.32 題</b><small>・講義 p.124・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（4-S00:31）以 48 筆觀察配適 \(Y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\varepsilon_i\)。ANOVA 表：迴歸平方和 103,658、自由度 3；誤差平方和 69,204、自由度 44。求調整 \(R^2\)。</p>
+<p>(A) 0.57　(B) 0.58　(C) 0.59　(D) 0.60　(E) 0.61</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A) 0.572</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>TSS \(=103{,}658+69{,}204=172{,}862\)，\(n-1=47\)：
+\[\text{調整 }R^2=1-\frac{69{,}204/44}{172{,}862/47}=1-\frac{1572.82}{3677.91}=1-0.42764=0.572 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(R^2=103{,}658/172{,}862=0.600\) 是選項 (D)。</p></div></div></article><article class="exercise" id="q7-33"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.33 題</b><small>・講義 p.124・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>線性迴歸 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i\)，已知：(i) \(F=96\)；(ii) 調整 \(R^2=0.95\)；(iii) \(\sum(\hat y_i-\bar y)^2=1000\)；(iv)
+\[(X&#x27;X)^{-1}=\begin{pmatrix}3&amp;8&amp;12\\8&amp;2&amp;0\\12&amp;0&amp;1\end{pmatrix}.\]
+求 \(\beta_1\) 最短的 95% 對稱信賴區間的寬度。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>寬度 \(=14.885\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>未知的 \(n\) 要先由 \(F\) 與調整 \(R^2\) 解出來。</p>
+<p><strong>第一步：用調整 \(R^2\) 表示 \(1-R^2\)。</strong> \(d=2\)：
+\[0.95=1-(1-R^2)\frac{n-1}{n-3}\ \Rightarrow\ 1-R^2=\frac{0.05(n-3)}{n-1}.\qquad(*)\]
+<strong>第二步：用 \(F\)。</strong> 分子分母同除以 TSS：
+\[F=\frac{R^2/2}{(1-R^2)/(n-3)}=\frac{(n-3)}{2}\cdot\frac{R^2}{1-R^2}=96 .\]
+由 \((*)\)，\(\dfrac{R^2}{1-R^2}=\dfrac{1}{1-R^2}-1=\dfrac{n-1}{0.05(n-3)}-1\)。代入：
+\[\frac{n-3}{2}\left(\frac{n-1}{0.05(n-3)}-1\right)=\frac{20(n-1)-(n-3)}{2}=\frac{19n-17}{2}=96\ \Rightarrow\ n=11 .\]
+<strong>第三步：\(s^2\)。</strong> \(1-R^2=\dfrac{0.05(8)}{10}=0.04\)，\(R^2=0.96\)。Regression SS \(=1000\)，所以 TSS \(=1000/0.96\)、
+\[\text{Error SS}=\text{TSS}(1-R^2)=1000\cdot\frac{0.04}{0.96}=41.667,\qquad s^2=\frac{41.667}{11-3}=5.2083 .\]
+<strong>第四步：信賴區間。</strong> \(\widehat{\operatorname{Var}}(b_1)=s^2[(X&#x27;X)^{-1}]_{22}=5.2083(2)=10.4167\)，\(t_{0.025,8}=2.306\)：
+\[\text{寬度}=2(2.306)\sqrt{10.4167}=2(2.306)(3.2275)=14.885 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(\beta_1\) 對應 \((X&#x27;X)^{-1}\) 的第 2 個對角元素（第 1 個是截距）；\(t\) 的自由度是 \(n-3=8\)。</p></div></div></article><article class="exercise" id="q7-35"><div class="ex-head"><span class="ex-tag">練習</span><b>第 7.35 題</b><small>・講義 p.125・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>有以下兩個迴歸模型：(A) \(y_i=\beta_0+\beta_1x_{i1}+\cdots+\beta_kx_{ik}+\varepsilon_i\)；(B) \(y_i^*=\beta_0^*+\beta_1^*x_{i1}+\cdots+\beta_k^*x_{ik}+\varepsilon_i^*\)，其中 \(y_i^*=2y_i\)。下列哪些敘述正確？</p>
+<ol>
+<li>兩個模型的迴歸標準誤相同。</li>
+<li>兩個模型的調整 \(R^2\) 相同。</li>
+<li>兩個模型的 \(F\) 統計量相同。</li>
+</ol></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>只有 2、3</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\mathbf b^*=(X&#x27;X)^{-1}X&#x27;(2\mathbf y)=2\mathbf b\)，配適值與殘差也都乘 2，所以 Total SS、Regression SS、Error SS 全部乘 4。
+1. 錯：\(s=\sqrt{\text{Error SS}/(n-k-1)}\) 乘 2。
+2. 對：調整 \(R^2\) 是 \(\text{Error SS}/\text{Total SS}\) 的函數，4 倍消掉。
+3. 對：\(F=\dfrac{\text{Reg SS}/k}{\text{Error SS}/(n-k-1)}\)，4 倍消掉。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>同理 \(t\) 統計量、\(R^2\) 也都不變；係數與標準誤都乘 2。</p></div></div></article></section><div class="navfoot"><a href="ch06.html">← 第 6 章</a><a href="ch08.html">第 8 章 →</a></div></main></body></html>

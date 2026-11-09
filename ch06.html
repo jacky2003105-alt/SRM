@@ -1,8 +1,403 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第 6 章　重抽樣：驗證集與交叉驗證｜SRM 精算筆記</title><link rel="stylesheet" href="assets/site.css"><link rel="stylesheet" href="assets/katex/katex.min.css"><script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/site.js"></script></head><body><nav aria-label="課程導覽"><a class="brand" href="index.html">SRM 精算筆記</a><label for="chapter">章節</label><select id="chapter"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html" selected>第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題與參考解答</option></select><a href="practice.html">題庫</a></nav><main><header><div class="kicker">SRM · 第 06 章</div><h1>重抽樣：驗證集與交叉驗證</h1><p>模型的用途是預測沒看過的保戶。哪些資料能用來訓練，哪些要留給評分？</p><div class="chips"><a href="pdf/ch06.pdf">下載本章 PDF</a><a href="practice.html#chapter6">習題索引</a></div></header><section class="panel"><h2>本章閱讀順序</h2><ol><li><a href="#s1">為何要留下驗證集？SSPE 與 MSE</a></li><li><a href="#s2">逐一留出：LOOCV、leverage 與 PRESS</a></li><li><a href="#s3">K 折驗證：如何比較模型，而不是比較兩次抽籤？</a></li></ol><div class="minititle">優先練習 · 10 題</div><div class="chips"><a href="#q6-1">6.1</a><a href="#q6-2">6.2</a><a href="#q6-3">6.3</a><a href="#q6-4">6.4</a><a href="#q6-5">6.5</a><a href="#q6-6">6.6</a><a href="#q6-7">6.7</a><a href="#q6-8">6.8</a><a href="#q6-9">6.9</a><a href="#q6-10">6.10</a></div></section><article class="unit" id="s1"><div class="kicker">概念 01</div><h2>為何要留下驗證集？SSPE 與 MSE</h2><figure><svg class="chart" role="img" aria-label="五折驗證時每輪保留一折，其餘四折訓練" viewBox="0 0 580 225" xmlns="http://www.w3.org/2000/svg"><rect width="580" height="225" rx="9" fill="#f3f6ee"/><g font-family="sans-serif" font-size="15" fill="#324b43"><text x="12" y="33">第 1 輪</text><rect x="87" y="12" width="88" height="30" rx="3" fill="#a76f36"/><text text-anchor="middle" x="131" y="33" fill="#fff">驗證</text><rect x="181" y="12" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="225" y="33" fill="#324b43">訓練</text><rect x="275" y="12" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="319" y="33" fill="#324b43">訓練</text><rect x="369" y="12" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="413" y="33" fill="#324b43">訓練</text><rect x="463" y="12" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="507" y="33" fill="#324b43">訓練</text><text x="12" y="72">第 2 輪</text><rect x="87" y="51" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="131" y="72" fill="#324b43">訓練</text><rect x="181" y="51" width="88" height="30" rx="3" fill="#a76f36"/><text text-anchor="middle" x="225" y="72" fill="#fff">驗證</text><rect x="275" y="51" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="319" y="72" fill="#324b43">訓練</text><rect x="369" y="51" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="413" y="72" fill="#324b43">訓練</text><rect x="463" y="51" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="507" y="72" fill="#324b43">訓練</text><text x="12" y="111">第 3 輪</text><rect x="87" y="90" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="131" y="111" fill="#324b43">訓練</text><rect x="181" y="90" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="225" y="111" fill="#324b43">訓練</text><rect x="275" y="90" width="88" height="30" rx="3" fill="#a76f36"/><text text-anchor="middle" x="319" y="111" fill="#fff">驗證</text><rect x="369" y="90" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="413" y="111" fill="#324b43">訓練</text><rect x="463" y="90" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="507" y="111" fill="#324b43">訓練</text><text x="12" y="150">第 4 輪</text><rect x="87" y="129" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="131" y="150" fill="#324b43">訓練</text><rect x="181" y="129" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="225" y="150" fill="#324b43">訓練</text><rect x="275" y="129" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="319" y="150" fill="#324b43">訓練</text><rect x="369" y="129" width="88" height="30" rx="3" fill="#a76f36"/><text text-anchor="middle" x="413" y="150" fill="#fff">驗證</text><rect x="463" y="129" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="507" y="150" fill="#324b43">訓練</text><text x="12" y="189">第 5 輪</text><rect x="87" y="168" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="131" y="189" fill="#324b43">訓練</text><rect x="181" y="168" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="225" y="189" fill="#324b43">訓練</text><rect x="275" y="168" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="319" y="189" fill="#324b43">訓練</text><rect x="369" y="168" width="88" height="30" rx="3" fill="#d7e5d6"/><text text-anchor="middle" x="413" y="189" fill="#324b43">訓練</text><rect x="463" y="168" width="88" height="30" rx="3" fill="#a76f36"/><text text-anchor="middle" x="507" y="189" fill="#fff">驗證</text></g></svg><figcaption>五個直欄是互斥的資料折；沿著任一欄往下看，每一折當一次驗證資料、四次訓練資料。</figcaption></figure><p>訓練平方和回答「模型能否貼合已看過的資料」。保費決策更在意的是新保戶，因此要把一部分資料留在訓練程序之外。將資料分為訓練集 \(T\) 與驗證集 \(V\)，只用 \(T\) 估計模型，再代入 \(V\) 的特徵：</p>
-<p>\[SSPE=\sum_{i\in V}(y_i-\hat f_T(x_i))^2,\qquad MSE_V=\frac{SSPE}{|V|}.\]</p>
-<p>同一批驗證資料的分母相同，用 SSPE 與 MSE 比較會給相同排名。但兩批資料大小不同，不能直接把誤差總和比較成模型好壞。單次切分有兩個代價：恰巧抽到難預測的驗證樣本會使評分不穩；訓練集較小，誤差也可能高估最後用全資料配適時的誤差。用驗證集反覆挑模型後，它已參與選擇；正式報告泛化表現可再留獨立測試集。</p><div class="related"><small>接著讀：<a class="concept" data-definition="一筆觀察在解釋變數空間的位置有多特殊；不是殘差本身。" data-target="第 5 章 · 槓桿值" href="ch05.html#s2">槓桿值</a> · <a class="concept" data-definition="從候選解釋變數中選子集合，使模型在預測與簡潔間取得平衡。" data-target="第 7 章 · 子集選擇" href="ch07.html#s1">子集選擇</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q6-1">6.1</a></div></article><article class="exercise" id="q6-1"><button class="toggle" aria-controls="a-q6-1" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 6.1</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q6-1">題目連結</a></small><p>前 3 個點 (8,10)、(12,20)、(16,30) 訓練直線，其餘 (18,50)、(24,55) 驗證，求 SSPE。</p><div class="solution" id="a-q6-1"><strong class="label">參考解答</strong><p>250。斜率 \((20-10)/(12-8)=2.5\)，截距 \(10-2.5(8)=-10\)；兩個預測為 35、50，所以 \(15^2+5^2=250\)。</p><strong class="label">解析</strong><p>若問 MSE 才除以 2。驗證點不得用來估斜率。</p></div></article><article class="unit" id="s2"><div class="kicker">概念 02</div><h2>逐一留出：LOOCV、leverage 與 PRESS</h2><p><strong>留一交叉驗證</strong>（leave-one-out cross-validation）每次留下一筆，其餘 \(n-1\) 筆估模型。每筆各當一次測試點：\(CV_{(n)}=n^{-1}\sum_i(y_i-\hat y_{(-i)})^2\)。刪除一筆後，原來很有影響力的觀察可能使整條線大幅移動；為什麼不能直接用普通殘差？</p>
-<p>OLS 下令 \(A=X^\top X\)、\(h_i=x_i^\top A^{-1}x_i\)、\(e_i=y_i-x_i^\top\hat\beta\)。從刪除第 \(i\) 筆後的常態方程，扣除全樣本常態方程，可得 \(A(\hat\beta-\hat\beta_{(-i)})=x_i(y_i-x_i^\top\hat\beta_{(-i)})\)。左乘 \(x_i^\top A^{-1}\)：兩個預測值之差等於刪除殘差乘 \(h_i\)。於是</p>
-<p>\[y_i-\hat y_{(-i)}=e_i+h_i(y_i-\hat y_{(-i)})\quad\Longrightarrow\quad y_i-\hat y_{(-i)}=\frac{e_i}{1-h_i}.\]</p>
-<p>上式假設刪除後設計仍滿秩，\(h_i&lt;1\)。\(PRESS=\sum_i[e_i/(1-h_i)]^2\)，除以 \(n\) 才是 LOOCV。高槓桿值的點可能把自己的配適值拉近自己，使表面殘差過小。<strong>即：留一法問的是「沒有看過這個人，還猜得準嗎？」</strong> 詳見<a href="ch05.html">槓桿值與診斷</a>。</p><p><strong>CA 複習例｜不用重新估 n 次，不等於用訓練 MSE。</strong> 真正被比較的是每一筆「沒有被模型看過」的預測。OLS 只是用槓桿修正從一次配適精確重建刪除預測。若殘差為 2、槓桿為 0.8，普通平方殘差是 4，留一平方誤差卻是 \((2/0.2)^2=100\)。換成一般非線性方法，這個快捷公式不能直接沿用。</p><div class="related"><small>接著讀：<a class="concept" data-definition="一筆觀察在解釋變數空間的位置有多特殊；不是殘差本身。" data-target="第 5 章 · 槓桿值" href="ch05.html#s2">槓桿值</a> · <a class="concept" data-definition="從候選解釋變數中選子集合，使模型在預測與簡潔間取得平衡。" data-target="第 7 章 · 子集選擇" href="ch07.html#s1">子集選擇</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q6-2">6.2</a><a href="#q6-3">6.3</a><a href="#q6-10">6.10</a></div></article><article class="exercise" id="q6-2"><button class="toggle" aria-controls="a-q6-2" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 6.2</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q6-2">題目連結</a></small><p>含截距與 3 個解釋變數，84 筆槓桿相等，RSS 為 1090，求 LOOCV。</p><div class="solution" id="a-q6-2"><strong class="label">參考解答</strong><p>\(h=4/84=1/21\)，所以 \(CV=1090/[84(1-1/21)^2]=14.30625\)。</p><strong class="label">解析</strong><p>帽子矩陣的跡等於係數個數。槓桿相等才可把共同分母移出加總。</p></div></article><article class="exercise" id="q6-3"><button class="toggle" aria-controls="a-q6-3" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 6.3</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q6-3">題目連結</a></small><p>殘差依序 3、−1、−3、−3、4，槓桿為 0.6、0.3、0.2、0.3、0.6，求 PRESS。</p><div class="solution" id="a-q6-3"><strong class="label">參考解答</strong><p>約 190.72。逐筆除以 \(1-h_i\) 再平方：\((3/.4)^2+(-1/.7)^2+(-3/.8)^2+(-3/.7)^2+(4/.4)^2\)。</p><strong class="label">解析</strong><p>PRESS 是總和，若除以 5 就變成 LOOCV。</p></div></article><article class="exercise" id="q6-10"><button class="toggle" aria-controls="a-q6-10" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 6.10</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q6-10">題目連結</a></small><p>觀察值為 (1.55,1.55,1.60,1.95)，按觀察 1 至 4，甲的留一預測為 (1.70,1.55,1.10,1.80)，乙為 (1.60,1.30,1.30,Z)。何種 Z 使乙較佳？求上界。</p><div class="solution" id="a-q6-10"><strong class="label">參考解答</strong><p>甲的 PRESS 為 0.295，乙為 \(0.155+(Z-1.95)^2\)。乙嚴格勝出須 \(|Z-1.95|&lt;\sqrt{0.14}\)，即 \(1.5758&lt;Z&lt;2.3242\)（約）；上界約 2.3242，選 D。</p><strong class="label">解析</strong><p>取每次被留出那一筆的預測，不使用同折訓練點的預測。在邊界是平手，嚴格不等式的上界不是可達的最大值。</p></div></article><article class="unit" id="s3"><div class="kicker">概念 03</div><h2>K 折驗證：如何比較模型，而不是比較兩次抽籤？</h2><p>將資料分成 \(K\) 個互斥折 \(V_1,\ldots,V_K\)。第 \(j\) 次用其餘折訓練，對 \(V_j\) 評分。等大折的 \(CV_{(K)}=K^{-1}\sum_j MSE_j\)；大小不同且欲讓每筆等權時用 \(\sum_j |V_j|MSE_j/n\)。每筆在測試集出現一次，在訓練集出現 \(K-1\) 次。比較兩模型時沿用相同折，避免把切分難易誤認為模型優劣。</p>
-<p>\(K=n\) 就是 LOOCV。其優點是每次訓練規模接近完整訓練集、給定資料及確定性演算法後沒有隨機切分差異。缺點是不同訓練集重疊很大，各次誤差相關，所以對重抽資料而言，最終誤差估計不一定最穩。5 折、10 折常用來權衡訓練規模、估計變異及重算成本；偏差變異的排序是常見趨勢，不是對所有資料的定理。</p>
-<p>補值、標準化、選變數都要在各折的訓練部分完成。若同一保戶有多筆資料，合理做法可能是按保戶分組；若是預測未來，應依時間先後驗證，不能把未來資訊交給過去。</p><div class="related"><small>接著讀：<a class="concept" data-definition="一筆觀察在解釋變數空間的位置有多特殊；不是殘差本身。" data-target="第 5 章 · 槓桿值" href="ch05.html#s2">槓桿值</a> · <a class="concept" data-definition="從候選解釋變數中選子集合，使模型在預測與簡潔間取得平衡。" data-target="第 7 章 · 子集選擇" href="ch07.html#s1">子集選擇</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q6-4">6.4</a><a href="#q6-5">6.5</a><a href="#q6-6">6.6</a><a href="#q6-7">6.7</a><a href="#q6-8">6.8</a><a href="#q6-9">6.9</a></div></article><article class="exercise" id="q6-4"><button class="toggle" aria-controls="a-q6-4" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 6.4</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q6-4">題目連結</a></small><p>五個等大折的 MSE 為 842、759、805、738、824，求五折 CV。</p><div class="solution" id="a-q6-4"><strong class="label">參考解答</strong><p>\(CV=(842+759+805+738+824)/5=793.6\)。</p><strong class="label">解析</strong><p>每筆只被拿來驗證一次；各折等大時可直接平均。</p></div></article><article class="exercise" id="q6-5"><button class="toggle" aria-controls="a-q6-5" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 6.5</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q6-5">題目連結</a></small><p>依一般考題的比較，將留一、5 折、10 折依測試誤差估計的偏差與變異由低排到高。</p><div class="solution" id="a-q6-5"><strong class="label">參考解答</strong><p>偏差：留一、10 折、5 折。變異的典型順序：5 折、10 折、留一。</p><strong class="label">解析</strong><p>較大 K 的訓練樣本較接近最終規模，較少高估新模型誤差；不同折卻共享較多樣本。此處討論誤差估計的變異，不是單一模型係數的變異。</p></div></article><article class="exercise" id="q6-6"><button class="toggle" aria-controls="a-q6-6" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 6.6</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q6-6">題目連結</a></small><p>判斷：① 留一是 K 折特例；② K 小於 n 時 K 折比留一變異高；③ 留一比單次切分更傾向高估測試誤差。</p><div class="solution" id="a-q6-6"><strong class="label">參考解答</strong><p>僅①正確，A。</p><strong class="label">解析</strong><p>留一每次訓練 n−1 筆，切分法常只有部分資料訓練；②③把常見比較方向顛倒。</p></div></article><article class="exercise" id="q6-7"><button class="toggle" aria-controls="a-q6-7" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 6.7</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q6-7">題目連結</a></small><p>比較留一與 5 折：哪個理由支持留一？選項考查單折是否足夠、簡單性、計算代價、小訓練集偏差與相近訓練集的相關性。</p><div class="solution" id="a-q6-7"><strong class="label">參考解答</strong><p>選 D：用太小的訓練集估計最終模型的誤差，較容易高估。</p><strong class="label">解析</strong><p>計算昂貴和訓練集重疊度高反而是保留 5 折的理由。</p></div></article><article class="exercise" id="q6-8"><button class="toggle" aria-controls="a-q6-8" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 6.8</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q6-8">題目連結</a></small><p>兩房屋理賠模型各折 MSE：甲 33415、38741、32112、37210、29501；乙 26666、38554、39662、36756、30303。甲的截距及重置成本（千元）、屋頂面積、降雨指數、成本×面積係數為 212、0.03、0.15、120、0.001。用選出的模型預測成本 500 千元、面積 2000、降雨 0.89、浴室 3 間的損失。</p><div class="solution" id="a-q6-8"><strong class="label">參考解答</strong><p>甲平均 34195.8，乙平均 34388.2，選甲。預測 \(212+.03(500)+.15(2000)+120(.89)+.001(500)(2000)=1633.8\)，C。</p><strong class="label">解析</strong><p>要比較驗證 MSE，不是訓練 R²。浴室數不是甲模型的變數，不能擅自代入。</p></div></article><article class="exercise" id="q6-9"><button class="toggle" aria-controls="a-q6-9" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 6.9</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q6-9">題目連結</a></small><p>50 筆觀察、22 個解釋變數，做 10 折驗證時第一筆觀察進入訓練集幾次？</p><div class="solution" id="a-q6-9"><strong class="label">參考解答</strong><p>9 次，落在 C 的區間。</p><strong class="label">解析</strong><p>第一筆只在所屬的那一折被留出，其他九次皆進入訓練。變數個數不影響次數。</p></div></article><article class="unit" id="terms"><div class="kicker">TERMS</div><h2>本章中英術語</h2><table><thead><tr><th>中文</th><th>English</th><th>解題時的意思</th></tr></thead><tbody><tr><td>驗證集</td><td>validation set</td><td>未用來估該模型、用於比較預測的資料。</td></tr><tr><td>留一交叉驗證</td><td>leave-one-out cross-validation</td><td>每次留一筆當測試點。</td></tr><tr><td>預測殘差平方和</td><td>PRESS</td><td>所有留一預測誤差的平方和。</td></tr></tbody></table></article><section class="panel"><h2>用模擬考複習本章</h2><div class="chips"><a href="exams.html#exam3">第 3 回 · 題 4</a><a href="exams.html#exam3">第 3 回 · 題 21</a><a href="exams.html#exam5">第 5 回 · 題 20</a><a href="exams.html#exam6">第 6 回 · 題 5</a><a href="exams.html#exam6">第 6 回 · 題 34</a></div></section><div class="navfoot"><a href="ch05.html">← 上一章</a><a href="ch07.html">下一章 →</a></div><footer>SRM 精算考試中文研讀筆記 · 依所附第四版教材章序編寫，中文解析為參考解答。</footer></main></body></html>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 6 章　重抽樣：驗證集與交叉驗證｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
+<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html" selected>第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 6 章</div><h1>重抽樣：驗證集與交叉驗證</h1><p class="ch-sub">前幾章用古典統計的方式評估迴歸：先做假設，再檢定假設。本章改用電腦直接估計「模型對新資料預測得多準」，方法適用於任何模型。重點是驗證集方法、留一交叉驗證（含最小平方的捷徑公式與推導）、\(k\) 折交叉驗證，以及它們在偏差與變異數上的取捨。</p><div class="chips"><a href="pdf/ch06.pdf">下載本章 PDF</a><a href="#exercises">章末習題（10 題）</a></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">6.1 驗證集方法</a></li><li><a href="#s2">6.2 交叉驗證</a></li></ol><p>本章對應講義第 6 課，讀本是 Frees 5.6.2～5.6.3 節與 ISLR 5.1 節。考題以觀念題為主（哪種方法偏差大、變異數大），計算題則是 SSPE、LOOCV 捷徑公式與 PRESS。</p>
+<h3>為什麼需要測試資料</h3>
+<p>模型的好壞看的是<strong>預測新資料</strong>的能力。只要放進夠多變數，模型就能把訓練資料配得幾乎完美，但這樣的模型用在別的資料上多半表現很差（第 1 章的<a class="concept" href="ch01.html#s1" data-definition="模型好不好要看沒有參與估計的資料上的誤差；訓練 MSE 會隨彈性一路下降，不能拿來選模型。" data-target="訓練 MSE 與測試 MSE">訓練 MSE 與測試 MSE</a>）。ISLR 反覆強調一件事：期望的測試 MSE 可以拆成<strong>偏差平方＋變異數</strong>（再加上不可降低的誤差）。彈性低的方法（例如直線）偏差大、變異數小；彈性高的方法（例如穿過每一點的曲線）偏差小、變異數大。我們要找的是讓測試 MSE 最小的彈性。</p>
+<figure><img src="assets/fig/ch01-bias-var.svg" alt="講義圖 6.1（類似 ISLR 圖 2.12）的實際數值版本，取自第 1 章的模擬。偏差平方隨彈性下降，變異數隨彈性上升，兩者相加（再加上不可降低的誤差）得到 U 形的測試 MSE，它在中間某個彈性達到最小。" loading="lazy"><figcaption>講義圖 6.1（類似 ISLR 圖 2.12）的實際數值版本，取自第 1 章的模擬。偏差平方隨彈性下降，變異數隨彈性上升，兩者相加（再加上不可降低的誤差）得到 U 形的測試 MSE，它在中間某個彈性達到最小。</figcaption></figure>
+
+<p>問題是：要算測試 MSE，就需要模型沒看過的資料。手上只有一份資料，做法就是<strong>把資料切成訓練資料與測試資料</strong>：用訓練資料配適模型，再把模型套到測試資料上算誤差。本章介紹幾種不同的切法。</p>
+<figure><img src="assets/fig/ch06-schemes.svg" alt="三種切法的示意（12 筆觀察，藍色是訓練資料、金色是測試資料）。(a) 驗證集方法只切一次。(b) 留一交叉驗證每次留出一筆，共做  次。(c)  折交叉驗證把資料隨機分成  組，每組輪流當一次測試資料。" loading="lazy"><figcaption>三種切法的示意（12 筆觀察，藍色是訓練資料、金色是測試資料）。(a) 驗證集方法只切一次。(b) 留一交叉驗證每次留出一筆，共做 \(n\) 次。(c) \(k\) 折交叉驗證把資料隨機分成 \(k\) 組，每組輪流當一次測試資料。</figcaption></figure></section><section class="unit" id="s1"><h2>6.1 驗證集方法</h2><h3>一、做法</h3>
+<p><strong>驗證集方法</strong>（validation set approach），Frees 稱為<strong>樣本外驗證</strong>（out-of-sample validation）：從資料中隨機移出一部分，這部分叫<strong>驗證集</strong>（validation set）或保留集（hold-out set），剩下的是<strong>訓練集</strong>。只用訓練集配適模型，再用驗證集當測試資料計算 MSE。</p>
+<p>設共有 \(n\) 筆，前 \(n_1\) 筆是訓練資料、後 \(n_2=n-n_1\) 筆是驗證資料（編號只是為了方便，實際上是隨機選的）。驗證集的 MSE 是</p>
+<p>\[\text{MSE}=\frac1{n_2}\sum_{i=n_1+1}^{n_1+n_2}(y_i-\hat y_i)^2 ,\]</p>
+<p>其中 \(\hat y_i\) 是<strong>用訓練資料配適的模型</strong>對第 \(i\) 筆的預測。也可以不除以 \(n_2\)，改用<strong>預測誤差平方和</strong>（sum of squared prediction errors）</p>
+<p>\[\text{SSPE}=\sum_{i=n_1+1}^{n_1+n_2}(y_i-\hat y_i)^2\qquad(6.1)\]</p>
+<p>SSPE 就是 MSE 乘上 \(n_2\)。比較幾個候選模型時，選 MSE（或 SSPE）最小的那個；同一個驗證集下兩者的排序相同。</p>
+<p>Frees 的經驗法則：觀察值在 100 筆以下時，用 25%～35% 的資料當驗證集；500 筆以上時用 50%。</p>
+<h3>二、兩個缺點</h3>
+<ol>
+<li><strong>結果變異大</strong>。驗證集是隨機選的，換一種切法，算出的 MSE 可能差很多，甚至選出不同的模型。</li>
+<li><strong>高估測試誤差</strong>。訓練集比原資料小很多。用比較少的資料配適，估計值的變異數比較大，預測比較差，所以驗證集上的 MSE 往往高於「用全部 \(n\) 筆配適的模型」真正的測試 MSE。</li>
+</ol>
+<figure><img src="assets/fig/ch06-valset.svg" alt="模擬一份類似 ISLR Auto 資料的資料（200 筆，反應隨  先快後慢地下降），用驗證集方法比較 1～10 次多項式。左：一次隨機切分，二次多項式比直線好很多（驗證 MSE 從 19.2 降到 16.4），再提高次數幾乎沒有改善。右：換 10 種隨機切分，二次多項式的驗證 MSE 從 12.7 到 16.7 都有；其中 5 種切分的最低點落在 6～8 次（只比 2 次低一點點）。這就是第一個缺點：數值與結論都依賴切法。" loading="lazy"><figcaption>模擬一份類似 ISLR Auto 資料的資料（200 筆，反應隨 \(x\) 先快後慢地下降），用驗證集方法比較 1～10 次多項式。左：一次隨機切分，二次多項式比直線好很多（驗證 MSE 從 19.2 降到 16.4），再提高次數幾乎沒有改善。右：換 10 種隨機切分，二次多項式的驗證 MSE 從 12.7 到 16.7 都有；其中 5 種切分的最低點落在 6～8 次（只比 2 次低一點點）。這就是第一個缺點：數值與結論都依賴切法。</figcaption></figure><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q6-1"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 6.1 題</b><small>・講義 p.105・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>以下資料配適 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)：</p>
+<table>
+<thead>
+<tr>
+<th>\(x\)</th>
+<th>8</th>
+<th>12</th>
+<th>16</th>
+<th>18</th>
+<th>24</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y\)</td>
+<td>10</td>
+<td>20</td>
+<td>30</td>
+<td>50</td>
+<td>55</td>
+</tr>
+</tbody>
+</table>
+<p>用樣本外驗證來驗證模型，驗證集是最後兩點 \((18,50)\) 與 \((24,55)\)。求 SSPE。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\text{SSPE}=250\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：只用訓練資料配適。</strong> 訓練資料是前三點 \((8,10)\)、\((12,20)\)、\((16,30)\)，剛好在一條直線上，斜率 \(\dfrac{20-10}{12-8}=2.5\)，截距 \(10-2.5(8)=-10\)，所以 \(\hat y=-10+2.5x\)。（用公式也一樣：\(\bar x=12\)、\(\bar y=20\)、\(S_{xy}=(-4)(-10)+0+(4)(10)=80\)、\(S_{xx}=32\)，\(b_1=2.5\)、\(b_0=20-30=-10\)。）</p>
+<p><strong>第二步：預測驗證點。</strong> \(\hat y_4=-10+2.5(18)=35\)，\(\hat y_5=-10+2.5(24)=50\)。</p>
+<p><strong>第三步：</strong> \(\text{SSPE}=(50-35)^2+(55-50)^2=225+25=250\)。</p>
+<figure><img src="assets/fig/ch06-ex1.svg" alt="藍線只由三個訓練點決定；紅色線段是兩個驗證點的預測誤差 15 與 5。" loading="lazy"><figcaption>藍線只由三個訓練點決定；紅色線段是兩個驗證點的預測誤差 15 與 5。</figcaption></figure></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不能用全部 5 點配適再算這兩點的殘差；SSPE 不除以 2（除以 2 是驗證集 MSE \(=125\)）。</p></div></div></article></div></section><section class="unit" id="s2"><h2>6.2 交叉驗證</h2><p><strong>交叉驗證</strong>（cross-validation）用有系統、非隨機（或較不隨機）的方式選出多組測試資料，分別計算 MSE 再平均。它需要配適很多次，但現代電腦讓這變得可行。下面介紹兩種。</p>
+<h3>一、留一交叉驗證（LOOCV）</h3>
+<p><strong>留一交叉驗證</strong>（leave-one-out cross-validation，LOOCV）：每次只留出一筆觀察當測試資料，其他 \(n-1\) 筆當訓練資料。每一筆輪流被留出一次，共配適 \(n\) 次，再把 \(n\) 個測試誤差平均：</p>
+<p>\[\text{CV}_{(n)}=\frac1n\sum_{i=1}^n\text{MSE}_i\qquad(6.2)\]</p>
+<p>其中 \(\text{MSE}_i=(y_i-\hat y_{(i)})^2\) 是刪掉第 \(i\) 筆配適的模型對第 \(i\) 筆的預測誤差平方。測試資料只有一筆，所以沒有加總、也沒有除法（除以 1）。</p>
+<p>LOOCV 避開了驗證集方法的兩個缺點：結果不隨機（每一筆都恰好被留出一次，沒有選擇的空間）；每次只少一筆，訓練集幾乎和原資料一樣大，MSE 不會被明顯高估。</p>
+<p><strong>最小平方的捷徑公式。</strong> 一般來說 LOOCV 要配適 \(n\) 次。但模型若以最小平方配適（線性迴歸、多項式迴歸），完全不必重新配適：</p>
+<p>\[\text{CV}_{(n)}=\frac1n\sum_{i=1}^n\left(\frac{y_i-\hat y_i}{1-h_{ii}}\right)^2\qquad(6.3)\]</p>
+<p>其中 \(e_i=y_i-\hat y_i\) 是用<strong>全部 \(n\) 筆</strong>配適的殘差，\(h_{ii}\) 是第 \(i\) 筆的槓桿（第 5 章 5.1 節）。</p>
+<div class="box derive">
+<div class="box-t">推導：\(y_i-\hat y_{(i)}=\dfrac{e_i}{1-h_{ii}}\)</div>
+<p>第 5 章 5.2 節用 Sherman–Morrison 公式推導過這個結果，這裡給一個只用最小平方定義的推導。</p>
+<p>令 \(\mathbf b_{(i)}\) 是刪掉第 \(i\) 筆後的最小平方解，\(\hat y_{(i)}=\mathbf x_i&#x27;\mathbf b_{(i)}\) 是它對第 \(i\) 筆的預測。造一個新的反應向量 \(\tilde{\mathbf y}\)：其他各筆不變，只把第 \(i\) 筆換成 \(\hat y_{(i)}\)。</p>
+<p><strong>第一步：\(\tilde{\mathbf y}\) 的最小平方解就是 \(\mathbf b_{(i)}\)。</strong> 對任何 \(\mathbf b\)，
+\[\sum_{j\ne i}(y_j-\mathbf x_j&#x27;\mathbf b)^2+(\hat y_{(i)}-\mathbf x_i&#x27;\mathbf b)^2\ \ge\ \sum_{j\ne i}(y_j-\mathbf x_j&#x27;\mathbf b_{(i)})^2+0 ,\]
+因為第一項在 \(\mathbf b=\mathbf b_{(i)}\) 時最小，第二項不小於 0；而 \(\mathbf b=\mathbf b_{(i)}\) 時等號成立。所以 \(\mathbf b_{(i)}\) 讓 \(\tilde{\mathbf y}\) 的誤差平方和最小。</p>
+<p><strong>第二步：用帽子矩陣寫出 \(\hat y_{(i)}\)。</strong> \(\tilde{\mathbf y}\) 的配適值是 \(H\tilde{\mathbf y}\)，第 \(i\) 個就是 \(\mathbf x_i&#x27;\mathbf b_{(i)}=\hat y_{(i)}\)：
+\[\hat y_{(i)}=\sum_{j\ne i}h_{ij}y_j+h_{ii}\hat y_{(i)}=\Big(\hat y_i-h_{ii}y_i\Big)+h_{ii}\hat y_{(i)},\]
+這裡用了 \(\hat y_i=\sum_jh_{ij}y_j\)。</p>
+<p><strong>第三步：解出來。</strong> \(\hat y_{(i)}(1-h_{ii})=\hat y_i-h_{ii}y_i\)，所以
+\[y_i-\hat y_{(i)}=\frac{y_i(1-h_{ii})-\hat y_i+h_{ii}y_i}{1-h_{ii}}=\frac{y_i-\hat y_i}{1-h_{ii}}=\frac{e_i}{1-h_{ii}} .\]
+平方後平均就是 (6.3)。推導只用到「最小平方」與「預測是 \(\mathbf y\) 的線性函數 \(H\mathbf y\)」，所以 ISLR 說捷徑對最小平方的線性或多項式迴歸成立；對一般模型（例如邏輯斯迴歸）不成立，必須真的配適 \(n\) 次。</p>
+</div>
+<figure><img src="assets/fig/ch06-shortcut.svg" alt="左：30 筆資料配適二次多項式，逐一刪掉每筆重新配適算出的刪除殘差 （縱軸），和只配適一次用公式算的 （橫軸）完全落在 45° 線上。 那一點槓桿 0.83，原始殘差只有 0.24，刪除殘差卻是 1.38。右：殘差平方在 LOOCV 中被放大  倍，槓桿越高放大越多。" loading="lazy"><figcaption>左：30 筆資料配適二次多項式，逐一刪掉每筆重新配適算出的刪除殘差 \(y_i-\hat y_{(i)}\)（縱軸），和只配適一次用公式算的 \(e_i/(1-h_{ii})\)（橫軸）完全落在 45° 線上。\(x=15\) 那一點槓桿 0.83，原始殘差只有 0.24，刪除殘差卻是 1.38。右：殘差平方在 LOOCV 中被放大 \(1/(1-h_{ii})^2\) 倍，槓桿越高放大越多。</figcaption></figure>
+
+<p>(6.3) 和殘差變異數 \(s^2=\sum e_i^2/(n-k-1)\) 很像，差別是每個殘差先除以 \(1-h_{ii}\)。槓桿越高，該點的殘差被放大越多，估計出的 MSE 越高。這也和標準化殘差除以 \(s\sqrt{1-h_{ii}}\) 的道理相同：高槓桿點的殘差被配適線「壓小」了，要放大回來。</p>
+<div class="box intuit">
+<div class="box-t">所有槓桿相等時：LOOCV 比 \(s^2\) 大多少</div>
+<p>槓桿的平均是 \((k+1)/n\)。若每一筆的槓桿都等於平均（或用平均來近似，這就是「廣義交叉驗證」GCV 的想法），(6.3) 變成
+\[\text{CV}_{(n)}=\frac{\text{SSE}}{n\big(1-\frac{k+1}{n}\big)^2}=\frac{n\,\text{SSE}}{(n-k-1)^2}=s^2\cdot\frac{n}{n-k-1} .\]
+\(s^2\) 除以 \(n-k-1\) 已經修正了「用同一份資料估計參數」的樂觀，LOOCV 再多乘 \(\frac{n}{n-k-1}\)，因為它估計的是對<strong>新</strong>觀察的預測誤差：新觀察除了誤差 \(\sigma^2\)，還要承擔係數估計的不確定性。習題 6.2 就是這個情形。</p>
+</div>
+<p><strong>PRESS。</strong> (6.2) 不除以 \(n\)，叫做<strong>預測殘差平方和</strong>（predicted residual sum of squares，PRESS）：</p>
+<p>\[\text{PRESS}=\sum_{i=1}^n(y_i-\hat y_{(i)})^2\qquad(6.4)\]
+\[\phantom{\text{PRESS}}=\sum_{i=1}^n\left(\frac{e_i}{1-h_{ii}}\right)^2\qquad(6.5)\]</p>
+<p>(6.5) 只對最小平方成立。\(\text{PRESS}=n\cdot\text{CV}_{(n)}\)。</p>
+<h3>二、\(k\) 折交叉驗證</h3>
+<p><strong>\(k\) 折交叉驗證</strong>（\(k\)-fold cross-validation）：把資料隨機分成 \(k\) 組（折），大小大致相同。每次留出一組當測試資料、用其他 \(k-1\) 組配適，共配適 \(k\) 次，再把 \(k\) 個測試 MSE 平均：</p>
+<p>\[\text{CV}_{(k)}=\frac1k\sum_{i=1}^k\text{MSE}_i\qquad(6.6)\]</p>
+<p>這裡的 \(k\) 和解釋變數的個數無關（講義的註腳）。</p>
+<ul>
+<li>通常取 \(k=5\) 或 \(k=10\)。</li>
+<li>分組是隨機的，所以結果仍有一些隨機性，但比驗證集方法小得多。</li>
+<li><strong>LOOCV 是 \(k=n\) 的特例</strong>：每組只有一筆。</li>
+<li>每一筆觀察恰好當一次測試資料、\(k-1\) 次訓練資料。</li>
+<li>各組大小不相等時，應以組的大小加權：\(\text{CV}_{(k)}=\sum_j\frac{n_j}{n}\text{MSE}_j=\frac1n\sum_{\text{全部 }i}(y_i-\hat y_i^{\text{CV}})^2\)。各組等大時就是 (6.6) 的簡單平均。</li>
+</ul>
+<figure><img src="assets/fig/ch06-cv-curves.svg" alt="和上一節同一份 200 筆的資料。左：LOOCV 的估計只有一條曲線（不隨機），用 (6.3) 只要配適一次。右：10 折交叉驗證用 9 種不同的隨機分組，9 條曲線幾乎重疊，變異遠小於驗證集方法的 10 條曲線。兩者都指出二次多項式最好。" loading="lazy"><figcaption>和上一節同一份 200 筆的資料。左：LOOCV 的估計只有一條曲線（不隨機），用 (6.3) 只要配適一次。右：10 折交叉驗證用 9 種不同的隨機分組，9 條曲線幾乎重疊，變異遠小於驗證集方法的 10 條曲線。兩者都指出二次多項式最好。</figcaption></figure>
+
+<h3>三、偏差與變異數的取捨：\(k\) 要取多少</h3>
+<p>交叉驗證本身也是一個<strong>估計量</strong>：它估計的是用全部 \(n\) 筆配適的模型的測試 MSE。這個估計量也有偏差與變異數。</p>
+<p><strong>偏差</strong>：\(k\) 折交叉驗證每次用 \(\frac{k-1}{k}n\) 筆訓練。訓練資料越少，配適越差，測試誤差越被高估。所以</p>
+<p>\[\text{偏差：驗證集方法}&gt;\text{5 折}&gt;\text{10 折}&gt;\text{LOOCV} .\]</p>
+<p>LOOCV 用了最大的訓練集（\(n-1\) 筆），高估得最少。</p>
+<p><strong>變異數</strong>（ISLR 的論證，也是考試的標準答案）：LOOCV 平均的是 \(n\) 個模型的結果，這 \(n\) 個模型的訓練資料幾乎完全一樣（任兩個只差一筆），所以它們的測試誤差<strong>高度相關</strong>。高度相關的量取平均，變異數降不下來。\(k\) 折交叉驗證的 \(k\) 個訓練集重疊較少，相關較低，平均後變異數較小。所以</p>
+<p>\[\text{變異數：LOOCV}&gt;\text{10 折}&gt;\text{5 折} .\]</p>
+<p>一般而言 <strong>\(k\) 越大，偏差越小、變異數越大</strong>。\(k=5\) 或 10 被認為是兩者之間的好折衷。</p>
+<div class="box warn">
+<div class="box-t">考試答案與實際情形</div>
+<p>考試請照上面 ISLR 的結論作答。但要知道變異數的比較並沒有那麼絕對：高度相關會讓 LOOCV 的變異數變大，可是 \(k\) 小時每個模型的訓練資料少、配適本身更不穩定，又會讓 \(k\) 折的變異數變大，兩股力量哪個強要看模型。對最小平方這類穩定的方法，LOOCV 的變異數往往不比 10 折大（下圖）；對決策樹或「先選變數再配適」這類不穩定的程序，LOOCV 的變異數才可能明顯偏大。</p>
+</div>
+<figure><img src="assets/fig/ch06-kfold-bv.svg" alt="1,500 份模擬資料（每份 50 筆，配適三次多項式），比較五種方法對測試 MSE 的估計。綠色虛線是「用全部 50 筆配適的模型」真正測試 MSE 的平均 1.11。偏差和理論一致：驗證集方法（只用 25 筆訓練）與 2 折平均約 1.25，明顯高估；5 折、10 折、LOOCV 幾乎不偏。變異數方面，這個最小平方的例子裡標準差隨  遞減（0.48、0.40、0.26、0.24、0.23），LOOCV 並沒有比 10 折大。" loading="lazy"><figcaption>1,500 份模擬資料（每份 50 筆，配適三次多項式），比較五種方法對測試 MSE 的估計。綠色虛線是「用全部 50 筆配適的模型」真正測試 MSE 的平均 1.11。偏差和理論一致：驗證集方法（只用 25 筆訓練）與 2 折平均約 1.25，明顯高估；5 折、10 折、LOOCV 幾乎不偏。變異數方面，這個最小平方的例子裡標準差隨 \(k\) 遞減（0.48、0.40、0.26、0.24、0.23），LOOCV 並沒有比 10 折大。</figcaption></figure>
+
+<p><strong>交叉驗證不必把 MSE 估得很準，只要選對彈性。</strong> 實務上交叉驗證最常的用途是選模型：比較不同彈性（多項式次數、變數個數、第 8 章的調整參數）下的 CV 值，選最小的。即使 CV 估計的 MSE 水準有偏差，只要曲線的形狀對，最低點的位置仍然正確。</p>
+<figure><img src="assets/fig/ch06-cv-vs-true.svg" alt="兩種已知真實函數的模擬（各 100 筆），比較真正的測試 MSE（藍，以 20,000 筆新資料計算）、LOOCV（灰虛線）與 10 折 CV（紅）。符號標出各曲線的最低點。左：真實函數接近二次，真正的測試 MSE 與 LOOCV 都在 2 次最小，10 折在 3 次，但 2 次與 3 次的真實測試 MSE 只差 0.02。右：真實函數彎曲較多，真實測試 MSE 與 LOOCV 都在 5 次最小，10 折在 7 次，5～8 次的真實測試 MSE 幾乎一樣（0.688～0.691）。" loading="lazy"><figcaption>兩種已知真實函數的模擬（各 100 筆），比較真正的測試 MSE（藍，以 20,000 筆新資料計算）、LOOCV（灰虛線）與 10 折 CV（紅）。符號標出各曲線的最低點。左：真實函數接近二次，真正的測試 MSE 與 LOOCV 都在 2 次最小，10 折在 3 次，但 2 次與 3 次的真實測試 MSE 只差 0.02。右：真實函數彎曲較多，真實測試 MSE 與 LOOCV 都在 5 次最小，10 折在 7 次，5～8 次的真實測試 MSE 幾乎一樣（0.688～0.691）。</figcaption></figure>
+
+<p>講義整理的比較：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>LOOCV 的優點</th>
+<th>\(k\) 折交叉驗證的優點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>計算</td>
+<td>最小平方時用 (6.3)，只要配適一次，非常有效率</td>
+<td>不是最小平方時，只要配適 \(k\) 次而不是 \(n\) 次</td>
+</tr>
+<tr>
+<td>偏差</td>
+<td>訓練集最大（\(n-1\) 筆），高估測試誤差最少</td>
+<td></td>
+</tr>
+<tr>
+<td>變異數</td>
+<td></td>
+<td>訓練集重疊較少、相關較低，變異數較小（ISLR）</td>
+</tr>
+</tbody>
+</table>
+<p>\(k\) 折交叉驗證因為變異數較低，整體的估計誤差（MSE）可能反而比 LOOCV 小。</p>
+<h3>四、分類問題</h3>
+<p>反應是類別時（第 12、15 章），把平方誤差換成<strong>誤分類率</strong>即可，例如 LOOCV 變成
+\[\text{CV}_{(n)}=\frac1n\sum_{i=1}^nI\big(y_i\ne\hat y_{(i)}\big),\]
+\(I(\cdot)\) 在預測錯誤時為 1。\(k\) 折的版本同理。</p>
+<div class="box exam">
+<div class="box-t">考試技巧</div>
+<ul>
+<li><strong>SSPE 是總和，MSE 是平均</strong>；<strong>PRESS 是總和，\(\text{CV}_{(n)}\) 是平均</strong>，\(\text{PRESS}=n\,\text{CV}_{(n)}\)。</li>
+<li>驗證集的預測必須用<strong>只由訓練集</strong>配適的模型；驗證點不能拿來估係數（習題 6.1）。</li>
+<li>捷徑公式的 \(e_i\)、\(h_{ii}\) 都來自<strong>全部資料</strong>的配適。</li>
+<li>兩個模型比較交叉驗證結果時，看的是 CV 的 MSE，不是訓練資料的 \(R^2\)、調整 \(R^2\)、MSE 或 AIC（習題 6.8）。</li>
+<li>觀念題的方向：\(k\) 越大，偏差越小、變異數越大、計算越多；LOOCV 是 \(k\) 最大的情形；驗證集方法偏差最大且結果最隨機。</li>
+</ul>
+</div>
+<div class="box key">
+<div class="box-t">本章公式總表（講義表 6.1）</div>
+<ul>
+<li>預測誤差平方和：\(\text{SSPE}=\sum_{i=n_1+1}^{n_1+n_2}(y_i-\hat y_i)^2\)　(6.1)</li>
+<li>LOOCV：\(\text{CV}_{(n)}=\dfrac1n\sum_{i=1}^n\text{MSE}_i\)　(6.2)；\(\text{PRESS}=\sum_{i=1}^n(y_i-\hat y_{(i)})^2\)　(6.4)</li>
+<li>最小平方的 LOOCV：\(\text{CV}_{(n)}=\dfrac1n\sum_{i=1}^n\left(\dfrac{e_i}{1-h_{ii}}\right)^2\)　(6.3)；\(\text{PRESS}=\sum_{i=1}^n\left(\dfrac{e_i}{1-h_{ii}}\right)^2\)　(6.5)</li>
+<li>\(k\) 折交叉驗證：\(\text{CV}_{(k)}=\dfrac1k\sum_{i=1}^k\text{MSE}_i\)　(6.6)</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q6-3"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 6.3 題</b><small>・講義 p.105・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>線性迴歸模型 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，5 筆觀察的殘差與槓桿如下：</p>
+<table>
+<thead>
+<tr>
+<th>殘差</th>
+<th>3</th>
+<th>\(-1\)</th>
+<th>\(-3\)</th>
+<th>\(-3\)</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>槓桿</td>
+<td>0.6</td>
+<td>0.3</td>
+<td>0.2</td>
+<td>0.3</td>
+<td>0.6</td>
+</tr>
+</tbody>
+</table>
+<p>求 PRESS 統計量。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\text{PRESS}=190.72\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>由 (6.5)，每個殘差除以 \(1-h_{ii}\) 再平方：
+\[\text{PRESS}=\left(\frac{3}{0.4}\right)^2+\left(\frac{-1}{0.7}\right)^2+\left(\frac{-3}{0.8}\right)^2+\left(\frac{-3}{0.7}\right)^2+\left(\frac{4}{0.4}\right)^2\]
+\[=56.25+2.0408+14.0625+18.3673+100=190.72 .\]
+檢查：有截距的模型殘差和為 0（\(3-1-3-3+4=0\)），槓桿和為 \(k+1=2\)。兩個槓桿 0.6 的點貢獻了 156，佔八成。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>PRESS 是總和，不除以 5（除以 5 是 \(\text{CV}_{(5)}=38.14\)）。</p></div></div></article><article class="exercise" id="q6-6"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 6.6 題</b><small>・講義 p.105・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 樣題 #3）關於重抽樣方法的敘述：</p>
+<p>I. 留一交叉驗證（LOOCV）是 \(k\) 折交叉驗證的特例。
+II. \(k&lt;n\) 時，\(k\) 折交叉驗證的變異數比 LOOCV 高。
+III. 和驗證集方法相比，LOOCV 傾向高估測試誤差。</p>
+<p>哪些正確？</p>
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A) 只有 I</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I. 正確。LOOCV 就是 \(k=n\) 的 \(k\) 折交叉驗證。</p>
+<p>II. 錯誤。方向反了：\(k\) 越小，各訓練集重疊越少、越不相關，\(k\) 折交叉驗證的變異數<strong>比 LOOCV 低</strong>。</p>
+<p>III. 錯誤。訓練集越大，偏差越小。LOOCV 的訓練集（\(n-1\) 筆）比驗證集方法（通常只有一半到四分之三）大，所以 LOOCV 高估得<strong>比較少</strong>；傾向高估的是驗證集方法。</p></div></div></article><article class="exercise" id="q6-10"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 6.10 題</b><small>・講義 p.107・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2019 秋 #29）精算師有 4 筆觀察的資料，要用 LOOCV 決定兩個模型哪個配適較好，以 MSE 最小為準。應變數的值 \(\mathbf y=(y_1,y_2,y_3,y_4)=(1.55,1.55,1.60,1.95)\)。各訓練子集下兩個模型的配適值：</p>
+<table>
+<thead>
+<tr>
+<th>使用的觀察</th>
+<th>模型 1：\(\hat y_1\)</th>
+<th>\(\hat y_2\)</th>
+<th>\(\hat y_3\)</th>
+<th>\(\hat y_4\)</th>
+<th>模型 2：\(\hat y_1\)</th>
+<th>\(\hat y_2\)</th>
+<th>\(\hat y_3\)</th>
+<th>\(\hat y_4\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1, 2, 3</td>
+<td>1.50</td>
+<td>1.60</td>
+<td>1.20</td>
+<td>1.80</td>
+<td>1.60</td>
+<td>1.70</td>
+<td>1.60</td>
+<td>\(Z\)</td>
+</tr>
+<tr>
+<td>1, 2, 4</td>
+<td>2.00</td>
+<td>1.50</td>
+<td>1.10</td>
+<td>1.90</td>
+<td>1.80</td>
+<td>1.40</td>
+<td>1.30</td>
+<td>1.70</td>
+</tr>
+<tr>
+<td>1, 3, 4</td>
+<td>1.75</td>
+<td>1.55</td>
+<td>1.70</td>
+<td>2.10</td>
+<td>1.40</td>
+<td>1.30</td>
+<td>1.50</td>
+<td>1.95</td>
+</tr>
+<tr>
+<td>2, 3, 4</td>
+<td>1.70</td>
+<td>1.65</td>
+<td>1.60</td>
+<td>2.00</td>
+<td>1.60</td>
+<td>1.70</td>
+<td>1.20</td>
+<td>2.00</td>
+</tr>
+</tbody>
+</table>
+<p>求精算師會偏好模型 2 的 \(Z\) 最大值。</p>
+<p>(A) 小於 1.5　(B) \([1.5,1.8)\)　(C) \([1.8,2.1)\)　(D) \([2.1,2.4)\)　(E) 至少 2.4</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) \(Z=2.3242\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：每一列只取被留出那一筆的預測。</strong> 使用 1,2,3 時留出的是第 4 筆，看 \(\hat y_4\)；使用 1,2,4 時看 \(\hat y_3\)；使用 1,3,4 時看 \(\hat y_2\)；使用 2,3,4 時看 \(\hat y_1\)。</p>
+<p><strong>第二步：兩個模型的誤差平方和</strong>（兩者都除以 4，比較時可以省略）。</p>
+<p>模型 1：
+\[(1.80-1.95)^2+(1.10-1.60)^2+(1.55-1.55)^2+(1.70-1.55)^2\]
+\[=0.0225+0.25+0+0.0225=0.295 .\]
+模型 2：
+\[(Z-1.95)^2+(1.30-1.60)^2+(1.30-1.55)^2+(1.60-1.55)^2\]
+\[=(Z-1.95)^2+0.09+0.0625+0.0025=(Z-1.95)^2+0.155 .\]</p>
+<p><strong>第三步：</strong> 偏好模型 2 需要 \((Z-1.95)^2+0.155&lt;0.295\)，即 \((Z-1.95)^2&lt;0.14\)、\(|Z-1.95|&lt;0.3742\)：
+\[1.5758&lt;Z&lt;2.3242 .\]
+最大值是 \(Z=2.3242\)（嚴格說是上界，等於時兩者打平）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>同一列的其他三個配適值是<strong>訓練</strong>資料的配適值，不能拿來算測試誤差。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（6 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q6-2"><div class="ex-head"><span class="ex-tag">練習</span><b>第 6.2 題</b><small>・講義 p.105・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>線性迴歸模型 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\varepsilon_i\) 配適 84 筆觀察，84 筆的槓桿都相同。殘差平方和為 1090。求 LOOCV 統計量。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\text{CV}_{(84)}=14.30625\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>槓桿總和等於參數個數 \(k+1=4\)，84 筆都相同，所以每一筆 \(h_{ii}=\dfrac4{84}=\dfrac1{21}\)。代入 (6.3)，共同的分母可以提出加總：
+\[\text{CV}_{(84)}=\frac1{84}\sum_{i=1}^{84}\left(\frac{e_i}{1-1/21}\right)^2=\frac{1090}{84(20/21)^2}=\frac{1090}{76.1905}=14.30625 .\]
+對照：\(s^2=1090/80=13.625\)，\(\text{CV}_{(84)}=s^2\cdot\dfrac{84}{80}=14.30625\)（6.2 節的「槓桿相等」公式）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>參數個數 4 包含截距；\((1-h)\) 要平方。</p></div></div></article><article class="exercise" id="q6-4"><div class="ex-head"><span class="ex-tag">練習</span><b>第 6.4 題</b><small>・講義 p.105・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>用 5 折交叉驗證得到的 5 個 MSE 為 842、759、805、738、824。求 \(\text{CV}_{(5)}\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\text{CV}_{(5)}=793.6\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\[\text{CV}_{(5)}=\frac{842+759+805+738+824}{5}=\frac{3968}{5}=793.6 .\]
+（各折大小相同時直接平均。）</p></div></div></article><article class="exercise" id="q6-5"><div class="ex-head"><span class="ex-tag">練習</span><b>第 6.5 題</b><small>・講義 p.105・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>把下列交叉驗證方法的偏差與變異數各自由低到高排列：1. LOOCV；2. 5 折交叉驗證；3. 10 折交叉驗證。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>偏差由低到高：LOOCV、10 折、5 折。變異數由低到高：5 折、10 折、LOOCV。</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>偏差</strong>：留出的資料越少，訓練集越大，越接近用全部資料配適的模型，高估測試誤差越少。LOOCV 只留 1 筆（訓練 \(n-1\) 筆），10 折留 \(1/10\)，5 折留 \(1/5\)，所以偏差 LOOCV \(&lt;\) 10 折 \(&lt;\) 5 折。</p>
+<p><strong>變異數</strong>（ISLR 的論證）：方向相反。\(k\) 越大，各次的訓練集重疊越多，結果越相關，平均後變異數越大：5 折 \(&lt;\) 10 折 \(&lt;\) LOOCV。</p></div></div></article><article class="exercise" id="q6-7"><div class="ex-head"><span class="ex-tag">練習</span><b>第 6.7 題</b><small>・講義 p.106・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2018 春 #30）你考慮用 \(k\) 折交叉驗證估計迴歸模型的測試誤差，有兩個選擇：5 折 CV 與留一 CV（LOOCV）。下列哪個敘述最能支持選擇 LOOCV 而不是 5 折 CV？</p>
+<p>(A) 在迴歸問題中，1 折 CV 通常就足以估計測試誤差。
+(B) LOOCV 與 5 折 CV 通常得到相近的測試誤差估計，所以較簡單的模型較好。
+(C) 每個交叉驗證模型的計算代價都很高。
+(D) 在較小的訓練資料子集上配適的模型，會更嚴重地高估測試誤差。
+(E) 使用幾乎相同的訓練資料集，會得到高度相關的測試誤差估計。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>(A) 沒有比較兩種方法，而且根本沒有「1 折 CV」（1 折表示沒有訓練資料）。
+(B) 就算兩者相近，比較簡單的是 5 折（只配適 5 次），這是支持 5 折的理由。
+(C) 計算代價高時，配適 \(n\) 次的 LOOCV 更吃虧，這是支持 5 折的理由。
+(D) 支持 LOOCV：5 折每次只用 80% 的資料訓練，高估測試誤差較多；LOOCV 用 \(n-1\) 筆，偏差最小。
+(E) LOOCV 的訓練集幾乎相同、結果高度相關，這是 LOOCV 變異數大的原因，是<strong>反對</strong> LOOCV 的理由。</p></div></div></article><article class="exercise" id="q6-8"><div class="ex-head"><span class="ex-tag">練習</span><b>第 6.8 題</b><small>・講義 p.106・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2018 秋 #33）兩個普通最小平方模型用來預測住宅保單的預期年損失：</p>
+<table>
+<thead>
+<tr>
+<th>參數</th>
+<th>模型 1 \(\hat\beta\)</th>
+<th>\(p\) 值</th>
+<th>模型 2 \(\hat\beta\)</th>
+<th>\(p\) 值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>截距</td>
+<td>212</td>
+<td></td>
+<td>315</td>
+<td></td>
+</tr>
+<tr>
+<td>重置成本（千元）</td>
+<td>0.03</td>
+<td>\(&lt;0.001\)</td>
+<td>0.02</td>
+<td>\(&lt;0.001\)</td>
+</tr>
+<tr>
+<td>屋頂面積</td>
+<td>0.15</td>
+<td>\(&lt;0.001\)</td>
+<td>0.17</td>
+<td>\(&lt;0.001\)</td>
+</tr>
+<tr>
+<td>降雨指數</td>
+<td>120</td>
+<td>0.02</td>
+<td>210</td>
+<td>0.03</td>
+</tr>
+<tr>
+<td>重置成本 × 屋頂面積</td>
+<td>0.0010</td>
+<td>0.05</td>
+<td>0.0015</td>
+<td>\(&lt;0.001\)</td>
+</tr>
+<tr>
+<td>\(R^2\)</td>
+<td>0.91</td>
+<td></td>
+<td>0.94</td>
+<td></td>
+</tr>
+<tr>
+<td>調整 \(R^2\)</td>
+<td>0.87</td>
+<td></td>
+<td>0.89</td>
+<td></td>
+</tr>
+<tr>
+<td>MSE</td>
+<td>31,765</td>
+<td></td>
+<td>30,689</td>
+<td></td>
+</tr>
+<tr>
+<td>AIC</td>
+<td>25,031</td>
+<td></td>
+<td>25,636</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>各折的交叉驗證 MSE：</p>
+<table>
+<thead>
+<tr>
+<th>折</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模型 1</td>
+<td>33,415</td>
+<td>38,741</td>
+<td>32,112</td>
+<td>37,210</td>
+<td>29,501</td>
+</tr>
+<tr>
+<td>模型 2</td>
+<td>26,666</td>
+<td>38,554</td>
+<td>39,662</td>
+<td>36,756</td>
+<td>30,303</td>
+</tr>
+</tbody>
+</table>
+<p>用 5 折交叉驗證選出較好的模型。以選出的模型，預測重置成本 500,000、屋頂面積 2,000、降雨指數 0.89、三間浴室的保單的預期年損失。</p>
+<p>(A) 小於 1,000　(B) \([1000,1500)\)　(C) \([1500,2000)\)　(D) \([2000,2500)\)　(E) 至少 2,500</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 1,633.8（模型 1）</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：比較交叉驗證 MSE。</strong>
+\[\text{模型 1：}\frac{170{,}979}{5}=34{,}195.8,\qquad\text{模型 2：}\frac{171{,}941}{5}=34{,}388.2 .\]
+模型 1 較小，選模型 1。</p>
+<p><strong>第二步：預測。</strong> 重置成本以千元計，代入 500；浴室數不在模型裡，用不到。
+\[212+0.03(500)+0.15(2000)+120(0.89)+0.0010(500)(2000)\]
+\[=212+15+300+106.8+1000=1633.8 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><ul>
+<li>題目指定用交叉驗證選模型，不能看 \(R^2\)、調整 \(R^2\) 或訓練 MSE（它們都偏向模型 2）。用模型 2 會算出 2,351.9，落入 (D)。</li>
+<li>重置成本代 500,000 會讓答案大上千倍。</li>
+</ul></div></div></article><article class="exercise" id="q6-9"><div class="ex-head"><span class="ex-tag">練習</span><b>第 6.9 題</b><small>・講義 p.107・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2019 春 #34）統計人員有 \(n=50\) 筆觀察與 \(p=22\) 個自變數，用 10 折交叉驗證從多個模型中選擇。求第一筆觀察在這個程序中被放進訓練資料的次數。</p>
+<p>(A) 0　(B) \([1,5)\)　(C) \([5,10)\)　(D) \([10,20)\)　(E) 至少 20</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 9 次</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>10 折把 50 筆分成 10 組、每組 5 筆。共配適 10 次，每次一組當測試資料（5 筆）、其他 9 組當訓練資料（45 筆）。第一筆所屬的那一組只在 1 次中被留出，其餘 9 次都在訓練資料裡。自變數的個數 22 與此無關。</p></div></div></article></section><div class="navfoot"><a href="ch05.html">← 第 5 章</a><a href="ch07.html">第 7 章 →</a></div></main></body></html>
