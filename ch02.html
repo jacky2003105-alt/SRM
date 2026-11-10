@@ -2,7 +2,7 @@
 <title>第 2 章　線性迴歸：估計參數｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
 <script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
 <body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
-<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html" selected>第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 2 章</div><h1>線性迴歸：估計參數</h1><p class="ch-sub">線性迴歸用一條線（或一個平面）描述反應變數的條件平均。本章從零推導最小平方估計式，先做一個解釋變數，再推廣到矩陣形式，最後介紹類別變數、交互作用、多項式、加權最小平方與變數轉換。</p><div class="chips"><a href="pdf/ch02.pdf">下載本章 PDF</a><a href="#exercises">章末習題（28 題）</a></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">2.1 模型與假設、簡單線性迴歸</a></li><li><a href="#s2">2.2 多元線性迴歸與矩陣形式</a></li><li><a href="#s3">2.3 其他模型形式</a></li></ol><p>本章對應講義第 2 課，讀本是 Frees 1.3、2.1～2.2、3.1～3.2 節與 ISLR 3.1～3.2、3.3.2、3.3.3 節。講義作者說考試很少要你親手算迴歸係數（計算機可以直接算），但題目常給<strong>摘要統計量</strong>要你算斜率、截距或某一筆的殘差，所以每一條公式的來由都要清楚。</p></section><section class="unit" id="s1"><h2>2.1 模型與假設、簡單線性迴歸</h2><h3>一、線性迴歸模型</h3>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html" selected>第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 2 章</div><h1>線性迴歸：估計參數</h1><p class="ch-sub">線性迴歸用一條線（或一個平面）描述反應變數的條件平均。本章從零推導最小平方估計式，先做一個解釋變數，再推廣到矩陣形式，最後介紹類別變數、交互作用、多項式、加權最小平方與變數轉換。</p><div class="chips"><a href="pdf/ch02.pdf">下載本章 PDF</a><a href="#exercises">章末習題（28 題）</a><span class="chip-note">觀念題 15 題（在各節後面）</span><button class="toggle-all" type="button">隱藏全部解答</button></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">2.1 模型與假設、簡單線性迴歸</a></li><li><a href="#s2">2.2 多元線性迴歸與矩陣形式</a></li><li><a href="#s3">2.3 其他模型形式</a></li></ol><p>本章對應講義第 2 課，讀本是 Frees 1.3、2.1～2.2、3.1～3.2 節與 ISLR 3.1～3.2、3.3.2、3.3.3 節。講義作者說考試很少要你親手算迴歸係數（計算機可以直接算），但題目常給<strong>摘要統計量</strong>要你算斜率、截距或某一筆的殘差，所以每一條公式的來由都要清楚。</p></section><section class="unit" id="s1"><h2>2.1 模型與假設、簡單線性迴歸</h2><h3>一、線性迴歸模型</h3>
 <p>我們有 \(n\) 筆觀察值，每一筆包含一個反應值 \(y_i\) 與 \(k\) 個解釋變數的值 \(x_{i1},\ldots,x_{ik}\)。<strong>線性迴歸模型</strong>假設</p>
 <p>\[y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\cdots+\beta_kx_{ik}+\varepsilon_i,\qquad i=1,\ldots,n.\]</p>
 <p>\(\beta_0\) 是截距，\(\beta_1,\ldots,\beta_k\) 是斜率（又稱迴歸係數），\(\varepsilon_i\) 是誤差項。注意：除了 \(k\) 個斜率，還有截距，所以總共要估計 <strong>\(k+1\) 個參數</strong>。這個 \(k+1\) 會在後面每一章的自由度裡出現（例如 \(n-k-1\)）。</p>
@@ -101,7 +101,7 @@
 <li>\(\sum_ix_ie_i=0\)：殘差和解釋變數不相關（來自對 \(b_1\) 的條件）。</li>
 <li>迴歸線通過 \((\bar x,\bar y)\)：由 \(\hat\beta_0=\bar y-\hat\beta_1\bar x\)。</li>
 <li>\(\sum\hat y_i=\sum y_i\)，所以配適值的平均等於 \(\bar y\)。</li>
-</ol><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q2-1"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.1 題</b><small>・講義 p.16・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>以模型 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 配適下列資料，求 \(\beta_0\) 的最小平方估計。</p>
+</ol><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q2-1"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.1 題</b><small>・講義 p.16・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are given the linear regression model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) to fit to the following data:</p>
 <table>
 <thead>
 <tr>
@@ -123,29 +123,56 @@
 <td>10</td>
 </tr>
 </tbody>
-</table></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\hat\beta_0=7\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>截距公式 \(\hat\beta_0=\bar y-\hat\beta_1\bar x\)。</p>
+</table>
+<p>Determine the least squares estimate of \(\beta_0\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以模型 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 配適下列資料，求 \(\beta_0\) 的最小平方估計。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\hat\beta_0=7\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>截距公式 \(\hat\beta_0=\bar y-\hat\beta_1\bar x\)。</p>
 <ul>
 <li>\(\bar x=(-2-1+0+1+2)/5=0\)。</li>
 <li>\(\bar y=(3+5+8+9+10)/5=35/5=7\)。</li>
 </ul>
 <p>因為 \(\bar x=0\)，\(\hat\beta_1\bar x=0\)，不論斜率多少，\(\hat\beta_0=\bar y=7\)。</p>
-<p>（若要斜率：\(S_{xx}=4+1+0+1+4=10\)，\(S_{xy}=(-2)(-4)+(-1)(-2)+0+1(2)+2(3)=18\)，\(\hat\beta_1=1.8\)。）</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(x\) 已經中心化（平均為 0）時，截距就是 \(\bar y\)。這是考題常用的捷徑。</p></div></div></article><article class="exercise" id="q2-2"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.2 題</b><small>・講義 p.17・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>以 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 配適 18 筆觀察值。已知 \(\sum x_i=216\)、\(\sum x_i^2=3092\)、\(\sum y_i=252\)、\(\sum y_i^2=4528\)、\(\sum x_iy_i=3364\)。求 \(\beta_1\) 的最小平方估計。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\hat\beta_1=0.68\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：中心化平方和。</strong>
+<p>（若要斜率：\(S_{xx}=4+1+0+1+4=10\)，\(S_{xy}=(-2)(-4)+(-1)(-2)+0+1(2)+2(3)=18\)，\(\hat\beta_1=1.8\)。）</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(x\) 已經中心化（平均為 0）時，截距就是 \(\bar y\)。這是考題常用的捷徑。</p></div></div></article><article class="exercise" id="q2-2"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.2 題</b><small>・講義 p.17・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are fitting a linear regression model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) to 18 observations. You are given the following:</p>
+<div class="items">
+<p>(i) \(\sum_{i=1}^{18}x_i=216\)</p>
+<p>(ii) \(\sum_{i=1}^{18}x_i^2=3092\)</p>
+<p>(iii) \(\sum_{i=1}^{18}y_i=252\)</p>
+<p>(iv) \(\sum_{i=1}^{18}y_i^2=4528\)</p>
+<p>(v) \(\sum_{i=1}^{18}x_iy_i=3364\)</p>
+</div>
+<p>Determine the least squares estimate of \(\beta_1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 配適 18 筆觀察值。已知 \(\sum x_i=216\)、\(\sum x_i^2=3092\)、\(\sum y_i=252\)、\(\sum y_i^2=4528\)、\(\sum x_iy_i=3364\)。求 \(\beta_1\) 的最小平方估計。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\hat\beta_1=0.68\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：中心化平方和。</strong>
 \[S_{xx}=\sum x_i^2-\frac{(\sum x_i)^2}{n}=3092-\frac{216^2}{18}=3092-2592=500 .\]
 <strong>第二步：中心化交叉乘積和。</strong>
 \[S_{xy}=\sum x_iy_i-\frac{(\sum x_i)(\sum y_i)}{n}=3364-\frac{216\times252}{18}=3364-3024=340 .\]
-<strong>第三步：</strong> \(\hat\beta_1=S_{xy}/S_{xx}=340/500=0.68\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(\sum y_i^2\) 用不到。不能直接拿 \(\sum x_iy_i/\sum x_i^2\) 當斜率，那是「沒有截距」的迴歸斜率。</p></div></div></article><article class="exercise" id="q2-6"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.6 題</b><small>・講義 p.18・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（SRM 樣題 #23）員工餐廳的咖啡價格：12 盎司 1.00、16 盎司 1.20、20 盎司 1.40。餐廳宣布任何容量的價格都改成「以最小平方法將現有價格對容量做簡單線性迴歸」的預測值。Toby 和 Karen 原本各買一杯 24 盎司，若改成合買一杯 48 盎司再分著喝，每天能省多少？</p>
-<p>(A) 多花 0.40　(B) 一樣　(C) 省 0.40　(D) 省 0.80　(E) 省 1.20</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 省 0.40</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：求迴歸線。</strong> 三點 \((12,1.00),(16,1.20),(20,1.40)\) 剛好在一條直線上：每多 4 盎司貴 0.20，斜率 \(0.20/4=0.05\)。截距由 \(1.00=\beta_0+0.05(12)\) 得 \(\beta_0=0.40\)。點都在線上時，最小平方線就是那條線（SSE＝0 已是最小）。</p>
+<strong>第三步：</strong> \(\hat\beta_1=S_{xy}/S_{xx}=340/500=0.68\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(\sum y_i^2\) 用不到。不能直接拿 \(\sum x_iy_i/\sum x_i^2\) 當斜率，那是「沒有截距」的迴歸斜率。</p></div></div></article><article class="exercise" id="q2-6"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.6 題</b><small>・講義 p.18・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #23] Toby observes the following coffee prices in his company cafeteria:</p>
+<ul>
+<li>12 ounces for 1.00</li>
+<li>16 ounces for 1.20</li>
+<li>20 ounces for 1.40</li>
+</ul>
+<p>The cafeteria announces that they will begin to sell any amount of coffee for a price that is the value predicted by a simple linear regression using least squares of the current prices on size.</p>
+<p>Toby and his co-worker Karen want to determine how much they would save each day, using the new pricing, if, instead of each buying a 24-ounce coffee, they bought a 48-ounce coffee and shared it.</p>
+<p>Calculate the amount they would save.</p>
+<div class="opts">
+<p>(A) It would cost them 0.40 more.</p>
+<p>(B) It would cost the same.</p>
+<p>(C) They would save 0.40.</p>
+<p>(D) They would save 0.80.</p>
+<p>(E) They would save 1.20.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SRM 樣題 #23）員工餐廳的咖啡價格：12 盎司 1.00、16 盎司 1.20、20 盎司 1.40。餐廳宣布任何容量的價格都改成「以最小平方法將現有價格對容量做簡單線性迴歸」的預測值。Toby 和 Karen 原本各買一杯 24 盎司，若改成合買一杯 48 盎司再分著喝，每天能省多少？</p>
+<div class="opts">
+<p>(A) 多花 0.40　(B) 一樣　(C) 省 0.40　(D) 省 0.80　(E) 省 1.20</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 省 0.40</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：求迴歸線。</strong> 三點 \((12,1.00),(16,1.20),(20,1.40)\) 剛好在一條直線上：每多 4 盎司貴 0.20，斜率 \(0.20/4=0.05\)。截距由 \(1.00=\beta_0+0.05(12)\) 得 \(\beta_0=0.40\)。點都在線上時，最小平方線就是那條線（SSE＝0 已是最小）。</p>
 <p>用公式驗算：\(\bar x=16\)、\(\bar y=1.2\)，\(S_{xx}=16+0+16=32\)，\(S_{xy}=(-4)(-0.2)+0+4(0.2)=1.6\)，\(\hat\beta_1=1.6/32=0.05\)，\(\hat\beta_0=1.2-0.05(16)=0.40\)。</p>
 <p><strong>第二步：比較兩種買法。</strong>
 - 各買 24 盎司：\(2\times(0.40+0.05\times24)=2\times1.60=3.20\)。
 - 合買 48 盎司：\(0.40+0.05\times48=2.80\)。</p>
-<p>省 \(3.20-2.80=0.40\)，正好是一個截距：多買一杯就多付一次固定的 0.40。</p></div></div></article><article class="exercise" id="q2-7"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.7 題</b><small>・講義 p.18・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2018 秋 #29）以一個變數（廣告費）加截距的普通最小平方模型估計銷售額，資料如下。求第三筆觀察的殘差。</p>
+<p>省 \(3.20-2.80=0.40\)，正好是一個截距：多買一杯就多付一次固定的 0.40。</p></div></div></article><article class="exercise" id="q2-7"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.7 題</b><small>・講義 p.18・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F18:29] An ordinary least squares model with one variable (Advertising) and an intercept was fit to the following observed data in order to estimate Sales:</p>
 <table>
 <thead>
 <tr>
-<th>觀察</th>
-<th>廣告費</th>
-<th>銷售額</th>
+<th>Observation</th>
+<th>Advertising</th>
+<th>Sales</th>
 </tr>
 </thead>
 <tbody>
@@ -176,22 +203,132 @@
 </tr>
 </tbody>
 </table>
-<p>(A) 小於 \(-2\)　(B) \([-2,0)\)　(C) \([0,2)\)　(D) \([2,4)\)　(E) 至少 4</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)，殘差約 \(-1.657\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：平均數。</strong> \(\sum x=29.4\)，\(\bar x=5.88\)；\(\sum y=554\)，\(\bar y=110.8\)。</p>
+<p>Calculate the residual for the third observation.</p>
+<div class="opts">
+<p>(A) Less than \(-2\)</p>
+<p>(B) At least \(-2\), but less than 0</p>
+<p>(C) At least 0, but less than 2</p>
+<p>(D) At least 2, but less than 4</p>
+<p>(E) At least 4</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2018 秋 #29）以一個變數（廣告費）加截距的普通最小平方模型估計銷售額，資料如下。求第三筆觀察的殘差。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)，殘差約 \(-1.657\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：平均數。</strong> \(\sum x=29.4\)，\(\bar x=5.88\)；\(\sum y=554\)，\(\bar y=110.8\)。</p>
 <p><strong>第二步：\(S_{xx}\) 與 \(S_{xy}\)。</strong> 離差 \(x_i-\bar x\)：\(-0.38,-0.08,0.12,0.02,0.32\)；\(y_i-\bar y\)：\(-10.8,-0.8,1.2,4.2,6.2\)。
 \[S_{xx}=0.1444+0.0064+0.0144+0.0004+0.1024=0.268,\]
 \[S_{xy}=4.104+0.064+0.144+0.084+1.984=6.38 .\]</p>
 <p><strong>第三步：係數。</strong> \(\hat\beta_1=6.38/0.268=23.806\)；\(\hat\beta_0=110.8-23.806\times5.88=-29.179\)。</p>
-<p><strong>第四步：第三筆的配適值與殘差。</strong> \(\hat y_3=-29.179+23.806\times6.0=113.657\)，\(e_3=112-113.657=-1.657\)，落在 \([-2,0)\)。</p></div></div></article><article class="exercise" id="q2-10"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.10 題</b><small>・講義 p.19・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>配適 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，共 28 筆。已知 \(\sum x_i=392\)、\(\sum y_i=924\)、\(\sum x_iy_i=13{,}272\)、\(\hat\beta_0=-23\)。求 \(\sum x_i^2\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(5{,}572\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>這題是反過來用公式。</p>
+<p><strong>第四步：第三筆的配適值與殘差。</strong> \(\hat y_3=-29.179+23.806\times6.0=113.657\)，\(e_3=112-113.657=-1.657\)，落在 \([-2,0)\)。</p></div></div></article><article class="exercise" id="q2-10"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.10 題</b><small>・講義 p.19・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are fitting the linear regression model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\). You are given:</p>
+<div class="items">
+<p>(i) \(\sum_{i=1}^{28}x_i=392\)</p>
+<p>(ii) \(\sum_{i=1}^{28}y_i=924\)</p>
+<p>(iii) \(\sum_{i=1}^{28}x_iy_i=13{,}272\)</p>
+<p>(iv) \(\hat\beta_0=-23\)</p>
+</div>
+<p>Determine \(\sum_{i=1}^{28}x_i^2\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>配適 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，共 28 筆。已知 \(\sum x_i=392\)、\(\sum y_i=924\)、\(\sum x_iy_i=13{,}272\)、\(\hat\beta_0=-23\)。求 \(\sum x_i^2\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(5{,}572\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>這題是反過來用公式。</p>
 <p><strong>第一步：平均數。</strong> \(\bar x=392/28=14\)，\(\bar y=924/28=33\)。</p>
 <p><strong>第二步：由截距反推斜率。</strong> \(\hat\beta_0=\bar y-\hat\beta_1\bar x\)，所以 \(-23=33-14\hat\beta_1\)，\(\hat\beta_1=56/14=4\)。</p>
 <p><strong>第三步：\(S_{xy}\)。</strong> \(S_{xy}=\sum x_iy_i-n\bar x\bar y=13{,}272-28(14)(33)=13{,}272-12{,}936=336\)。</p>
 <p><strong>第四步：由斜率反推 \(S_{xx}\)。</strong> \(\hat\beta_1=S_{xy}/S_{xx}\)，\(S_{xx}=336/4=84\)。</p>
-<p><strong>第五步：回到原始平方和。</strong> \(S_{xx}=\sum x_i^2-n\bar x^2\)，\(\sum x_i^2=84+28(14^2)=84+5{,}488=5{,}572\)。</p></div></div></article><article class="exercise" id="q2-19"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.19 題</b><small>・講義 p.21・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>簡單迴歸 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，\(n=15\)，\(\sum x_i=30\)、\(\sum y_i=450\)、\(\sum x_i^2=270\)、\(\sum x_iy_i=8100\)。第五筆 \(x_5=3\)、\(y_5=40\)。求第五個殘差 \(\hat\varepsilon_5\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\hat\varepsilon_5=-24.29\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：</strong> \(\bar x=2\)，\(\bar y=30\)。
+<p><strong>第五步：回到原始平方和。</strong> \(S_{xx}=\sum x_i^2-n\bar x^2\)，\(\sum x_i^2=84+28(14^2)=84+5{,}488=5{,}572\)。</p></div></div></article><article class="exercise" id="q2-19"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.19 題</b><small>・講義 p.21・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>In a simple regression model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\), you are given
+\[\sum x_i=30\qquad\sum y_i=450\qquad\sum x_i^2=270\]
+\[\sum x_iy_i=8100\qquad n=15\qquad x_5=3\qquad y_5=40\]
+Calculate the fifth residual, \(\hat\varepsilon_5\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>簡單迴歸 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，\(n=15\)，\(\sum x_i=30\)、\(\sum y_i=450\)、\(\sum x_i^2=270\)、\(\sum x_iy_i=8100\)。第五筆 \(x_5=3\)、\(y_5=40\)。求第五個殘差 \(\hat\varepsilon_5\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\hat\varepsilon_5=-24.29\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：</strong> \(\bar x=2\)，\(\bar y=30\)。
 \[S_{xx}=270-\frac{30^2}{15}=270-60=210,\]
 \[S_{xy}=8100-\frac{30\times450}{15}=8100-900=7200 .\]
 <strong>第二步：</strong> \(\hat\beta_1=7200/210=34.2857\)。
 <strong>第三步：</strong> \(\hat y_5=\bar y+\hat\beta_1(x_5-\bar x)=30+34.2857\times(3-2)=64.2857\)。
-<strong>第四步：</strong> \(\hat\varepsilon_5=y_5-\hat y_5=40-64.2857=-24.29\)。</p></div></div></article></div></section><section class="unit" id="s2"><h2>2.2 多元線性迴歸與矩陣形式</h2><h3>一、設計矩陣</h3>
+<strong>第四步：</strong> \(\hat\varepsilon_5=y_5-\hat y_5=40-64.2857=-24.29\)。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的質性題，含跨章節）</div><article class="exercise concept-q" id="qC2-1-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.1-1</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For the linear regression model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\), determine which of the following are standard assumptions.</p>
+<div class="items">
+<p>I. The errors \(\varepsilon_i\) have mean 0.</p>
+<p>II. The errors \(\varepsilon_i\) have constant variance \(\sigma^2\).</p>
+<p>III. The explanatory variable \(x\) is normally distributed.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪些是線性迴歸 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 的標準假設？</p>
+<div class="items">
+<p>I. 誤差平均為 0。</p>
+<p>II. 誤差變異數固定為 \(\sigma^2\)。</p>
+<p>III. 解釋變數 \(x\) 服從常態分配。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對（另外還有誤差彼此獨立；做推論時再加上常態）。</p>
+<p>III 錯：\(x\) 被視為固定、非隨機的數，對它的分配沒有任何假設。要常態的是<strong>誤差</strong>，不是解釋變數。</p></div></div></article><article class="exercise concept-q" id="qC2-1-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.1-2</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For a least squares regression with an intercept, determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. The residuals sum to zero.</p>
+<p>II. The fitted regression line passes through \((\bar x,\bar y)\).</p>
+<p>III. \(\sum_ix_ie_i=0\), where \(e_i\) is the \(i\)th residual.</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>有截距的最小平方迴歸，下列哪些正確？</p>
+<div class="items">
+<p>I. 殘差和為 0。</p>
+<p>II. 迴歸線通過 \((\bar x,\bar y)\)。</p>
+<p>III. \(\sum_ix_ie_i=0\)。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：I、II、III 都正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>三個都是正規方程式的直接結果：對 \(b_0\) 偏微分得 \(\sum e_i=0\)（I），除以 \(n\) 得 \(\bar y=b_0+b_1\bar x\)（II）；對 \(b_1\) 偏微分得 \(\sum x_ie_i=0\)（III）。（第 2 章 2.1 節）</p></div></div></article><article class="exercise concept-q" id="qC2-1-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.1-3</b><small>仿 SOA 樣題・跨章：第 3 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For a simple linear regression of \(y\) on \(x\) with least squares slope \(b_1\) and sample correlation \(r\), determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. \(b_1\) has the same sign as \(r\).</p>
+<p>II. The least squares slope of the regression of \(x\) on \(y\) is \(1/b_1\).</p>
+<p>III. If every \(y_i\) is multiplied by 10, \(b_1\) is multiplied by 10 and \(R^2\) is unchanged.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and II only</p>
+<p>(D) I and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>簡單迴歸的斜率 \(b_1\) 與樣本相關係數 \(r\)，下列哪些正確？</p>
+<div class="items">
+<p>I. \(b_1\) 和 \(r\) 同號。</p>
+<p>II. \(x\) 對 \(y\) 迴歸的斜率是 \(1/b_1\)。</p>
+<p>III. 所有 \(y_i\) 乘以 10，\(b_1\) 乘以 10，\(R^2\) 不變。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(b_1=r\,s_y/s_x\)，\(s_x,s_y&gt;0\)。</p>
+<p>II 錯：\(x\) 對 \(y\) 的斜率是 \(r\,s_x/s_y\)。兩個斜率的乘積是 \(r^2\)，只有 \(|r|=1\) 時才互為倒數。</p>
+<p>III 對：\(s_y\) 乘 10 所以 \(b_1\) 乘 10；\(R^2=r^2\)（第 3 章 3.2 節），相關係數不受尺度影響。</p></div></div></article><article class="exercise concept-q" id="qC2-1-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.1-4</b><small>仿 SOA 樣題・跨章：第 3 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. The least squares estimates can only be computed if the errors are normally distributed.</p>
+<p>II. Normality of the errors is needed for the \(t\) statistics of the coefficients to have exactly a \(t\) distribution in small samples.</p>
+<p>III. If the errors are normal, the least squares estimates of the \(\beta\)'s are also the maximum likelihood estimates.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪些正確？</p>
+<div class="items">
+<p>I. 誤差必須是常態才能算最小平方估計。</p>
+<p>II. 小樣本時，係數的 \(t\) 統計量要剛好服從 \(t\) 分配，需要誤差常態。</p>
+<p>III. 誤差常態時，最小平方估計也是 \(\beta\) 的最大概似估計。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 II、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：最小平方只是讓殘差平方和最小，任何資料都算得出來。</p>
+<p>II 對：\(t\) 分配的推導用到 \(\mathbf b\) 常態、\(\text{Error SS}/\sigma^2\) 為卡方且兩者獨立（第 3 章 3.3 節）。</p>
+<p>III 對：常態概似的對數是 \(-\text{RSS}/(2\sigma^2)\) 加上與 \(\beta\) 無關的項，最大化概似等於最小化 RSS（第 7 章 7.2 節 AIC 的推導也用到這點）。</p></div></div></article><article class="exercise concept-q" id="qC2-1-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.1-5</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true for a simple linear regression.</p>
+<div class="items">
+<p>I. Predictions for values of \(x\) far outside the observed range are unreliable.</p>
+<p>II. A fitted slope of zero implies that \(x\) and \(y\) are independent.</p>
+<p>III. If the sample correlation between \(x\) and \(y\) is zero, the least squares slope is zero.</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>簡單迴歸中，下列哪些正確？</p>
+<div class="items">
+<p>I. 對遠超出觀察範圍的 \(x\) 做預測不可靠。</p>
+<p>II. 配適斜率為 0 表示 \(x\) 與 \(y\) 獨立。</p>
+<p>III. 樣本相關係數為 0 時，最小平方斜率為 0。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：外插時模型形式未經資料檢驗，而且預測的變異數隨 \((x-\bar x)^2\) 變大（第 9 章）。</p>
+<p>II 錯：斜率 0 只表示沒有<strong>線性</strong>關係。例如 \(y=x^2\)、\(x\) 對稱分布在 0 附近時，斜率約為 0，但 \(y\) 完全由 \(x\) 決定。</p>
+<p>III 對：\(b_1=r\,s_y/s_x\)。</p></div></div></article></div></section><section class="unit" id="s2"><h2>2.2 多元線性迴歸與矩陣形式</h2><h3>一、設計矩陣</h3>
 <p>\(k&gt;1\) 時，把資料排成矩陣。第一欄全是 1（代表截距），其餘每一欄是一個解釋變數：</p>
 <p>\[X=\begin{pmatrix}1&amp;x_{11}&amp;x_{12}&amp;\cdots&amp;x_{1k}\\1&amp;x_{21}&amp;x_{22}&amp;\cdots&amp;x_{2k}\\\vdots&amp;\vdots&amp;\vdots&amp;&amp;\vdots\\1&amp;x_{n1}&amp;x_{n2}&amp;\cdots&amp;x_{nk}\end{pmatrix}_{n\times(k+1)},\qquad \boldsymbol\beta=\begin{pmatrix}\beta_0\\\beta_1\\\vdots\\\beta_k\end{pmatrix},\qquad \mathbf y=\begin{pmatrix}y_1\\\vdots\\y_n\end{pmatrix}.\]</p>
 <p>\(X\) 叫<strong>設計矩陣</strong>（design matrix；名稱來自實驗設計，實驗者可以選 \(x\) 的值，保險資料通常不行）。模型寫成 \(\mathbf y=X\boldsymbol\beta+\boldsymbol\varepsilon\)。</p>
@@ -227,11 +364,11 @@
 <div class="box ex">
 <div class="box-t">例題 2-5：五個年齡層</div>
 <p>年齡分 5 層，設第 1 層為基準，放 \(D_2,\ldots,D_5\) 四個指標。模型 \(E(y)=\beta_0+\beta_2D_2+\cdots+\beta_5D_5\)。則第 1 層平均為 \(\beta_0\)，第 3 層平均為 \(\beta_0+\beta_3\)，\(\beta_3\) 是「第 3 層比第 1 層高多少」。</p>
-</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q2-22"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.22 題</b><small>・講義 p.23・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-82-94:11）汽車保險公司用性別（\(x_1=0\) 女、1 男）與違規點數 \(x_2\) 預測理賠次數 \(y\)。六位駕駛人：</p>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q2-22"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.22 題</b><small>・講義 p.23・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[120-82-94:11] An automobile insurance company wants to use gender (\(x_1=0\) if female, 1 if male) and traffic penalty points (\(x_2\)) to predict the number of claims (\(y\)). The observed values of these variables for a sample of six motorists are given by:</p>
 <table>
 <thead>
 <tr>
-<th>駕駛人</th>
+<th>Motorist</th>
 <th>\(x_1\)</th>
 <th>\(x_2\)</th>
 <th>\(y\)</th>
@@ -276,11 +413,120 @@
 </tr>
 </tbody>
 </table>
+<p>You are to use the following model:
+\[y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i,\qquad i=1,2,\dots,6\]
+You have determined
+\[(X&#x27;X)^{-1}=\frac1{12}\begin{pmatrix}7&amp;-4&amp;-3\\-4&amp;8&amp;0\\-3&amp;0&amp;3\end{pmatrix}\]
+Determine \(\hat\beta_2\).</p>
+<div class="opts">
+<p>(A) \(-0.25\)</p>
+<p>(B) 0.25</p>
+<p>(C) 1.25</p>
+<p>(D) 2.00</p>
+<p>(E) 4.25</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題 120-82-94:11）汽車保險公司用性別（\(x_1=0\) 女、1 男）與違規點數 \(x_2\) 預測理賠次數 \(y\)。六位駕駛人：</p>
 <p>模型 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i\)，已知 \((X&#x27;X)^{-1}=\dfrac1{12}\begin{pmatrix}7&amp;-4&amp;-3\\-4&amp;8&amp;0\\-3&amp;0&amp;3\end{pmatrix}\)。求 \(\hat\beta_2\)。</p>
-<p>(A) \(-0.25\)　(B) 0.25　(C) 1.25　(D) 2.00　(E) 4.25</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 1.25</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：\(X&#x27;\mathbf y\)。</strong> \(\sum y=12\)；\(\sum x_1y=1+3+5=9\)；\(\sum x_2y=0(1)+1(0)+2(2)+0(1)+1(3)+2(5)=17\)。</p>
+<div class="opts">
+<p>(A) \(-0.25\)　(B) 0.25　(C) 1.25　(D) 2.00　(E) 4.25</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 1.25</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：\(X&#x27;\mathbf y\)。</strong> \(\sum y=12\)；\(\sum x_1y=1+3+5=9\)；\(\sum x_2y=0(1)+1(0)+2(2)+0(1)+1(3)+2(5)=17\)。</p>
 <p><strong>第二步：</strong> 取反矩陣第 2 列 \(\frac1{12}(-3,0,3)\)：
 \[\hat\beta_2=\frac{-3(12)+0(9)+3(17)}{12}=\frac{15}{12}=1.25 .\]</p>
-<p>（另外兩個係數：\(\hat\beta_0=\frac{7(12)-4(9)-3(17)}{12}=-0.25\)，\(\hat\beta_1=\frac{-4(12)+8(9)}{12}=2\)。干擾選項 (A)、(D) 就是它們。）</p></div></div></article></div></section><section class="unit" id="s3"><h2>2.3 其他模型形式</h2><p>線性迴歸只要求對參數線性，所以可以把各種非線性的關係放進來。</p>
+<p>（另外兩個係數：\(\hat\beta_0=\frac{7(12)-4(9)-3(17)}{12}=-0.25\)，\(\hat\beta_1=\frac{-4(12)+8(9)}{12}=2\)。干擾選項 (A)、(D) 就是它們。）</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的質性題，含跨章節）</div><article class="exercise concept-q" id="qC2-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.2-1</b><small>仿 SOA 樣題・跨章：第 5 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>For a multiple regression \(y=\beta_0+\beta_1x_1+\beta_2x_2+\varepsilon\), determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. \(\beta_1\) is the expected change in \(y\) for a one-unit increase in \(x_1\), holding \(x_2\) constant.</p>
+<p>II. The least squares estimate \(b_1\) equals the slope of the simple regression of \(y\) on \(x_1\).</p>
+<p>III. Adding \(x_2\) to a model that already contains \(x_1\) can change the sign of the coefficient of \(x_1\).</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>多元迴歸 \(y=\beta_0+\beta_1x_1+\beta_2x_2+\varepsilon\)，下列哪些正確？</p>
+<div class="items">
+<p>I. \(\beta_1\) 是 \(x_2\) 固定時 \(x_1\) 增加一單位 \(y\) 的期望變化。</p>
+<p>II. \(b_1\) 等於 \(y\) 對 \(x_1\) 簡單迴歸的斜率。</p>
+<p>III. 在含 \(x_1\) 的模型加入 \(x_2\)，可能讓 \(x_1\) 的係數變號。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：這是多元迴歸係數的解讀。</p>
+<p>II 錯：只有 \(x_1\) 與 \(x_2\)（中心化後）正交時才相等。一般情況下，\(b_1\) 只用到 \(x_1\) 中和 \(x_2\) 無關的部分（第 5 章 5.3 節的 FWL 定理）。</p>
+<p>III 對：若 \(x_1\) 與 \(x_2\) 相關，單獨用 \(x_1\) 時它的係數同時吸收了 \(x_2\) 的效果，控制 \(x_2\) 後可能反轉（遺漏變數偏誤）。</p></div></div></article><article class="exercise concept-q" id="qC2-2-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.2-2</b><small>仿 SOA 樣題・跨章：第 5 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about the matrix \(X&#x27;X\) in least squares regression is/are true.</p>
+<div class="items">
+<p>I. If the number of observations is less than the number of coefficients, \(X&#x27;X\) is not invertible.</p>
+<p>II. If one explanatory variable is a linear combination of the others, \(X&#x27;X\) is not invertible.</p>
+<p>III. If \(X&#x27;X\) is not invertible, the fitted values \(\hat{\mathbf y}\) are not unique.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and II only</p>
+<p>(D) I and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於最小平方中的 \(X&#x27;X\)，下列哪些正確？</p>
+<div class="items">
+<p>I. 觀察筆數少於係數個數時，\(X&#x27;X\) 不可逆。</p>
+<p>II. 某個解釋變數是其他變數的線性組合時，\(X&#x27;X\) 不可逆。</p>
+<p>III. \(X&#x27;X\) 不可逆時，配適值 \(\hat{\mathbf y}\) 不唯一。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(X\) 的秩最多是 \(n\)，小於係數個數 \(k+1\) 時欄必定線性相依。</p>
+<p>II 對：完全共線（第 5 章 5.3 節）。</p>
+<p>III 錯：\(\hat{\mathbf y}\) 是 \(\mathbf y\) 在 \(X\) 欄位空間上的投影，永遠唯一；不唯一的是係數 \(\mathbf b\)（\(\mathbf b+t\mathbf v\) 都是解）。</p></div></div></article><article class="exercise concept-q" id="qC2-2-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.2-3</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Least squares estimates satisfy the normal equations \(X&#x27;(\mathbf y-X\mathbf b)=\mathbf 0\). Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. The residual vector is orthogonal to every column of \(X\).</p>
+<p>II. The residual vector is orthogonal to the vector of fitted values.</p>
+<p>III. The residuals sum to zero even if the model has no intercept.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I and II only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>最小平方解滿足正規方程式 \(X&#x27;(\mathbf y-X\mathbf b)=\mathbf 0\)。下列哪些正確？</p>
+<div class="items">
+<p>I. 殘差向量和 \(X\) 的每一欄垂直。</p>
+<p>II. 殘差向量和配適值向量垂直。</p>
+<p>III. 即使沒有截距，殘差和也為 0。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：正規方程式逐列讀出來就是 \(\sum_ie_ix_{ij}=0\)。</p>
+<p>II 對：\(\hat{\mathbf y}&#x27;\mathbf e=\mathbf b&#x27;X&#x27;\mathbf e=0\)。</p>
+<p>III 錯：殘差和為 0 來自「\(X\) 有一欄全為 1」。沒有截距時這一欄不存在，殘差和一般不為 0。</p></div></div></article><article class="exercise concept-q" id="qC2-2-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.2-4</b><small>仿 SOA 樣題・跨章：第 1 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A categorical variable with \(c\) levels is used in a linear regression. Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. If the model has an intercept, including indicators for all \(c\) levels makes \(X&#x27;X\) singular.</p>
+<p>II. If the model has no intercept, indicators for all \(c\) levels can be included.</p>
+<p>III. An interaction between two binary indicator variables adds one parameter to the model.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>含 \(c\) 個水準的類別變數放進線性迴歸。下列哪些正確？</p>
+<div class="items">
+<p>I. 有截距時放 \(c\) 個指標，\(X&#x27;X\) 不可逆。</p>
+<p>II. 沒有截距時可以放 \(c\) 個指標。</p>
+<p>III. 兩個二元指標變數的交互作用多一個參數。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：I、II、III 都正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(c\) 個指標相加等於截距那一欄（每筆恰有一個指標為 1），完全共線，俗稱虛擬變數陷阱。</p>
+<p>II 對：拿掉截距後 \(c\) 個指標線性獨立，每個係數就是該類的平均。</p>
+<p>III 對：\(x_1x_2\) 只是一欄，一個係數（第 2 章習題 2.26）。</p></div></div></article><article class="exercise concept-q" id="qC2-2-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.2-5</b><small>仿 SOA 樣題・跨章：第 5 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Let \(H=X(X&#x27;X)^{-1}X&#x27;\) for a regression with \(k\) explanatory variables and an intercept. Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. \(\hat{\mathbf y}=H\mathbf y\), and \(H\) is symmetric and idempotent.</p>
+<p>II. The trace of \(H\) is \(k+1\).</p>
+<p>III. The covariance matrix of the residual vector is \(\sigma^2I\).</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(H=X(X&#x27;X)^{-1}X&#x27;\)，模型有 \(k\) 個解釋變數與截距。下列哪些正確？</p>
+<div class="items">
+<p>I. \(\hat{\mathbf y}=H\mathbf y\)，\(H\) 對稱且冪等。</p>
+<p>II. \(H\) 的跡為 \(k+1\)。</p>
+<p>III. 殘差向量的共變異矩陣為 \(\sigma^2I\)。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對（第 5 章 5.1 節的推導）。</p>
+<p>III 錯：\(\sigma^2I\) 是<strong>誤差</strong>的共變異矩陣；殘差的是 \(\sigma^2(I-H)\)，變異數比 \(\sigma^2\) 小，而且殘差彼此相關。</p></div></div></article></div></section><section class="unit" id="s3"><h2>2.3 其他模型形式</h2><p>線性迴歸只要求對參數線性，所以可以把各種非線性的關係放進來。</p>
 <h3>一、多項式</h3>
 <p>\[y_i=\beta_0+\beta_1x_i+\beta_2x_i^2+\beta_3x_i^3+\varepsilon_i .\]</p>
 <p>把 \(x,x^2,x^3\) 當成三個不同的解釋變數，照常做最小平方。注意此時 \(\beta_1\) 不再是「\(x\) 增加 1 單位的效果」：二次模型 \(\beta_0+\beta_1x+\beta_2x^2\) 的邊際效果是 \(\dfrac{dE(y)}{dx}=\beta_1+2\beta_2x\)，會隨 \(x\) 改變。\(\beta_2&lt;0\) 時曲線開口向下，頂點在 \(x=-\beta_1/(2\beta_2)\)。</p>
@@ -344,8 +590,27 @@
 <li>加權最小平方：\(\hat{\boldsymbol\beta}_W=(X&#x27;WX)^{-1}X&#x27;W\mathbf y\)。</li>
 <li>Box–Cox：\(y^{(\lambda)}=(y^\lambda-1)/\lambda\)，\(\lambda=0\) 時為 \(\ln y\)。</li>
 </ul>
-</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q2-12"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.12 題</b><small>・講義 p.19・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>模型 \(Y_i=\exp(\beta_0+\beta_1X_i+\varepsilon_i)\)。10 筆觀察：\(\sum X_i=13.5\)、\(\sum\ln Y_i=9.681\)、\(\sum X_i^2=19.57\)、\(\sum(\ln Y_i)^2=9.690\)、\(\sum X_i\ln Y_i=13.697\)。求 \(X=2\) 時 \(Y\) 的預測值。</p>
-<p>(A) 3.2　(B) 3.6　(C) 4.0　(D) 4.4　(E) 4.8</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 約 3.566</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>取對數：\(\ln Y_i=\beta_0+\beta_1X_i+\varepsilon_i\)，是 \(\ln Y\) 對 \(X\) 的普通線性迴歸。令 \(Z_i=\ln Y_i\)。</p>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q2-12"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.12 題</b><small>・講義 p.19・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>The following model relates \(Y\) to \(X\):
+\[Y_i=\exp(\beta_0+\beta_1X_i+\varepsilon_i)\]
+For 10 observations, you are given:</p>
+<div class="items">
+<p>(i) \(\sum X_i=13.5\)</p>
+<p>(ii) \(\sum\ln Y_i=9.681\)</p>
+<p>(iii) \(\sum X_i^2=19.57\)</p>
+<p>(iv) \(\sum(\ln Y_i)^2=9.690\)</p>
+<p>(v) \(\sum X_i\ln Y_i=13.697\)</p>
+</div>
+<p>Calculate the prediction of \(Y\) when \(X=2\).</p>
+<div class="opts">
+<p>(A) 3.2</p>
+<p>(B) 3.6</p>
+<p>(C) 4.0</p>
+<p>(D) 4.4</p>
+<p>(E) 4.8</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>模型 \(Y_i=\exp(\beta_0+\beta_1X_i+\varepsilon_i)\)。10 筆觀察：\(\sum X_i=13.5\)、\(\sum\ln Y_i=9.681\)、\(\sum X_i^2=19.57\)、\(\sum(\ln Y_i)^2=9.690\)、\(\sum X_i\ln Y_i=13.697\)。求 \(X=2\) 時 \(Y\) 的預測值。</p>
+<div class="opts">
+<p>(A) 3.2　(B) 3.6　(C) 4.0　(D) 4.4　(E) 4.8</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 約 3.566</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>取對數：\(\ln Y_i=\beta_0+\beta_1X_i+\varepsilon_i\)，是 \(\ln Y\) 對 \(X\) 的普通線性迴歸。令 \(Z_i=\ln Y_i\)。</p>
 <p><strong>第一步：</strong> \(\bar X=1.35\)，\(\bar Z=0.9681\)。
 \[S_{XX}=19.57-\frac{13.5^2}{10}=19.57-18.225=1.345,\]
 \[S_{XZ}=13.697-\frac{13.5\times9.681}{10}=13.697-13.06935=0.62765 .\]
@@ -353,7 +618,22 @@
 <p><strong>第三步：預測 \(\ln Y\)，再轉回去。</strong> \(\widehat{\ln Y}(2)=0.33812+0.46665\times2=1.27142\)，\(\hat Y=e^{1.27142}=3.566\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><ul>
 <li>這裡的預測值直接取 \(e^{\widehat{\ln Y}}\)，是 \(Y\) 的中位數估計。若要平均數還要乘 \(e^{\sigma^2/2}\)（本章 2.3 節），題目沒有給 \(\sigma^2\)，也沒有要求。</li>
 <li>不能先把 \(\sum\ln Y\) 換成 \(\ln\sum Y\)，對數只能逐筆取。</li>
-</ul></div></div></article><article class="exercise" id="q2-25"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.25 題</b><small>・講義 p.24・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>（S-F15:35）責任險理賠的迴歸模型只有下列可能的解釋變數：</p>
+</ul></div></div></article><article class="exercise" id="q2-25"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.25 題</b><small>・講義 p.24・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[S-F15:35] You are given a regression model of liability claims with the following potential explanatory variables only:</p>
+<ul>
+<li>Vehicle price, which is a continuous variable modeled with a third order polynomial</li>
+<li>Average driver age, which is a continuous variable modeled with a first order polynomial</li>
+<li>Number of drivers, which is a categorical variable with four levels</li>
+<li>Gender, which is a categorical variable with two levels</li>
+</ul>
+<p>There is only one interaction in the model, which is between gender and average driver age.</p>
+<p>Determine the maximum number of parameters in this model.</p>
+<div class="opts">
+<p>(A) Less than 9</p>
+<p>(B) 9</p>
+<p>(C) 10</p>
+<p>(D) 11</p>
+<p>(E) At least 12</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（S-F15:35）責任險理賠的迴歸模型只有下列可能的解釋變數：</p>
 <ul>
 <li>車價：連續變數，用三次多項式</li>
 <li>平均駕駛人年齡：連續變數，用一次項</li>
@@ -361,7 +641,7 @@
 <li>性別：類別變數，2 個水準</li>
 </ul>
 <p>模型中唯一的交互作用是性別與平均駕駛人年齡。求這個模型最多有幾個參數。</p>
-<p>(A) 少於 9　(B) 9　(C) 10　(D) 11　(E) 至少 12</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 10</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>逐項數參數：</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 10</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>逐項數參數：</p>
 <table>
 <thead>
 <tr>
@@ -407,10 +687,26 @@
 <td><strong>10</strong></td>
 </tr>
 </tbody>
-</table></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>有截距時 \(m\) 個水準只能放 \(m-1\) 個指標；多項式的每一次方各一個參數；交互作用另算一個。</p></div></div></article><article class="exercise" id="q2-26"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.26 題</b><small>・講義 p.25・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2018 春 #37）用兩個二元類別變數配適線性模型：\(X_1=1\) 為 Account、0 為 Monoline；\(X_2=1\) 為 Multi-Car、0 為 Single Car。模型 \(E(Y)=\beta_0+\beta_1X_1+\beta_2X_2+\beta_3X_1X_2\)，估計值 \(\hat\beta_0=-0.10\)、\(\hat\beta_1=-0.25\)、\(\hat\beta_2=0.58\)、\(\hat\beta_3=-0.20\)。</p>
+</table></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>有截距時 \(m\) 個水準只能放 \(m-1\) 個指標；多項式的每一次方各一個參數；交互作用另算一個。</p></div></div></article><article class="exercise" id="q2-26"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 2.26 題</b><small>・講義 p.25・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:37] You fit a linear model using the following two-level categorical variables:
+\[X_1=\begin{cases}1&amp;\text{if Account}\\0&amp;\text{if Monoline}\end{cases}\qquad X_2=\begin{cases}1&amp;\text{if Multi-Car}\\0&amp;\text{if Single Car}\end{cases}\]
+with the equation \(E[Y]=\beta_0+\beta_1X_1+\beta_2X_2+\beta_3X_1X_2\). This model produced the following parameter estimates:
+\[\hat\beta_0=-0.10\qquad\hat\beta_1=-0.25\qquad\hat\beta_2=0.58\qquad\hat\beta_3=-0.20\]
+Another actuary modeled the same underlying data, but coded the variables differently as such:
+\[X_1=\begin{cases}0&amp;\text{if Account}\\1&amp;\text{if Monoline}\end{cases}\qquad X_2=\begin{cases}0&amp;\text{if Multi-Car}\\1&amp;\text{if Single Car}\end{cases}\]
+with the equation \(E[Y]=\alpha_0+\alpha_1X_1+\alpha_2X_2+\alpha_3X_1X_2\).</p>
+<p>Afterwards you make a comparison of the individual parameter estimates in the two models. Calculate how many pairs of coefficient estimates \((\hat\alpha_j,\hat\beta_j)\) switched signs, and how many pairs of estimates stayed identically the same, when results of the two models are compared.</p>
+<div class="opts">
+<p>(A) 1 sign change, 0 identical estimates</p>
+<p>(B) 1 sign change, 1 identical estimate</p>
+<p>(C) 2 sign changes, 0 identical estimates</p>
+<p>(D) 2 sign changes, 1 identical estimate</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2018 春 #37）用兩個二元類別變數配適線性模型：\(X_1=1\) 為 Account、0 為 Monoline；\(X_2=1\) 為 Multi-Car、0 為 Single Car。模型 \(E(Y)=\beta_0+\beta_1X_1+\beta_2X_2+\beta_3X_1X_2\)，估計值 \(\hat\beta_0=-0.10\)、\(\hat\beta_1=-0.25\)、\(\hat\beta_2=0.58\)、\(\hat\beta_3=-0.20\)。</p>
 <p>另一位精算師用同一份資料，但把兩個變數的編碼都反過來（\(X_1=0\) 為 Account、1 為 Monoline；\(X_2=0\) 為 Multi-Car、1 為 Single Car），模型 \(E(Y)=\alpha_0+\alpha_1X_1+\alpha_2X_2+\alpha_3X_1X_2\)。</p>
 <p>比較 \((\hat\alpha_j,\hat\beta_j)\) 四對係數：有幾對變號？有幾對完全相同？</p>
-<p>(A) 1 對變號、0 對相同　(B) 1 對變號、1 對相同　(C) 2 對變號、0 對相同　(D) 2 對變號、1 對相同　(E) 以上皆非</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：3 對變號、1 對相同</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>新的編碼 \(U=1-X_1\)、\(V=1-X_2\)。兩個模型描述的是同樣四個格子的平均，所以每一格的配適值必須相同。代入 \(X_1=1-U\)、\(X_2=1-V\)：
+<div class="opts">
+<p>(A) 1 對變號、0 對相同　(B) 1 對變號、1 對相同　(C) 2 對變號、0 對相同　(D) 2 對變號、1 對相同　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：3 對變號、1 對相同</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>新的編碼 \(U=1-X_1\)、\(V=1-X_2\)。兩個模型描述的是同樣四個格子的平均，所以每一格的配適值必須相同。代入 \(X_1=1-U\)、\(X_2=1-V\)：
 \[\beta_0+\beta_1(1-U)+\beta_2(1-V)+\beta_3(1-U)(1-V)\]
 \[=(\beta_0+\beta_1+\beta_2+\beta_3)-(\beta_1+\beta_3)U-(\beta_2+\beta_3)V+\beta_3UV .\]
 對照係數：
@@ -419,23 +715,150 @@
 - \(\alpha_2=-(\beta_2+\beta_3)=-(0.58-0.20)=-0.38\)（由正變負，變號）
 - \(\alpha_3=\beta_3=-0.20\)（完全相同）</p>
 <p>3 對變號、1 對相同，不在 (A)～(D) 裡。</p>
-<p>也可以用四個格子驗算：Account＋Multi-Car 的平均，原模型 \(-0.10-0.25+0.58-0.20=0.03\)；新模型這一格 \(U=V=0\)，平均 \(\alpha_0=0.03\)，一致。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>交互作用係數不會因為兩個變數同時反向編碼而改變；但只反轉其中一個時，交互作用係數會變號。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（18 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q2-3"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.3 題</b><small>・講義 p.17・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（SRM 樣題 #17）迴歸模型 \(y=\beta_0+\beta_1x+\varepsilon\)，共 6 筆觀察。摘要統計：\(\sum y_i=8.5\)、\(\sum x_i=6\)、\(\sum x_i^2=16\)、\(\sum x_iy_i=15.5\)、\(\sum y_i^2=17.25\)。求 \(\beta_1\) 的最小平方估計。</p>
-<p>(A) 0.1　(B) 0.3　(C) 0.5　(D) 0.7　(E) 0.9</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 0.7</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\[S_{xx}=16-\frac{6^2}{6}=16-6=10,\qquad S_{xy}=15.5-\frac{6\times8.5}{6}=15.5-8.5=7 .\]
-\(\hat\beta_1=7/10=0.7\)。</p></div></div></article><article class="exercise" id="q2-4"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.4 題</b><small>・講義 p.17・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（SRM 樣題 #47）已知 \(\bar x=3.500\)、\(\bar y=2.840\)、\(\sum(x_i-\bar x)^2=10.820\)、\(\sum(x_i-\bar x)(y_i-\bar y)=2.677\)、\(\sum(y_i-\bar y)^2=1.125\)。用最小平方法求迴歸線。</p>
-<p>(A) \(y=1.97+0.25x\)　(B) \(y=0.78+0.59x\)　(C) \(y=0.57+0.65x\)　(D) \(y=0.39+0.70x\)　(E) 以上皆非</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat\beta_1=S_{xy}/S_{xx}=2.677/10.820=0.2474\)。
+<p>也可以用四個格子驗算：Account＋Multi-Car 的平均，原模型 \(-0.10-0.25+0.58-0.20=0.03\)；新模型這一格 \(U=V=0\)，平均 \(\alpha_0=0.03\)，一致。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>交互作用係數不會因為兩個變數同時反向編碼而改變；但只反轉其中一個時，交互作用係數會變號。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的質性題，含跨章節）</div><article class="exercise concept-q" id="qC2-3-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.3-1</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A model \(y=\beta_0+\beta_1x+\beta_2x^2+\varepsilon\) is fitted by least squares. Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. The model is a linear regression model.</p>
+<p>II. \(\beta_1\) is the expected change in \(y\) for a one-unit increase in \(x\).</p>
+<p>III. Polynomials of high degree can behave erratically near the boundary of the observed \(x\) values.</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以最小平方配適 \(y=\beta_0+\beta_1x+\beta_2x^2+\varepsilon\)。下列哪些正確？</p>
+<div class="items">
+<p>I. 這是線性迴歸模型。</p>
+<p>II. \(\beta_1\) 是 \(x\) 增加一單位 \(y\) 的期望變化。</p>
+<p>III. 高次多項式在觀察範圍的邊界附近可能變化劇烈。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：「線性」指對<strong>參數</strong>線性，\(x^2\) 只是另一欄解釋變數。</p>
+<p>II 錯：\(x\) 增加一單位的效果是 \(\beta_1+\beta_2(2x+1)\)，依 \(x\) 的位置而定；\(x\) 與 \(x^2\) 不能「一個固定、另一個變」。</p>
+<p>III 對：高次多項式的彈性高、變異數大，邊界附近尤其明顯（第 6 章交叉驗證的圖）。</p></div></div></article><article class="exercise concept-q" id="qC2-3-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.3-2</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>The model \(\ln y=\beta_0+\beta_1x+\varepsilon\), \(\varepsilon\sim N(0,\sigma^2)\), is fitted. Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. A one-unit increase in \(x\) multiplies the median of \(y\) by \(e^{\beta_1}\).</p>
+<p>II. \(E(y\mid x)=e^{\beta_0+\beta_1x}\).</p>
+<p>III. Taking logs of the response can reduce heteroscedasticity when the variance of \(y\) grows with its mean.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>配適 \(\ln y=\beta_0+\beta_1x+\varepsilon\)，\(\varepsilon\) 常態。下列哪些正確？</p>
+<div class="items">
+<p>I. \(x\) 增加一單位，\(y\) 的中位數乘以 \(e^{\beta_1}\)。</p>
+<p>II. \(E(y\mid x)=e^{\beta_0+\beta_1x}\)。</p>
+<p>III. \(y\) 的變異數隨平均增加時，取對數可以減輕異質變異。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(\ln y\) 的中位數是 \(\beta_0+\beta_1x\)，取指數得 \(y\) 的中位數 \(e^{\beta_0+\beta_1x}\)。</p>
+<p>II 錯：\(y\) 是對數常態，\(E(y\mid x)=e^{\beta_0+\beta_1x+\sigma^2/2}\)，多一個 \(e^{\sigma^2/2}\)（第 2 章 2.3 節）。</p>
+<p>III 對：乘法型的誤差取對數後變成加法型、變異數固定。</p></div></div></article><article class="exercise concept-q" id="qC2-3-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.3-3</b><small>仿 SOA 樣題・跨章：第 5 章・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>The variance of the error of observation \(i\) is \(\sigma^2/w_i\) with known \(w_i\). Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. Weighted least squares uses weights inversely proportional to the variances of the errors.</p>
+<p>II. If \(y_i\) is the average of \(n_i\) independent claims with common variance, an appropriate weight is \(n_i\).</p>
+<p>III. Ordinary least squares estimates are biased when the errors are heteroscedastic, and weighted least squares removes this bias.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I and II only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>第 \(i\) 筆誤差的變異數為 \(\sigma^2/w_i\)，\(w_i\) 已知。下列哪些正確？</p>
+<div class="items">
+<p>I. 加權最小平方的權重和誤差變異數成反比。</p>
+<p>II. \(y_i\) 是 \(n_i\) 個獨立、變異數相同的理賠的平均時，適當的權重是 \(n_i\)。</p>
+<p>III. 異質變異時普通最小平方的估計有偏，加權最小平方消除了偏誤。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：權重是變異數的倒數（不是標準差的倒數，第 5 章 5.1 節的提醒）。</p>
+<p>II 對：平均數的變異數是 \(\sigma^2/n_i\)。</p>
+<p>III 錯：異質變異不影響普通最小平方的<strong>不偏性</strong>（推導 \(E(\mathbf b)=\boldsymbol\beta\) 只用到 \(E(\boldsymbol\varepsilon)=\mathbf 0\)）。問題在於它不再是變異數最小的估計，而且通常的標準誤公式錯了。加權最小平方改善的是效率。</p></div></div></article><article class="exercise concept-q" id="qC2-3-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.3-4</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>The Box–Cox family transforms a positive response \(y\) to \((y^\lambda-1)/\lambda\) for \(\lambda\ne0\) and \(\ln y\) for \(\lambda=0\). Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. \(\lambda=0\) corresponds to the log transformation.</p>
+<p>II. \(\lambda=1\) corresponds to no transformation other than a shift.</p>
+<p>III. The Box–Cox transformation can be applied directly to responses that take negative values.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Box–Cox 轉換：\(\lambda\ne0\) 時 \((y^\lambda-1)/\lambda\)，\(\lambda=0\) 時 \(\ln y\)。下列哪些正確？</p>
+<div class="items">
+<p>I. \(\lambda=0\) 是對數轉換。</p>
+<p>II. \(\lambda=1\) 除了平移外沒有轉換。</p>
+<p>III. Box–Cox 可以直接用在有負值的反應。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(\lambda\to0\) 時 \((y^\lambda-1)/\lambda\to\ln y\)，這正是減 1 再除以 \(\lambda\) 的用意。</p>
+<p>II 對：\(\lambda=1\) 得 \(y-1\)。</p>
+<p>III 錯：非整數次方與對數都要求 \(y&gt;0\)；有負值時要先平移。</p></div></div></article><article class="exercise concept-q" id="qC2-3-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C2.3-5</b><small>仿 SOA 樣題・跨章：第 4 章・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Salary \(y\) is modeled on experience \(x_1\) and a gender indicator \(x_2\): \(y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_1x_2+\varepsilon\). Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. To test whether the relationship between salary and experience is identical for both genders, test \(\beta_2=\beta_3=0\) with a partial \(F\) test.</p>
+<p>II. The \(t\) test of \(\beta_3=0\) alone is sufficient to test whether the two relationships are identical.</p>
+<p>III. When the interaction \(x_1x_2\) is included, the main effect \(x_2\) is usually kept in the model as well.</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>薪資對年資 \(x_1\) 與性別指標 \(x_2\)：\(y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_1x_2+\varepsilon\)。下列哪些正確？</p>
+<div class="items">
+<p>I. 檢定兩性的薪資—年資關係是否相同，要用部分 \(F\) 檢定 \(\beta_2=\beta_3=0\)。</p>
+<p>II. 只用 \(\beta_3=0\) 的 \(t\) 檢定就夠了。</p>
+<p>III. 放了交互作用 \(x_1x_2\)，通常也保留主效果 \(x_2\)。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：「關係相同」表示截距與斜率都相同，兩個限制要一起檢定（第 4 章習題 4.25）。</p>
+<p>II 錯：\(\beta_3=0\) 只檢定斜率相同，兩條線仍可能截距不同（平行但不重合）。</p>
+<p>III 對：階層原則（hierarchical principle）。只放交互作用、不放主效果，會強迫 \(x_1=0\) 時兩性的平均相同，通常沒有道理。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（18 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q2-3"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.3 題</b><small>・講義 p.17・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #17] The regression model is \(y=\beta_0+\beta_1x+\varepsilon\). There are six observations. The summary statistics are:
+\[\sum y_i=8.5\qquad\sum x_i=6\qquad\sum x_i^2=16\qquad\sum x_iy_i=15.5\qquad\sum y_i^2=17.25\]
+Calculate the least squares estimate of \(\beta_1\).</p>
+<div class="opts">
+<p>(A) 0.1</p>
+<p>(B) 0.3</p>
+<p>(C) 0.5</p>
+<p>(D) 0.7</p>
+<p>(E) 0.9</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SRM 樣題 #17）迴歸模型 \(y=\beta_0+\beta_1x+\varepsilon\)，共 6 筆觀察。摘要統計：\(\sum y_i=8.5\)、\(\sum x_i=6\)、\(\sum x_i^2=16\)、\(\sum x_iy_i=15.5\)、\(\sum y_i^2=17.25\)。求 \(\beta_1\) 的最小平方估計。</p>
+<div class="opts">
+<p>(A) 0.1　(B) 0.3　(C) 0.5　(D) 0.7　(E) 0.9</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 0.7</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\[S_{xx}=16-\frac{6^2}{6}=16-6=10,\qquad S_{xy}=15.5-\frac{6\times8.5}{6}=15.5-8.5=7 .\]
+\(\hat\beta_1=7/10=0.7\)。</p></div></div></article><article class="exercise" id="q2-4"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.4 題</b><small>・講義 p.17・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #47] You are given the following summary statistics:
+\[\bar x=3.500\qquad\bar y=2.840\qquad\sum(x_i-\bar x)^2=10.820\]
+\[\sum(x_i-\bar x)(y_i-\bar y)=2.677\qquad\sum(y_i-\bar y)^2=1.125\]
+Determine the equation of the regression line, using the least squares method.</p>
+<div class="opts">
+<p>(A) \(y=1.97+0.25x\)</p>
+<p>(B) \(y=0.78+0.59x\)</p>
+<p>(C) \(y=0.57+0.65x\)</p>
+<p>(D) \(y=0.39+0.70x\)</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SRM 樣題 #47）已知 \(\bar x=3.500\)、\(\bar y=2.840\)、\(\sum(x_i-\bar x)^2=10.820\)、\(\sum(x_i-\bar x)(y_i-\bar y)=2.677\)、\(\sum(y_i-\bar y)^2=1.125\)。用最小平方法求迴歸線。</p>
+<div class="opts">
+<p>(A) \(y=1.97+0.25x\)　(B) \(y=0.78+0.59x\)　(C) \(y=0.57+0.65x\)　(D) \(y=0.39+0.70x\)　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat\beta_1=S_{xy}/S_{xx}=2.677/10.820=0.2474\)。
 \(\hat\beta_0=\bar y-\hat\beta_1\bar x=2.840-0.2474\times3.5=2.840-0.8659=1.974\)。
-迴歸線 \(\hat y=1.97+0.25x\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(S_{yy}=1.125\) 是干擾資訊。(B)～(D) 的斜率都接近 \(S_{xy}/S_{yy}\) 或相關係數一類的錯誤組合，不要用 \(S_{yy}\) 當分母（那是 \(x\) 對 \(y\) 迴歸的斜率）。</p></div></div></article><article class="exercise" id="q2-5"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.5 題</b><small>・講義 p.17・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（SRM 樣題 #53）關於方程式 \(Y=\beta_0+\beta_1X+\varepsilon\)，下列何者<strong>不正確</strong>？</p>
-<p>(A) \(\beta_0\) 是 \(Y\) 的期望值。
-(B) \(\beta_1\) 是 \(X\) 增加一單位時 \(Y\) 的平均增加量。
-(C) 誤差項 \(\varepsilon\) 通常假設和 \(X\)、\(Y\) 獨立。
-(D) 這條方程式定義了母體迴歸線。
-(E) 最小平方法常用來估計 \(\beta_0\) 與 \(\beta_1\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
+迴歸線 \(\hat y=1.97+0.25x\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(S_{yy}=1.125\) 是干擾資訊。(B)～(D) 的斜率都接近 \(S_{xy}/S_{yy}\) 或相關係數一類的錯誤組合，不要用 \(S_{yy}\) 當分母（那是 \(x\) 對 \(y\) 迴歸的斜率）。</p></div></div></article><article class="exercise" id="q2-5"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.5 題</b><small>・講義 p.17・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #53] Determine which of the following statements is NOT true about the equation \(Y=\beta_0+\beta_1X+\varepsilon\).</p>
+<div class="opts">
+<p>(A) \(\beta_0\) is the expected value of \(Y\).</p>
+<p>(B) \(\beta_1\) is the average increase in \(Y\) associated with a one-unit increase in \(X\).</p>
+<p>(C) The error term, \(\varepsilon\), is typically assumed to be independent of \(X\) and \(Y\).</p>
+<p>(D) The equation defines the population regression line.</p>
+<p>(E) The method of least squares is commonly used to estimate the coefficients \(\beta_0\) and \(\beta_1\).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SRM 樣題 #53）關於方程式 \(Y=\beta_0+\beta_1X+\varepsilon\)，下列何者<strong>不正確</strong>？</p>
+<div class="opts">
+<p>(A) \(\beta_0\) 是 \(Y\) 的期望值。</p>
+<p>(B) \(\beta_1\) 是 \(X\) 增加一單位時 \(Y\) 的平均增加量。</p>
+<p>(C) 誤差項 \(\varepsilon\) 通常假設和 \(X\)、\(Y\) 獨立。</p>
+<p>(D) 這條方程式定義了母體迴歸線。</p>
+<p>(E) 最小平方法常用來估計 \(\beta_0\) 與 \(\beta_1\)。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
 <li>(A) 錯。\(E(Y)=\beta_0+\beta_1E(X)\)，所以 \(\beta_0\) 是 \(X=0\) 時 \(Y\) 的期望值 \(E(Y\mid X=0)\)，不是 \(Y\) 的期望值（除非 \(E(X)=0\)）。對應到估計式就是 \(\hat\beta_0=\bar y-\hat\beta_1\bar x\)，不是 \(\bar y\)。</li>
 <li>(B) 對：\(E(Y\mid X=x+1)-E(Y\mid X=x)=\beta_1\)。</li>
 <li>(C) 這是 ISLR 原文的說法，官方答案視為正確。嚴格說，\(\varepsilon\) 和 \(X\) 獨立，但不可能和 \(Y\) 獨立（\(Y\) 裡面就含有 \(\varepsilon\)，\(\mathrm{Cov}(Y,\varepsilon)=\sigma^2\)）。考試照官方答案選 (A)。</li>
 <li>(D) 對：含未知參數的式子描述的是母體；用估計值的 \(\hat y=\hat\beta_0+\hat\beta_1x\) 才是樣本迴歸線。</li>
 <li>(E) 對。</li>
-</ul></div></div></article><article class="exercise" id="q2-8"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.8 題</b><small>・講義 p.18・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>以 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 配適下列資料，求 \(\beta_1\) 的最小平方估計。</p>
+</ul></div></div></article><article class="exercise" id="q2-8"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.8 題</b><small>・講義 p.18・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are fitting the linear regression model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) to the following data:</p>
 <table>
 <thead>
 <tr>
@@ -463,11 +886,13 @@
 <td>8</td>
 </tr>
 </tbody>
-</table></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\hat\beta_1=1.2273\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar x=88/8=11\)，\(\bar y=0/8=0\)。</p>
+</table>
+<p>Determine the least squares estimate of \(\beta_1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 配適下列資料，求 \(\beta_1\) 的最小平方估計。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\hat\beta_1=1.2273\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar x=88/8=11\)，\(\bar y=0/8=0\)。</p>
 <p>\(x_i-\bar x\)：\(-9,-6,-3,0,2,4,5,7\)。
 \(S_{xx}=81+36+9+0+4+16+25+49=220\)。
 因為 \(\bar y=0\)，\(S_{xy}=\sum(x_i-\bar x)y_i=(-9)(-10)+(-6)(-9)+(-3)(-4)+0+2(4)+4(5)+5(6)+7(8)=90+54+12+0+8+20+30+56=270\)。</p>
-<p>\(\hat\beta_1=270/220=1.2273\)（截距 \(0-1.2273\times11=-13.5\)）。</p></div></div></article><article class="exercise" id="q2-9"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.9 題</b><small>・講義 p.18・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>以 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 配適下列資料，求 \(x=6\) 的配適值。</p>
+<p>\(\hat\beta_1=270/220=1.2273\)（截距 \(0-1.2273\times11=-13.5\)）。</p></div></div></article><article class="exercise" id="q2-9"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.9 題</b><small>・講義 p.18・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are fitting the linear regression model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) to the following data:</p>
 <table>
 <thead>
 <tr>
@@ -491,18 +916,44 @@
 <td>11</td>
 </tr>
 </tbody>
-</table></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(5.794\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar x=42/6=7\)，\(\bar y=42/6=7\)。</p>
+</table>
+<p>Determine the fitted value of \(y\) corresponding to \(x=6\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 配適下列資料，求 \(x=6\) 的配適值。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(5.794\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar x=42/6=7\)，\(\bar y=42/6=7\)。</p>
 <p>\(x_i-\bar x\)：\(-4,-2,0,1,2,3\)；\(y_i-\bar y\)：\(-5,-2,0,1,2,4\)。
 \(S_{xx}=16+4+0+1+4+9=34\)；\(S_{xy}=20+4+0+1+4+12=41\)。
 \(\hat\beta_1=41/34=1.2059\)。</p>
 <p>迴歸線通過 \((\bar x,\bar y)=(7,7)\)，所以
-\[\hat y(6)=\bar y+\hat\beta_1(6-\bar x)=7+1.2059\times(-1)=5.794 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>用「中心點＋斜率×距離」的寫法，不必先算截距，也比較不會出錯。</p></div></div></article><article class="exercise" id="q2-11"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.11 題</b><small>・講義 p.19・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 3-F84:5）以 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 配適 10 筆。已知 \(\sum x_i=100\)、\(\sum y_i=200\)、\(\sum x_iy_i=2000\)、\(\sum x_i^2=2000\)、\(\sum y_i^2=5000\)。求 \(\beta_1\) 的最小平方估計。</p>
-<p>(A) 0.0　(B) 0.1　(C) 0.2　(D) 0.3　(E) 0.4</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A) 0.0</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(S_{xy}=2000-\dfrac{100\times200}{10}=2000-2000=0\)；\(S_{xx}=2000-\dfrac{100^2}{10}=1000&gt;0\)。
-\(\hat\beta_1=0/1000=0\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>斜率為 0 只代表樣本中沒有<strong>線性</strong>關係，不代表 \(x\) 和 \(y\) 無關（例如 \(y=x^2\) 對稱分布在 0 附近時，\(S_{xy}\) 也可能為 0）。</p></div></div></article><article class="exercise" id="q2-13"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.13 題</b><small>・講義 p.20・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 3L-S05:27）已知 \(\sum x_i=144\)、\(\sum y_i=1742\)、\(\sum x_i^2=2300\)、\(\sum y_i^2=312{,}674\)、\(\sum x_iy_i=26{,}696\)、\(n=12\)。求模型 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 的最小平方方程式。</p>
-<p>(A) \(\hat y=-0.73+12.16x\)　(B) \(\hat y=-8.81+12.16x\)　(C) \(\hat y=283.87+10.13x\)　(D) \(\hat y=10.13+12.16x\)　(E) \(\hat y=23.66+10.13x\)</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar x=12\)，\(\bar y=145.1667\)。
+\[\hat y(6)=\bar y+\hat\beta_1(6-\bar x)=7+1.2059\times(-1)=5.794 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>用「中心點＋斜率×距離」的寫法，不必先算截距，也比較不會出錯。</p></div></div></article><article class="exercise" id="q2-11"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.11 題</b><small>・講義 p.19・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[3-F84:5] You are fitting the linear regression model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) to 10 points of data. You are given:
+\[\sum x_i=100\qquad\sum y_i=200\qquad\sum x_iy_i=2000\qquad\sum x_i^2=2000\qquad\sum y_i^2=5000\]
+Calculate the least-squares estimate of \(\beta_1\).</p>
+<div class="opts">
+<p>(A) 0.0</p>
+<p>(B) 0.1</p>
+<p>(C) 0.2</p>
+<p>(D) 0.3</p>
+<p>(E) 0.4</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題 3-F84:5）以 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 配適 10 筆。已知 \(\sum x_i=100\)、\(\sum y_i=200\)、\(\sum x_iy_i=2000\)、\(\sum x_i^2=2000\)、\(\sum y_i^2=5000\)。求 \(\beta_1\) 的最小平方估計。</p>
+<div class="opts">
+<p>(A) 0.0　(B) 0.1　(C) 0.2　(D) 0.3　(E) 0.4</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A) 0.0</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(S_{xy}=2000-\dfrac{100\times200}{10}=2000-2000=0\)；\(S_{xx}=2000-\dfrac{100^2}{10}=1000&gt;0\)。
+\(\hat\beta_1=0/1000=0\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>斜率為 0 只代表樣本中沒有<strong>線性</strong>關係，不代表 \(x\) 和 \(y\) 無關（例如 \(y=x^2\) 對稱分布在 0 附近時，\(S_{xy}\) 也可能為 0）。</p></div></div></article><article class="exercise" id="q2-13"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.13 題</b><small>・講義 p.20・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[3L-S05:27] Given the following information:
+\[\sum x_i=144\qquad\sum y_i=1{,}742\qquad\sum x_i^2=2{,}300\]
+\[\sum y_i^2=312{,}674\qquad\sum x_iy_i=26{,}696\qquad n=12\]
+Determine the least squares equation for the following model:
+\[y_i=\beta_0+\beta_1x_i+\varepsilon_i\]</p>
+<div class="opts">
+<p>(A) \(\hat y_i=-0.73+12.16x_i\)</p>
+<p>(B) \(\hat y_i=-8.81+12.16x_i\)</p>
+<p>(C) \(\hat y_i=283.87+10.13x_i\)</p>
+<p>(D) \(\hat y_i=10.13+12.16x_i\)</p>
+<p>(E) \(\hat y_i=23.66+10.13x_i\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題 3L-S05:27）已知 \(\sum x_i=144\)、\(\sum y_i=1742\)、\(\sum x_i^2=2300\)、\(\sum y_i^2=312{,}674\)、\(\sum x_iy_i=26{,}696\)、\(n=12\)。求模型 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) 的最小平方方程式。</p>
+<div class="opts">
+<p>(A) \(\hat y=-0.73+12.16x\)　(B) \(\hat y=-8.81+12.16x\)　(C) \(\hat y=283.87+10.13x\)　(D) \(\hat y=10.13+12.16x\)　(E) \(\hat y=23.66+10.13x\)</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar x=12\)，\(\bar y=145.1667\)。
 \[S_{xx}=2300-\frac{144^2}{12}=2300-1728=572,\]
 \[S_{xy}=26{,}696-\frac{144\times1742}{12}=26{,}696-20{,}904=5{,}792 .\]
-\(\hat\beta_1=5792/572=10.126\)；\(\hat\beta_0=145.1667-10.126\times12=23.66\)。</p></div></div></article><article class="exercise" id="q2-14"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.14 題</b><small>・講義 p.20・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-F90:6）估計 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，資料如下。求 \(\hat\beta_1\)。</p>
+\(\hat\beta_1=5792/572=10.126\)；\(\hat\beta_0=145.1667-10.126\times12=23.66\)。</p></div></div></article><article class="exercise" id="q2-14"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.14 題</b><small>・講義 p.20・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[120-F90:6] You are estimating the linear regression model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\). You are given</p>
 <table>
 <thead>
 <tr>
@@ -533,27 +984,89 @@
 </tr>
 </tbody>
 </table>
-<p>(A) 0.8　(B) 0.9　(C) 1.0　(D) 1.1　(E) 1.2</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 0.9</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar x=35.5/5=7.1\)，\(\bar y=5.3/5=1.06\)。</p>
+<p>Determine \(\hat\beta_1\).</p>
+<div class="opts">
+<p>(A) 0.8</p>
+<p>(B) 0.9</p>
+<p>(C) 1.0</p>
+<p>(D) 1.1</p>
+<p>(E) 1.2</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題 120-F90:6）估計 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，資料如下。求 \(\hat\beta_1\)。</p>
+<div class="opts">
+<p>(A) 0.8　(B) 0.9　(C) 1.0　(D) 1.1　(E) 1.2</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 0.9</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar x=35.5/5=7.1\)，\(\bar y=5.3/5=1.06\)。</p>
 <p>\(x_i-\bar x\)：\(-0.3,-0.1,0,0.1,0.3\)；\(y_i-\bar y\)：\(-0.26,0.14,-0.16,-0.16,0.44\)。
 \(S_{xx}=0.09+0.01+0+0.01+0.09=0.20\)。
 \(S_{xy}=0.078-0.014+0-0.016+0.132=0.18\)。
-\(\hat\beta_1=0.18/0.20=0.9\)。</p></div></div></article><article class="exercise" id="q2-15"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.15 題</b><small>・講義 p.20・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-S90:11）下列哪些是簡單線性迴歸中 \(y\) 對 \(x\) 的斜率 \(b\) 的正確表示式？</p>
+\(\hat\beta_1=0.18/0.20=0.9\)。</p></div></div></article><article class="exercise" id="q2-15"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.15 題</b><small>・講義 p.20・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[120-S90:11] Which of the following are valid expressions for \(b\), the slope coefficient in the simple linear regression of \(y\) on \(x\)?</p>
+<div class="items">
+<p>I. \(\dfrac{\left(\sum x_iy_i\right)-\bar y\sum x_i}{\left(\sum x_i^2\right)-\bar x\sum x_i}\)</p>
+<p>II. \(\dfrac{\left(\sum x_iy_i\right)-\bar y\sum x_i}{\sum x_i^2-\bar x^2}\)</p>
+<p>III. \(\dfrac{\sum x_i(y_i-\bar y)}{\sum(x_i-\bar x)^2}\)</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題 120-S90:11）下列哪些是簡單線性迴歸中 \(y\) 對 \(x\) 的斜率 \(b\) 的正確表示式？</p>
+<div class="items">
 <p>I. \(\dfrac{\sum x_iy_i-\bar y\sum x_i}{\sum x_i^2-\bar x\sum x_i}\)　II. \(\dfrac{\sum x_iy_i-\bar y\sum x_i}{\sum x_i^2-\bar x^2}\)　III. \(\dfrac{\sum x_i(y_i-\bar y)}{\sum(x_i-\bar x)^2}\)</p>
-<p>(A) 只有 I、II　(B) 只有 I、III　(C) 只有 II、III　(D) I、II、III　(E) 以上皆非</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
+</div>
+<div class="opts">
+<p>(A) 只有 I、II　(B) 只有 I、III　(C) 只有 II、III　(D) I、II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
 <li><strong>I 正確。</strong> 分子 \(\sum x_iy_i-\bar y\sum x_i=\sum x_iy_i-n\bar x\bar y=S_{xy}\)；分母 \(\sum x_i^2-\bar x\sum x_i=\sum x_i^2-n\bar x^2=S_{xx}\)。</li>
 <li><strong>II 錯誤。</strong> 分母少了 \(n\)：應為 \(\sum x_i^2-n\bar x^2\)，而 \(\sum x_i^2-\bar x^2\) 只扣了一次。</li>
 <li><strong>III 正確。</strong> 分母就是 \(S_{xx}\)。分子 \(\sum x_i(y_i-\bar y)=\sum(x_i-\bar x)(y_i-\bar y)+\bar x\sum(y_i-\bar y)=S_{xy}+0\)。</li>
-</ul></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>中心化只要做在其中一個變數上就夠了：\(\sum(x_i-\bar x)(y_i-\bar y)=\sum x_i(y_i-\bar y)=\sum(x_i-\bar x)y_i\)。</p></div></div></article><article class="exercise" id="q2-16"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.16 題</b><small>・講義 p.21・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題）簡單線性迴歸 30 筆觀察，樣本相關係數 \(r_{xy}=0.5\)、\(s_x=7\)、\(s_y=5\)。求 \(\hat\beta_1\)。</p>
-<p>(A) 0.4　(B) 0.5　(C) 0.6　(D) 0.7　(E) 0.8</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)，\(\hat\beta_1=0.357\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat\beta_1=r_{xy}\dfrac{s_y}{s_x}=0.5\times\dfrac57=0.357\)，最接近 0.4。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>寫成 \(0.5\times7/5=0.7\) 就選到 (D)，那是 \(x\) 對 \(y\) 迴歸的斜率。</p></div></div></article><article class="exercise" id="q2-17"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.17 題</b><small>・講義 p.21・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 110-S83:14）在一個雙變數分配中，\(y\) 對 \(x\) 的迴歸為 \(1500+b(x-68)\)，\(b\) 是某個常數。相關係數 0.81，\(y\) 與 \(x\) 的標準差分別為 220 與 2.5。\(x=70\) 時 \(y\) 的期望值（取到個位）是多少？</p>
-<p>(A) 1357　(B) 1515　(C) 1517　(D) 1643　(E) 1738</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 1643</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>迴歸寫成「中心點」形式：\(x=68\) 時 \(E(y)=1500\)，所以 \((\bar x,\bar y)=(68,1500)\)。
+</ul></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>中心化只要做在其中一個變數上就夠了：\(\sum(x_i-\bar x)(y_i-\bar y)=\sum x_i(y_i-\bar y)=\sum(x_i-\bar x)y_i\)。</p></div></div></article><article class="exercise" id="q2-16"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.16 題</b><small>・講義 p.21・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[Old exam] For the linear regression model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) with 30 observations, you are given:</p>
+<div class="items">
+<p>(i) \(r_{xy}=0.5\)</p>
+<p>(ii) \(s_x=7\)</p>
+<p>(iii) \(s_y=5\)</p>
+</div>
+<p>where \(r_{xy}\) is the sample correlation coefficient. Calculate the estimated value of \(\beta_1\).</p>
+<div class="opts">
+<p>(A) 0.4</p>
+<p>(B) 0.5</p>
+<p>(C) 0.6</p>
+<p>(D) 0.7</p>
+<p>(E) 0.8</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題）簡單線性迴歸 30 筆觀察，樣本相關係數 \(r_{xy}=0.5\)、\(s_x=7\)、\(s_y=5\)。求 \(\hat\beta_1\)。</p>
+<div class="opts">
+<p>(A) 0.4　(B) 0.5　(C) 0.6　(D) 0.7　(E) 0.8</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)，\(\hat\beta_1=0.357\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat\beta_1=r_{xy}\dfrac{s_y}{s_x}=0.5\times\dfrac57=0.357\)，最接近 0.4。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>寫成 \(0.5\times7/5=0.7\) 就選到 (D)，那是 \(x\) 對 \(y\) 迴歸的斜率。</p></div></div></article><article class="exercise" id="q2-17"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.17 題</b><small>・講義 p.21・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[110-S83:14] In a bivariate distribution the regression of the variable \(y\) on the variable \(x\) is \(1500+b(x-68)\) for some constant \(b\). If the correlation coefficient is 0.81 and if the standard deviations of \(y\) and \(x\) are 220 and 2.5 respectively, then what is the expected value of \(y\), to the nearest unit, when \(x\) is 70?</p>
+<div class="opts">
+<p>(A) 1357</p>
+<p>(B) 1515</p>
+<p>(C) 1517</p>
+<p>(D) 1643</p>
+<p>(E) 1738</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題 110-S83:14）在一個雙變數分配中，\(y\) 對 \(x\) 的迴歸為 \(1500+b(x-68)\)，\(b\) 是某個常數。相關係數 0.81，\(y\) 與 \(x\) 的標準差分別為 220 與 2.5。\(x=70\) 時 \(y\) 的期望值（取到個位）是多少？</p>
+<div class="opts">
+<p>(A) 1357　(B) 1515　(C) 1517　(D) 1643　(E) 1738</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 1643</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>迴歸寫成「中心點」形式：\(x=68\) 時 \(E(y)=1500\)，所以 \((\bar x,\bar y)=(68,1500)\)。
 斜率 \(b=r\dfrac{s_y}{s_x}=0.81\times\dfrac{220}{2.5}=71.28\)。
-\(E(y\mid x=70)=1500+71.28\times(70-68)=1500+142.56=1642.56\approx1643\)。</p></div></div></article><article class="exercise" id="q2-18"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.18 題</b><small>・講義 p.21・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-82-97:7）簡單迴歸 10 筆：\(\sum x_i=20\)、\(\sum y_i=100\)、\(s_x=2\)、\(s_y=8\)，相關係數 \(r=-0.98\)。求 \(x=5\) 時的預測值。</p>
-<p>(A) \(-10\)　(B) \(-2\)　(C) 11　(D) 30　(E) 37</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)，預測值 \(-1.76\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar x=2\)，\(\bar y=10\)。斜率 \(\hat\beta_1=r\dfrac{s_y}{s_x}=-0.98\times\dfrac82=-3.92\)。
-\(\hat y(5)=\bar y+\hat\beta_1(5-\bar x)=10-3.92\times3=-1.76\)，最接近 \(-2\)。</p></div></div></article><article class="exercise" id="q2-20"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.20 題</b><small>・講義 p.22・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（舊考題 120-F89:13）資料如下，模型 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i\)。</p>
+\(E(y\mid x=70)=1500+71.28\times(70-68)=1500+142.56=1642.56\approx1643\)。</p></div></div></article><article class="exercise" id="q2-18"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.18 題</b><small>・講義 p.21・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[120-82-97:7] You are given the following information about a simple regression model fit to 10 observations:
+\[\sum x_i=20\qquad\sum y_i=100\qquad s_x=2\qquad s_y=8\]
+You are also given that the correlation coefficient \(r_{xy}=-0.98\). Determine the predicted value of \(y\) when \(x=5\).</p>
+<div class="opts">
+<p>(A) \(-10\)</p>
+<p>(B) \(-2\)</p>
+<p>(C) 11</p>
+<p>(D) 30</p>
+<p>(E) 37</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題 120-82-97:7）簡單迴歸 10 筆：\(\sum x_i=20\)、\(\sum y_i=100\)、\(s_x=2\)、\(s_y=8\)，相關係數 \(r=-0.98\)。求 \(x=5\) 時的預測值。</p>
+<div class="opts">
+<p>(A) \(-10\)　(B) \(-2\)　(C) 11　(D) 30　(E) 37</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)，預測值 \(-1.76\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar x=2\)，\(\bar y=10\)。斜率 \(\hat\beta_1=r\dfrac{s_y}{s_x}=-0.98\times\dfrac82=-3.92\)。
+\(\hat y(5)=\bar y+\hat\beta_1(5-\bar x)=10-3.92\times3=-1.76\)，最接近 \(-2\)。</p></div></div></article><article class="exercise" id="q2-20"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.20 題</b><small>・講義 p.22・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[120-F89:13] You are given:</p>
 <table>
 <thead>
 <tr>
-<th>期</th>
+<th>Period</th>
 <th>\(y\)</th>
 <th>\(x_1\)</th>
 <th>\(x_2\)</th>
@@ -592,16 +1105,30 @@
 </tr>
 </tbody>
 </table>
-<p>已知
+<p>You are to use the following regression model:
+\[y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i,\qquad i=1,2,\dots,5\]
+You have determined:
 \[(X&#x27;X)^{-1}=\begin{pmatrix}1522.73&amp;26.87&amp;-374.67\\26.87&amp;0.93&amp;-7.33\\-374.67&amp;-7.33&amp;93.33\end{pmatrix}.\]
+Calculate \(\hat\varepsilon_2\).</p>
+<div class="opts">
+<p>(A) \(-0.2\)</p>
+<p>(B) \(-0.1\)</p>
+<p>(C) 0.0</p>
+<p>(D) 0.1</p>
+<p>(E) 0.2</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題 120-F89:13）資料如下，模型 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i\)。</p>
+<p>已知
 求 \(\hat\varepsilon_2\)。</p>
-<p>(A) \(-0.2\)　(B) \(-0.1\)　(C) 0.0　(D) 0.1　(E) 0.2</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)（以題目給的矩陣算出 0.095）</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：\(X&#x27;\mathbf y\)。</strong> 三個元素依序是 \(\sum y_i\)、\(\sum x_{i1}y_i\)、\(\sum x_{i2}y_i\)：
+<div class="opts">
+<p>(A) \(-0.2\)　(B) \(-0.1\)　(C) 0.0　(D) 0.1　(E) 0.2</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)（以題目給的矩陣算出 0.095）</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：\(X&#x27;\mathbf y\)。</strong> 三個元素依序是 \(\sum y_i\)、\(\sum x_{i1}y_i\)、\(\sum x_{i2}y_i\)：
 \[X&#x27;\mathbf y=\begin{pmatrix}1.3+1.5+1.8+1.6+1.7\\6(1.3)+7(1.5)+7(1.8)+8(1.6)+8(1.7)\\4.5(1.3)+4.6(1.5)+4.5(1.8)+4.7(1.6)+4.6(1.7)\end{pmatrix}=\begin{pmatrix}7.9\\57.3\\36.19\end{pmatrix}.\]
 <strong>第二步：\(\hat{\boldsymbol\beta}=(X&#x27;X)^{-1}X&#x27;\mathbf y\)。</strong>
 - \(\hat\beta_0=1522.73(7.9)+26.87(57.3)-374.67(36.19)=9.9107\)
 - \(\hat\beta_1=26.87(7.9)+0.93(57.3)-7.33(36.19)=0.2893\)
 - \(\hat\beta_2=-374.67(7.9)-7.33(57.3)+93.33(36.19)=-2.2893\)</p>
-<p><strong>第三步：第二筆殘差。</strong> \(\hat y_2=9.9107+0.2893(7)-2.2893(4.6)=1.4050\)，\(\hat\varepsilon_2=1.5-1.4050=0.095\)，選 (D)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>這題對四捨五入非常敏感。\(x_2\) 幾乎沒有變化，\(X&#x27;X\) 接近奇異，反矩陣元素很大（1522.73），只要矩陣只給兩位小數，係數就會偏一點。用精確的反矩陣算，係數是 \((9.8667,\,0.3333,\,-2.3333)\)，殘差是 \(0.033\)。官方答案依題目給的矩陣選 (D)。這正是 2.2 節說的「接近共線時係數不穩定」。</p></div></div></article><article class="exercise" id="q2-21"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.21 題</b><small>・講義 p.22・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>以 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\varepsilon_i\) 配適下列資料：</p>
+<p><strong>第三步：第二筆殘差。</strong> \(\hat y_2=9.9107+0.2893(7)-2.2893(4.6)=1.4050\)，\(\hat\varepsilon_2=1.5-1.4050=0.095\)，選 (D)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>這題對四捨五入非常敏感。\(x_2\) 幾乎沒有變化，\(X&#x27;X\) 接近奇異，反矩陣元素很大（1522.73），只要矩陣只給兩位小數，係數就會偏一點。用精確的反矩陣算，係數是 \((9.8667,\,0.3333,\,-2.3333)\)，殘差是 \(0.033\)。官方答案依題目給的矩陣選 (D)。這正是 2.2 節說的「接近共線時係數不穩定」。</p></div></div></article><article class="exercise" id="q2-21"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.21 題</b><small>・講義 p.22・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>You are fitting the following data to a linear regression model of the form \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\varepsilon_i\):</p>
 <table>
 <thead>
 <tr>
@@ -644,16 +1171,19 @@
 </tr>
 </tbody>
 </table>
-<p>已知
+<p>You are given that
 \[(X&#x27;X)^{-1}=\frac1{30}\begin{pmatrix}26&amp;-10&amp;-18&amp;-12\\-10&amp;20&amp;0&amp;0\\-18&amp;0&amp;24&amp;6\\-12&amp;0&amp;6&amp;24\end{pmatrix}.\]
-求 \(\hat\beta_1\)。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\hat\beta_1=-2\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>只需要 \((X&#x27;X)^{-1}\) 的第 1 列（從第 0 列算起）乘 \(X&#x27;\mathbf y\)。</p>
+Determine the least squares estimate of \(\beta_1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\varepsilon_i\) 配適下列資料：</p>
+<p>已知
+求 \(\hat\beta_1\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\hat\beta_1=-2\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>只需要 \((X&#x27;X)^{-1}\) 的第 1 列（從第 0 列算起）乘 \(X&#x27;\mathbf y\)。</p>
 <p><strong>第一步：\(X&#x27;\mathbf y\)。</strong>
 - \(\sum y_i=5+3+10+4+3+5=30\)
 - \(\sum x_{i1}y_i=3+4+5=12\)（\(x_1=1\) 的是第 2、4、6 筆）
 - \(\sum x_{i2}y_i=5+10+4+5=24\)（第 1、3、4、6 筆）
 - \(\sum x_{i3}y_i=3+10=13\)（第 2、3 筆）</p>
 <p><strong>第二步：</strong> \(\hat\beta_1=\dfrac1{30}\big[-10(30)+20(12)+0(24)+0(13)\big]=\dfrac{-300+240}{30}=-2\)。</p>
-<p>（完整的係數向量是 \((2.4,\,-2,\,3.8,\,3.2)\)。）</p></div></div></article><article class="exercise" id="q2-23"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.23 題</b><small>・講義 p.23・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>以 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\varepsilon_i\) 配適：</p>
+<p>（完整的係數向量是 \((2.4,\,-2,\,3.8,\,3.2)\)。）</p></div></div></article><article class="exercise" id="q2-23"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.23 題</b><small>・講義 p.23・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>You are fitting the following data to the linear regression model \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\varepsilon_i\):</p>
 <table>
 <thead>
 <tr>
@@ -700,20 +1230,26 @@
 </tr>
 </tbody>
 </table>
-<p>已知
+<p>You are given that
 \[(X&#x27;X)^{-1}=\frac1{30}\begin{pmatrix}7&amp;0&amp;1.5&amp;-2.5\\0&amp;12&amp;3&amp;-3\\1.5&amp;3&amp;11.25&amp;-0.75\\-2.5&amp;-3&amp;-0.75&amp;3.25\end{pmatrix}.\]
-求 \(x_1=x_2=x_3=1\) 時的配適值。</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(1.9\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：\(X&#x27;\mathbf y\)。</strong>
+Determine the fitted value of \(y\) for \(x_1=x_2=x_3=1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\varepsilon_i\) 配適：</p>
+<p>已知
+求 \(x_1=x_2=x_3=1\) 時的配適值。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(1.9\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：\(X&#x27;\mathbf y\)。</strong>
 - \(\sum y=1+2+6+5+1+2+3=20\)
 - \(\sum x_1y=6-5+2+3=6\)
 - \(\sum x_2y=-2+1-2=-3\)
 - \(\sum x_3y=1+2+24+3=30\)</p>
 <p><strong>第二步：係數。</strong>
 \[\hat{\boldsymbol\beta}=\frac1{30}\begin{pmatrix}7(20)+0(6)+1.5(-3)-2.5(30)\\0+12(6)+3(-3)-3(30)\\1.5(20)+3(6)+11.25(-3)-0.75(30)\\-2.5(20)-3(6)-0.75(-3)+3.25(30)\end{pmatrix}=\frac1{30}\begin{pmatrix}60.5\\-27\\-8.25\\31.75\end{pmatrix}=\begin{pmatrix}2.0167\\-0.9\\-0.275\\1.0583\end{pmatrix}.\]
-<strong>第三步：</strong> 在 \(x_1=x_2=x_3=1\)，\(\hat y=\hat\beta_0+\hat\beta_1+\hat\beta_2+\hat\beta_3=\dfrac{60.5-27-8.25+31.75}{30}=\dfrac{57}{30}=1.9\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>更快的做法：配適值 \(=\mathbf x_0&#x27;(X&#x27;X)^{-1}X&#x27;\mathbf y\)，\(\mathbf x_0=(1,1,1,1)&#x27;\)，先把反矩陣四列相加得 \((6,12,15,-3)/30\)，再和 \(X&#x27;\mathbf y=(20,6,-3,30)\) 做內積：\((120+72-45-90)/30=57/30=1.9\)。</p></div></div></article><article class="exercise" id="q2-24"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.24 題</b><small>・講義 p.24・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（舊考題）研究收費公路每月死亡車禍數 \(y\) 與三個變數的關係：降雨量 \(x_1\)（英吋）、交通流量 \(x_2\)、當月是否有連假 \(x_3\)（是 1、否 0）。模型<strong>沒有截距</strong>：\(y=\beta_1x_1+\beta_2x_2+\beta_3x_3+\varepsilon\)。12 個月資料：</p>
+<strong>第三步：</strong> 在 \(x_1=x_2=x_3=1\)，\(\hat y=\hat\beta_0+\hat\beta_1+\hat\beta_2+\hat\beta_3=\dfrac{60.5-27-8.25+31.75}{30}=\dfrac{57}{30}=1.9\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>更快的做法：配適值 \(=\mathbf x_0&#x27;(X&#x27;X)^{-1}X&#x27;\mathbf y\)，\(\mathbf x_0=(1,1,1,1)&#x27;\)，先把反矩陣四列相加得 \((6,12,15,-3)/30\)，再和 \(X&#x27;\mathbf y=(20,6,-3,30)\) 做內積：\((120+72-45-90)/30=57/30=1.9\)。</p></div></div></article><article class="exercise" id="q2-24"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.24 題</b><small>・講義 p.24・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[Old exam] You are examining the relationship between the number of fatal car accidents on a tollway each month and three other variables: precipitation, traffic volume, and the occurrence of a holiday weekend during the month. You are using the following model:
+\[y=\beta_1x_1+\beta_2x_2+\beta_3x_3+\varepsilon\]
+where \(y\) = the number of fatal car accidents, \(x_1\) = precipitation, in inches, \(x_2\) = traffic volume, and \(x_3\) = 1 if a holiday weekend occurs during the month, and 0 otherwise.</p>
+<p>The following data were collected for a 12-month period:</p>
 <table>
 <thead>
 <tr>
-<th>月</th>
+<th>Month</th>
 <th>\(y\)</th>
 <th>\(x_1\)</th>
 <th>\(x_2\)</th>
@@ -807,19 +1343,91 @@
 </tr>
 </tbody>
 </table>
+<p>You have determined:
+\[(X&#x27;X)^{-1}=\frac1{6506}\begin{pmatrix}257&amp;-82&amp;-446\\-82&amp;254&amp;-364\\-446&amp;-364&amp;2622\end{pmatrix}\]
+Determine \(\hat\beta_1\).</p>
+<div class="opts">
+<p>(A) \(-0.07\)</p>
+<p>(B) 0.15</p>
+<p>(C) 0.24</p>
+<p>(D) 0.70</p>
+<p>(E) 1.30</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題）研究收費公路每月死亡車禍數 \(y\) 與三個變數的關係：降雨量 \(x_1\)（英吋）、交通流量 \(x_2\)、當月是否有連假 \(x_3\)（是 1、否 0）。模型<strong>沒有截距</strong>：\(y=\beta_1x_1+\beta_2x_2+\beta_3x_3+\varepsilon\)。12 個月資料：</p>
 <p>已知 \((X&#x27;X)^{-1}=\dfrac1{6506}\begin{pmatrix}257&amp;-82&amp;-446\\-82&amp;254&amp;-364\\-446&amp;-364&amp;2622\end{pmatrix}\)。求 \(\hat\beta_1\)。</p>
-<p>(A) \(-0.07\)　(B) 0.15　(C) 0.24　(D) 0.70　(E) 1.30</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 0.24</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>沒有截距，所以 \(X\) 只有三欄，\(X&#x27;\mathbf y=(\sum x_1y,\sum x_2y,\sum x_3y)&#x27;\)。</p>
+<div class="opts">
+<p>(A) \(-0.07\)　(B) 0.15　(C) 0.24　(D) 0.70　(E) 1.30</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 0.24</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>沒有截距，所以 \(X\) 只有三欄，\(X&#x27;\mathbf y=(\sum x_1y,\sum x_2y,\sum x_3y)&#x27;\)。</p>
 <ul>
 <li>\(\sum x_1y=3+6+2+10+16+1+0+2+0+4+1+12=57\)</li>
 <li>\(\sum x_2y=1+3+1+4+8+2+6+4+0+6+4+12=51\)</li>
 <li>\(\sum x_3y=1+3+2+4+3+2+0+2+3=20\)（\(x_3=1\) 的月份：1、2、4、5、7、8、9、10、12）</li>
 </ul>
-<p>\[\hat\beta_1=\frac{257(57)-82(51)-446(20)}{6506}=\frac{14{,}649-4{,}182-8{,}920}{6506}=\frac{1547}{6506}=0.2378 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>模型沒有截距時，\(X\) 沒有全是 1 的那一欄，\(X&#x27;\mathbf y\) 也沒有 \(\sum y\)；而且殘差總和不一定為 0。</p></div></div></article><article class="exercise" id="q2-27"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.27 題</b><small>・講義 p.26・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2019 春 #32）配適線性迴歸 \(\mathbf y=X\boldsymbol\beta+\boldsymbol\varepsilon\)，\(\varepsilon_i\sim N(0,\sigma^2)\)，已知
+<p>\[\hat\beta_1=\frac{257(57)-82(51)-446(20)}{6506}=\frac{14{,}649-4{,}182-8{,}920}{6506}=\frac{1547}{6506}=0.2378 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>模型沒有截距時，\(X\) 沒有全是 1 的那一欄，\(X&#x27;\mathbf y\) 也沒有 \(\sum y\)；而且殘差總和不一定為 0。</p></div></div></article><article class="exercise" id="q2-27"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.27 題</b><small>・講義 p.26・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S19:32] You are fitting a linear regression model of the form:
+\[\mathbf y=X\boldsymbol\beta+\boldsymbol\varepsilon;\qquad\varepsilon_i\sim N(0,\sigma^2)\]
+and are given the following values used in this model:
 \[X=\begin{pmatrix}1&amp;0&amp;1&amp;9\\1&amp;1&amp;1&amp;15\\1&amp;1&amp;1&amp;8\\0&amp;1&amp;1&amp;7\\0&amp;1&amp;1&amp;6\\0&amp;0&amp;1&amp;6\end{pmatrix},\quad\mathbf y=\begin{pmatrix}21\\32\\19\\17\\15\\15\end{pmatrix},\quad(X&#x27;X)^{-1}X&#x27;\mathbf y=\begin{pmatrix}0.297\\-0.032\\3.943\\1.854\end{pmatrix},\]
+(The question also gives \(X&#x27;X\), \((X&#x27;X)^{-1}\), the hat matrix \(H=X(X&#x27;X)^{-1}X&#x27;\), the fitted values \(X(X&#x27;X)^{-1}X&#x27;\mathbf y\), and \(\hat\sigma^2=0.012657\).)</p>
+<p>Calculate the modeled estimate of the intercept parameter.</p>
+<div class="opts">
+<p>(A) Less than 0</p>
+<p>(B) At least 0, but less than 1</p>
+<p>(C) At least 1, but less than 2</p>
+<p>(D) At least 2, but less than 3</p>
+<p>(E) At least 3</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2019 春 #32）配適線性迴歸 \(\mathbf y=X\boldsymbol\beta+\boldsymbol\varepsilon\)，\(\varepsilon_i\sim N(0,\sigma^2)\)，已知
 另外還給了 \(X&#x27;X\)、\((X&#x27;X)^{-1}\)、帽子矩陣、配適值與 \(\hat\sigma^2=0.012657\)。求截距參數的估計值。</p>
-<p>(A) 小於 0　(B) \([0,1)\)　(C) \([1,2)\)　(D) \([2,3)\)　(E) 至少 3</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)，截距為 3.943</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>截距對應的是設計矩陣中<strong>全為 1 的那一欄</strong>。看 \(X\) 的四欄：第一欄是 \((1,1,1,0,0,0)\)、第二欄是 \((0,1,1,1,1,0)\)，都是指標變數；<strong>第三欄全是 1</strong>；第四欄是連續變數。</p>
-<p>所以截距是係數向量的第三個元素 \(3.943\)，至少 3。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不要反射性地把第一個係數 0.297 當截距。題目給的大量矩陣（帽子矩陣、\(\hat\sigma^2\)）都用不到，是干擾資訊。</p></div></div></article><article class="exercise" id="q2-28"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.28 題</b><small>・講義 p.27・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>（MAS-I 2019 春 #29）Tim 用普通最小平方迴歸，以年資與性別預測薪資，性別編碼為男 1、女 0。結果：截距 18,169.300、年資 1,110.233、性別 169.550。Abby 用同一份資料，但性別編碼為女 1、男 0。求 Abby 模型的截距。</p>
-<p>(A) 至多 18,169.3　(B) 大於 18,169.3、至多 18,400.0　(C) 大於 18,400.0、至多 18,600.0　(D) 大於 18,600.0　(E) 無法由題目資訊算出</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)，18,338.85</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Tim 的模型：女性（\(g=0\)）的線是 \(18{,}169.30+1{,}110.233\cdot\text{年資}\)，男性多 169.55。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)，截距為 3.943</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>截距對應的是設計矩陣中<strong>全為 1 的那一欄</strong>。看 \(X\) 的四欄：第一欄是 \((1,1,1,0,0,0)\)、第二欄是 \((0,1,1,1,1,0)\)，都是指標變數；<strong>第三欄全是 1</strong>；第四欄是連續變數。</p>
+<p>所以截距是係數向量的第三個元素 \(3.943\)，至少 3。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不要反射性地把第一個係數 0.297 當截距。題目給的大量矩陣（帽子矩陣、\(\hat\sigma^2\)）都用不到，是干擾資訊。</p></div></div></article><article class="exercise" id="q2-28"><div class="ex-head"><span class="ex-tag">練習</span><b>第 2.28 題</b><small>・講義 p.27・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S19:29] Tim uses an ordinary least squares regression model to predict salary based on Experience and Gender. Gender is a qualitative variable and is coded as follows:
+\[\text{Gender}=\begin{cases}1&amp;\text{if Male}\\0&amp;\text{if Female}\end{cases}\]
+His analysis results in the following output:</p>
+<table>
+<thead>
+<tr>
+<th>Coefficients</th>
+<th>Estimate</th>
+<th>Std. Error</th>
+<th>\(t\)-value</th>
+<th>\(\Pr(&gt;\lvert t\rvert)\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>18169.300</td>
+<td>212.2080</td>
+<td>85.62027</td>
+<td>2.05E−14</td>
+</tr>
+<tr>
+<td>Experience</td>
+<td>1110.233</td>
+<td>59.8224</td>
+<td>18.55881</td>
+<td>1.75E−08</td>
+</tr>
+<tr>
+<td>Gender</td>
+<td>169.550</td>
+<td>162.9177</td>
+<td>10.38285</td>
+<td>2.62E−06</td>
+</tr>
+</tbody>
+</table>
+<p>Abby uses the same data set but codes gender as follows:
+\[\text{Gender}=\begin{cases}1&amp;\text{if Female}\\0&amp;\text{if Male}\end{cases}\]
+Calculate the value of the Intercept in Abby's model.</p>
+<div class="opts">
+<p>(A) At most 18,169.3</p>
+<p>(B) Greater than 18,169.3, but at most 18,400.0</p>
+<p>(C) Greater than 18,400.0, but at most 18,600.0</p>
+<p>(D) Greater than 18,600.0</p>
+<p>(E) The answer cannot be computed from the information given</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2019 春 #29）Tim 用普通最小平方迴歸，以年資與性別預測薪資，性別編碼為男 1、女 0。結果：截距 18,169.300、年資 1,110.233、性別 169.550。Abby 用同一份資料，但性別編碼為女 1、男 0。求 Abby 模型的截距。</p>
+<div class="opts">
+<p>(A) 至多 18,169.3　(B) 大於 18,169.3、至多 18,400.0　(C) 大於 18,400.0、至多 18,600.0　(D) 大於 18,600.0　(E) 無法由題目資訊算出</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)，18,338.85</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Tim 的模型：女性（\(g=0\)）的線是 \(18{,}169.30+1{,}110.233\cdot\text{年資}\)，男性多 169.55。</p>
 <p>Abby 的模型以男性為基準：截距必須是<strong>男性</strong>在年資 0 時的平均，也就是 Tim 模型裡男性的截距：
 \[18{,}169.30+169.55=18{,}338.85 .\]
-她的性別係數則是 \(-169.55\)（女性比男性低 169.55），年資係數不變。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>換基準類別只是換一種記帳方式：每一類的配適值不變，截距變成新基準類別的平均，指標係數變號。</p></div></div></article></section><div class="navfoot"><a href="ch01.html">← 第 1 章</a><a href="ch03.html">第 3 章 →</a></div></main></body></html>
+她的性別係數則是 \(-169.55\)（女性比男性低 169.55），年資係數不變。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>換基準類別只是換一種記帳方式：每一類的配適值不變，截距變成新基準類別的平均，指標係數變號。另外，題目表中性別的 \(t\) 值 10.38 和 \(169.550/162.9177=1.04\) 對不上（原題如此），但不影響截距的計算。</p></div></div></article></section><button class="toggle-all float" type="button">隱藏全部解答</button><div class="navfoot"><a href="ch01.html">← 第 1 章</a><a href="ch03.html">第 3 章 →</a></div></main></body></html>

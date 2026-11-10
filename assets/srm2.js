@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded',()=>{
  const sel=document.getElementById('chapter');if(sel)sel.onchange=()=>location.href=sel.value;
- document.addEventListener('click',e=>{const b=e.target.closest('button.reveal');if(!b)return;const ex=b.closest('.exercise');const f=ex.classList.toggle('folded');b.textContent=f?'顯示解答':'隱藏解答';b.setAttribute('aria-expanded',String(!f))});
+ const EXS=()=>[...document.querySelectorAll('.exercise')];
+ const setEx=(ex,f)=>{ex.classList.toggle('folded',f);const r=ex.querySelector('button.reveal');if(r){r.textContent=f?'顯示解答':'隱藏解答';r.setAttribute('aria-expanded',String(!f))}};
+ const syncAll=()=>{const open=EXS().some(x=>!x.classList.contains('folded'));document.querySelectorAll('button.toggle-all').forEach(b=>{b.textContent=open?'隱藏全部解答':'顯示全部解答';b.setAttribute('aria-pressed',String(!open))})};
+ document.addEventListener('click',e=>{const t=e.target.closest('button.toggle-all');if(t){const open=EXS().some(x=>!x.classList.contains('folded'));EXS().forEach(x=>setEx(x,open));syncAll();return}
+  const b=e.target.closest('button.reveal');if(!b)return;const ex=b.closest('.exercise');setEx(ex,!ex.classList.contains('folded'));syncAll()});
  window.mathIssues=[];renderMathInElement(document.querySelector('main'),{delimiters:[{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}],strict:'ignore',throwOnError:false,errorCallback:m=>window.mathIssues.push(m)});
  document.querySelectorAll('main table').forEach(t=>{const d=document.createElement('div');d.className='tabwrap';t.before(d);d.append(t)});
  let pop,active,timer;const hide=()=>{if(pop)pop.remove();pop=null;active=null};

@@ -55,9 +55,17 @@ button.reveal{margin:8px 0 6px;font-size:13.5px;padding:3px 12px;border-radius:9
 a.concept{color:inherit;text-decoration:none;border-bottom:1.5px dashed #6d8fb3}
 .pop{position:fixed;z-index:50;max-width:340px;background:#fff;border:1px solid #c9d3df;border-radius:9px;padding:10px 13px;box-shadow:0 6px 22px rgba(0,0,0,.16);font-size:14px;line-height:1.6}
 .pop p{margin:0 0 6px}
-.back{position:fixed;right:18px;bottom:18px;z-index:40;padding:8px 14px;border-radius:999px;border:0;background:var(--navy);color:#fff;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.25)}
+.back{position:fixed;right:18px;bottom:64px;z-index:40;padding:8px 14px;border-radius:999px;border:0;background:var(--navy);color:#fff;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.25)}
 .navfoot{display:flex;justify-content:space-between;margin:20px 4px}
 @media (max-width:640px){body{font-size:16px}.course-switcher{padding:8px 12px;flex-wrap:wrap;gap:6px}.course-switcher .pickers{margin-left:0;width:100%}.course-switcher select{max-width:none;flex:1 1 0;min-width:0;width:0}
  .ch-head,.toc,.unit{padding:16px 16px;border-radius:10px}main.course{padding:14px 10px 40px}h1{font-size:24px}.unit>h2{font-size:20px}.exercise{padding:12px 12px}}
-@media print{.course-switcher,button.reveal,.back,.navfoot,.chips{display:none!important}body{background:#fff;font-size:12.5pt}.ch-head,.toc,.unit{border:0;padding:0 0 10px}.exercise.folded .solution{display:block}.unit{break-before:page}figure,.box,.exercise{break-inside:avoid}}
+@media print{.course-switcher,button.reveal,button.toggle-all,.chip-note,.back,.navfoot,.chips{display:none!important}body{background:#fff;font-size:12.5pt}.ch-head,.toc,.unit{border:0;padding:0 0 10px}.exercise.folded .solution{display:block}.unit{break-before:page}figure,.box,.exercise{break-inside:avoid}}
 .katex{position:relative}.katex .katex-mathml{left:0;top:0}
+
+.sol-part.中文題意{background:#f4f2fa;border-left:4px solid #6550a8}.sol-part.中文題意 .sol-t{color:#4b3a86}
+.opts p,.items p{margin:3px 0}.opts{margin:8px 0 4px;padding-left:4px}.items{margin:6px 0}
+.prompt{font-family:inherit}
+.ex-tag.cc{background:#ebe6f7;color:#4b3a86}.sec-ex.cc .sec-ex-t{color:#4b3a86}
+.chip-note{font-size:14px;padding:4px 12px;border-radius:999px;background:#f3f0fa;border:1px solid #dcd3ef;color:#4b3a86}
+button.toggle-all{font-size:14px;padding:4px 14px;border-radius:999px;border:1px solid #1f4e78;background:#1f4e78;color:#fff;cursor:pointer}
+button.toggle-all.float{position:fixed;right:18px;bottom:18px;z-index:39;box-shadow:0 3px 12px rgba(0,0,0,.25);font-size:13.5px;padding:7px 14px}
