@@ -6,7 +6,7 @@
 <p><strong>統計學習</strong>（statistical learning）是用過去的資料，找出一個變數如何依賴其他變數，或找出資料本身的結構。以保險為例：保險公司想依被保險人的年齡、性別、收入、信用評分、過去理賠紀錄等特徵，估計他的理賠成本。若 \(Y\) 代表理賠成本、\(X_1,X_2,\ldots,X_p\) 代表這些特徵，我們想找一個函數 \(f\) 使得</p>
 <p>\[Y=f(X_1,X_2,\ldots,X_p)+\varepsilon .\]</p>
 <p>這裡 \(\varepsilon\) 是<strong>誤差項</strong>（error term）。沒有任何函數能完美描述 \(Y\)：兩個特徵完全相同的人，理賠金額仍然不同，因為有些影響因素沒有被量測，或本身就是隨機的。通常假設 \(E(\varepsilon)=0\)，而且 \(\varepsilon\) 和 \(X\) 無關，所以 \(f(X)\) 就是給定 \(X\) 時 \(Y\) 的條件平均 \(E(Y\mid X)\)。</p>
-<p>名詞對照：\(X_j\) 稱為<strong>解釋變數</strong>（explanatory variable）、<strong>自變數</strong>（independent variable）、<strong>預測變數</strong>（predictor）或<strong>特徵</strong>（feature；講義說「特徵」通常指只有有限幾個可能值的離散變數）。\(Y\) 稱為<strong>應變數</strong>（dependent variable）或<strong>反應變數</strong>（response）。</p>
+<p>名詞對照：\(X_j\) 稱為<strong>解釋變數</strong>（explanatory variable）、<strong>自變數</strong>（independent variable）、<strong>預測變數</strong>（predictor）或<strong>特徵</strong>（feature；「特徵」常特指只有有限幾個可能值的離散變數）。\(Y\) 稱為<strong>應變數</strong>（dependent variable）或<strong>反應變數</strong>（response）。</p>
 <h3>二、可降低的誤差與不可降低的誤差</h3>
 <p>我們手上只有估計出來的 \(\hat f\)，用它預測得到 \(\hat Y=\hat f(X)\)。把 \(X\) 固定在某個值，預測誤差的期望平方可以拆成兩塊：</p>
 <div class="box derive">
@@ -30,7 +30,7 @@
 <li><strong>參數方法</strong>（parametric method）：先假設 \(f\) 的函數形式，再用資料估計其中的參數。例如假設 \(f(X)=\beta_0+\beta_1X_1+\cdots+\beta_pX_p\)，問題就從「估計整個函數」縮小成「估計 \(p+1\) 個係數」。估好之後，描述這條關係只需要那幾個係數，原始資料可以丟掉。缺點是假設的形式可能錯：真正的 \(f\) 若是彎的，直線再怎麼估也貼不上。</li>
 <li><strong>非參數方法</strong>（non-parametric method）：不事先假設簡單的形式，只要求 \(\hat f\) 盡量靠近資料點、又不要太扭曲。例子是<strong>樣條</strong>（spline）：三次樣條用分段的三次多項式把點接起來，接點處曲率連續（樣條不在考試範圍）。非參數方法描述關係時需要全部的資料；缺點是需要大量觀察值才估得準。</li>
 </ul>
-<p>本書的 KNN（第 15 章）與決策樹（第 16 章）是非參數方法；線性迴歸與廣義線性模型是參數方法。</p>
+<p>本書的 KNN（<a href="ch15.html">第 15 章</a>）與決策樹（<a href="ch16.html">第 16 章</a>）是非參數方法；線性迴歸與廣義線性模型是參數方法。</p>
 <h3>五、彈性與可解釋性的取捨</h3>
 <p><strong>彈性高</strong>（flexible）的方法會為了貼近每一個觀察值而扭曲；<strong>彈性低</strong>的方法不會。直覺上彈性越高越好，但有兩個問題：</p>
 <ol>
@@ -41,12 +41,12 @@
 <ol start="2">
 <li><strong>越有彈性越難解釋</strong>。線性迴歸彈性低，但每個係數的意思一目了然；彈性高的方法往往是黑盒子。若目的是預測，看不懂沒關係；若目的是推論，就是很大的缺點。</li>
 </ol>
-<figure><img src="assets/fig/ch01-flex-interp.svg" alt="本書各方法在「彈性」與「可解釋性」上的大致位置（仿 ISLR 圖 2.7）。越往右越能貼合複雜的形狀，但越難說明每個變數的作用。" loading="lazy"><figcaption>本書各方法在「彈性」與「可解釋性」上的大致位置（仿 ISLR 圖 2.7）。越往右越能貼合複雜的形狀，但越難說明每個變數的作用。</figcaption></figure>
+<figure><img src="assets/fig/ch01-flex-interp.svg" alt="本書各方法在「彈性」與「可解釋性」上的大致位置。越往右越能貼合複雜的形狀，但越難說明每個變數的作用。" loading="lazy"><figcaption>本書各方法在「彈性」與「可解釋性」上的大致位置。越往右越能貼合複雜的形狀，但越難說明每個變數的作用。</figcaption></figure>
 
 <h3>六、監督式與非監督式學習</h3>
 <ul>
 <li><strong>監督式學習</strong>（supervised learning）：每筆資料都有反應變數 \(Y\)，目標是用 \(X\) 解釋或預測 \(Y\)。因為有正確答案可以對照，可以算出模型錯了多少。</li>
-<li><strong>非監督式學習</strong>（unsupervised learning）：沒有反應變數，只是找觀察值之間的關係或資料裡的結構，例如主成分分析（第 17 章）與群集分析（第 18 章）。因為沒有正確答案，很難衡量做得好不好，所以比監督式學習困難。</li>
+<li><strong>非監督式學習</strong>（unsupervised learning）：沒有反應變數，只是找觀察值之間的關係或資料裡的結構，例如主成分分析（<a href="ch17.html">第 17 章</a>）與群集分析（<a href="ch18.html">第 18 章</a>）。因為沒有正確答案，很難衡量做得好不好，所以比監督式學習困難。</li>
 </ul>
 <h3>七、迴歸問題與分類問題</h3>
 <p>反應變數是連續的數值，稱為<strong>迴歸問題</strong>（regression problem）；反應變數只有少數幾個可能值，稱為<strong>分類問題</strong>（classification problem），而且那些值不一定是數字，例如藥物「有效／無效」。迴歸問題配適的函數可以是任何實數；分類問題配適的函數估計的是各類別的機率。</p>
@@ -57,8 +57,8 @@
 <h3>八、配適品質：訓練誤差與測試誤差</h3>
 <p>迴歸問題用<strong>均方誤差</strong>（mean squared error，MSE）衡量配適品質：</p>
 <p>\[\mathrm{MSE}=\frac1n\sum_{i=1}^n\big(y_i-\hat y_i\big)^2,\qquad \hat y_i=\hat f(x_i).\]</p>
-<p>用來估計模型的資料叫<strong>訓練資料</strong>（training data），沒有用來估計模型的叫<strong>測試資料</strong>（test data）。模型的好壞要看<strong>測試 MSE</strong>：在新資料上的誤差。彈性高的模型靠大量參數就能把訓練 MSE 壓得很低，但那不代表模型好。也正因如此，迴歸裡衡量訓練資料誤差的指標，分母通常比 \(n\) 小（例如第 3 章的 \(s^2=\mathrm{RSS}/(n-k-1)\)），用來抵銷估計參數造成的低估。第 6 章會說明怎麼在沒有額外資料時估計測試誤差。</p>
-<p>分類問題用<strong>錯誤率</strong>（error rate），也就是分錯類的比例 \(\frac1n\sum I(y_i\ne\hat y_i)\)；講義的說法是用「分對的比例」衡量，兩者互補。同樣要在測試資料上算。</p>
+<p>用來估計模型的資料叫<strong>訓練資料</strong>（training data），沒有用來估計模型的叫<strong>測試資料</strong>（test data）。模型的好壞要看<strong>測試 MSE</strong>（test MSE）：在新資料上的誤差。彈性高的模型靠大量參數就能把訓練 MSE 壓得很低，但那不代表模型好。也正因如此，迴歸裡衡量訓練資料誤差的指標，分母通常比 \(n\) 小（例如<a href="ch03.html">第 3 章</a>的 \(s^2=\mathrm{RSS}/(n-k-1)\)），用來抵銷估計參數造成的低估。<a href="ch06.html">第 6 章</a>會說明怎麼在沒有額外資料時估計測試誤差。</p>
+<p>分類問題用<strong>錯誤率</strong>（error rate），也就是分錯類的比例 \(\frac1n\sum I(y_i\ne\hat y_i)\)；也可以用「分對的比例」衡量，兩者互補。同樣要在測試資料上算。</p>
 <figure><img src="assets/fig/ch01-mse-flex.svg" alt="用模擬資料（22 個訓練點、真實函數同上圖）重複 300 次，計算不同彈性下的平均訓練 MSE 與測試 MSE。訓練 MSE 隨彈性一路下降；測試 MSE 先降後升，呈 U 形。兩條線都不會低於虛線（不可降低的誤差 0.30）之下太多：訓練 MSE 跌破虛線，代表模型已經在記住雜訊。" loading="lazy"><figcaption>用模擬資料（22 個訓練點、真實函數同上圖）重複 300 次，計算不同彈性下的平均訓練 MSE 與測試 MSE。訓練 MSE 隨彈性一路下降；測試 MSE 先降後升，呈 U 形。兩條線都不會低於虛線（不可降低的誤差 0.30）之下太多：訓練 MSE 跌破虛線，代表模型已經在記住雜訊。</figcaption></figure>
 
 <h3>九、偏差與變異數的取捨</h3>
@@ -114,8 +114,8 @@
 <p>I. 彈性越高，訓練 MSE 通常越低。</p>
 <p>II. 彈性越高，測試 MSE 一定越低。</p>
 <p>III. 彈性高的方法通常偏差較小、變異數較大。</p>
-</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：彈性越高越能貼近訓練資料，訓練 MSE 一路下降（第 1 章 1.1 節的圖）。</p>
-<p>II 錯：測試 MSE 呈 U 形，彈性過高時變異數增加的幅度超過偏差減少的幅度，測試 MSE 反而上升。第 6 章的交叉驗證就是要找 U 形的最低點。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：彈性越高越能貼近訓練資料，訓練 MSE 一路下降（<a href="ch01.html#s1">第 1 章 1.1 節</a>的圖）。</p>
+<p>II 錯：測試 MSE 呈 U 形，彈性過高時變異數增加的幅度超過偏差減少的幅度，測試 MSE 反而上升。<a href="ch06.html">第 6 章</a>的交叉驗證就是要找 U 形的最低點。</p>
 <p>III 對：這就是偏差與變異數的取捨。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>「訓練 MSE 下降」不代表模型變好；選模型要看測試誤差或它的估計（第 6、7 章）。</p></div></div></article><article class="exercise concept-q" id="qC1-1-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.1-2</b><small>仿 SOA 樣題・跨章：第 17,18 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>An analyst is given the following tasks:</p>
 <div class="items">
 <p>I. Grouping policyholders into segments based on 12 rating variables, with no response variable.</p>
@@ -135,8 +135,8 @@
 <p>II. 用少數幾個線性組合概括 10 個高度相關的費率變數。</p>
 <p>III. 由駕駛人特徵預測每位保戶的理賠件數。</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>非監督式學習沒有反應變數，只研究解釋變數本身的結構。</p>
-<p>I 是群集分析（第 18 章），II 是主成分分析（第 17 章），兩者都沒有反應變數，是非監督式。</p>
-<p>III 有明確的反應變數（理賠件數），是監督式的迴歸問題（第 13 章的計數模型）。</p></div></div></article><article class="exercise concept-q" id="qC1-1-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.1-3</b><small>仿 SOA 樣題・跨章：第 7,10 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
+<p>I 是群集分析（<a href="ch18.html">第 18 章</a>），II 是主成分分析（<a href="ch17.html">第 17 章</a>），兩者都沒有反應變數，是非監督式。</p>
+<p>III 有明確的反應變數（理賠件數），是監督式的迴歸問題（<a href="ch13.html">第 13 章</a>的計數模型）。</p></div></div></article><article class="exercise concept-q" id="qC1-1-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.1-3</b><small>仿 SOA 樣題・跨章：第 7,10 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
 <div class="items">
 <p>I. When the goal is inference, such as understanding how each rating factor relates to claim frequency, less flexible and more interpretable models are generally preferred.</p>
 <p>II. When the goal is prediction only, a model whose form is hard to interpret can be acceptable if its test error is low.</p>
@@ -154,7 +154,7 @@
 <p>II. 只要預測時，若測試誤差低，難以解釋的模型也可以接受。</p>
 <p>III. 做預測時，應選訓練 MSE 最低的模型。</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對、II 對：推論需要看得懂每個變數的效果，預測只在乎新資料上的誤差，這是可解釋性與彈性的取捨。</p>
-<p>III 錯：訓練 MSE 隨彈性一路下降，選它等於永遠選最複雜的模型，會過度配適。應該用交叉驗證（第 6 章）或 \(C_p\)、AIC、BIC、調整 \(R^2\)（第 7 章）。</p></div></div></article><article class="exercise concept-q" id="qC1-1-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.1-4</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For a fixed point \(x_0\), the expected test MSE can be decomposed as
+<p>III 錯：訓練 MSE 隨彈性一路下降，選它等於永遠選最複雜的模型，會過度配適。應該用交叉驗證（<a href="ch06.html">第 6 章</a>）或 \(C_p\)、AIC、BIC、調整 \(R^2\)（<a href="ch07.html">第 7 章</a>）。</p></div></div></article><article class="exercise concept-q" id="qC1-1-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.1-4</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For a fixed point \(x_0\), the expected test MSE can be decomposed as
 \[E\big(y_0-\hat f(x_0)\big)^2=\mathrm{Var}\big(\hat f(x_0)\big)+\big[\mathrm{Bias}\big(\hat f(x_0)\big)\big]^2+\mathrm{Var}(\varepsilon).\]
 Determine which of the following statements is/are true.</p>
 <div class="items">
@@ -175,7 +175,7 @@ Determine which of the following statements is/are true.</p>
 <p>III. 不偏的方法一定比有偏的方法測試 MSE 小。</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：\(\mathrm{Var}(\varepsilon)\) 是不可降低的誤差，來自模型沒有包含的因素，任何方法都無法消除。</p>
 <p>II 對：另外兩項都不小於 0。</p>
-<p>III 錯：不偏的方法可能變異數很大。第 8 章的脊迴歸與 lasso 就是故意引入一點偏差，換取變異數大幅下降，使測試 MSE 變小。</p></div></div></article><article class="exercise concept-q" id="qC1-1-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.1-5</b><small>仿 SOA 樣題・跨章：第 15 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about parametric and non-parametric methods is/are true.</p>
+<p>III 錯：不偏的方法可能變異數很大。<a href="ch08.html">第 8 章</a>的脊迴歸與 lasso 就是故意引入一點偏差，換取變異數大幅下降，使測試 MSE 變小。</p></div></div></article><article class="exercise concept-q" id="qC1-1-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.1-5</b><small>仿 SOA 樣題・跨章：第 15 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about parametric and non-parametric methods is/are true.</p>
 <div class="items">
 <p>I. Parametric methods reduce the problem of estimating \(f\) to estimating a set of parameters, after assuming a functional form for \(f\).</p>
 <p>II. Non-parametric methods do not make explicit assumptions about the functional form of \(f\), but generally need many more observations to estimate \(f\) accurately.</p>
@@ -192,8 +192,8 @@ Determine which of the following statements is/are true.</p>
 <p>I. 參數方法先假設 \(f\) 的形式，把估計 \(f\) 變成估計一組參數。</p>
 <p>II. 非參數方法不明確假設 \(f\) 的形式，但通常需要多得多的觀察值。</p>
 <p>III. \(K\) 最近鄰迴歸有一個參數 \(K\)，所以是參數方法。</p>
-</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對：這是 ISLR 對兩類方法的定義與代價。</p>
-<p>III 錯：\(K\) 是調整參數（tuning parameter），決定彈性，不是描述 \(f\) 形式的參數。KNN 不假設 \(f\) 的形式，是非參數方法（第 15 章）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>「有參數」和「參數方法」是兩回事：參數方法指的是 \(f\) 的形式由有限個參數決定（例如線性迴歸的 \(\beta\)）。</p></div></div></article><article class="exercise concept-q" id="qC1-1-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.1-6</b><small>仿 SOA 樣題・跨章：第 12,13 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對：這是兩類方法的定義與代價。</p>
+<p>III 錯：\(K\) 是調整參數（tuning parameter），決定彈性，不是描述 \(f\) 形式的參數。KNN 不假設 \(f\) 的形式，是非參數方法（<a href="ch15.html">第 15 章</a>）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>「有參數」和「參數方法」是兩回事：參數方法指的是 \(f\) 的形式由有限個參數決定（例如線性迴歸的 \(\beta\)）。</p></div></div></article><article class="exercise concept-q" id="qC1-1-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.1-6</b><small>仿 SOA 樣題・跨章：第 12,13 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
 <div class="items">
 <p>I. Predicting whether a claim is fraudulent is a classification problem.</p>
 <p>II. Predicting the number of claims (0, 1, 2, …) must be treated as a classification problem because the response is discrete.</p>
@@ -211,8 +211,8 @@ Determine which of the following statements is/are true.</p>
 <p>II. 理賠件數只取 0、1、2…，所以必須當成分類問題。</p>
 <p>III. 邏輯斯迴歸雖然名為迴歸，但因為估計的是類別機率，通常用於分類。</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：反應是兩類（詐欺／非詐欺）。</p>
-<p>II 錯：理賠件數是數值（計數）變數，2 件確實是 1 件的兩倍，通常用卜瓦松等計數迴歸處理（第 13 章），不是分類。</p>
-<p>III 對：邏輯斯迴歸估計 \(P(Y=1\mid x)\)，再依門檻分類（第 12 章）。</p></div></div></article></div></section><section class="unit" id="s2"><h2>1.2 變數的種類</h2><p>變數的型態決定能用哪些模型與圖。講義的分類如下。</p>
+<p>II 錯：理賠件數是數值（計數）變數，2 件確實是 1 件的兩倍，通常用卜瓦松等計數迴歸處理（<a href="ch13.html">第 13 章</a>），不是分類。</p>
+<p>III 對：邏輯斯迴歸估計 \(P(Y=1\mid x)\)，再依門檻分類（<a href="ch12.html">第 12 章</a>）。</p></div></div></article></div></section><section class="unit" id="s2"><h2>1.2 變數的種類</h2><p>變數的型態決定能用哪些模型與圖。</p>
 <h3>一、數值變數與類別變數</h3>
 <ul>
 <li><strong>數值變數</strong>（quantitative variable）：取值是有意義的數字，可以加減、比大小。又分<strong>連續</strong>（continuous，例如理賠金額、年齡）與<strong>離散</strong>（discrete，例如理賠件數 0、1、2、…）。</li>
@@ -220,10 +220,10 @@ Determine which of the following statements is/are true.</p>
 </ul>
 <p>判斷的關鍵不是「看起來是不是數字」，而是「數字本身有沒有數量上的意義」。傷害代碼 101、205、310 雖然是數字，但 310 不代表比 101「多」，所以是類別變數。理賠件數雖然只取整數，但 2 件確實是 1 件的兩倍，所以是（離散的）數值變數。</p>
 <h3>二、類別變數在模型裡怎麼用</h3>
-<p>迴歸模型裡，類別變數要先轉成<strong>指標變數</strong>（indicator，又稱虛擬變數 dummy variable）：一個有 \(c\) 類的變數，在有截距的模型中用 \(c-1\) 個 0／1 變數表示，剩下那一類是<strong>基準類別</strong>（reference level）。詳細的寫法與係數解讀在第 2 章 2.3 節。</p>
+<p>迴歸模型裡，類別變數要先轉成<strong>指標變數</strong>（indicator，又稱虛擬變數 dummy variable）：一個有 \(c\) 類的變數，在有截距的模型中用 \(c-1\) 個 0／1 變數表示，剩下那一類是<strong>基準類別</strong>（reference level）。詳細的寫法與係數解讀在<a href="ch02.html#s3">第 2 章 2.3 節</a>。</p>
 <div class="box warn">
 <div class="box-t">易錯提醒</div>
-<p>「理賠件數」是數值（計數）變數，不是類別變數；「理賠延遲時間」是連續的數值變數。章末第 1.1 題就是考這個區分。</p>
+<p>「理賠件數」是數值（計數）變數，不是類別變數；「理賠延遲時間」是連續的數值變數。章末第 <a href="ch01.html#q1-1">1.1</a> 題就是考這個區分。</p>
 </div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q1-1"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 1.1 題</b><small>・講義 p.7・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>Which of the following are categorical variables?</p>
 <ol>
 <li>Legal representation</li>
@@ -245,7 +245,7 @@ Determine which of the following statements is/are true.</p>
 <li><strong>傷害代碼</strong>即使寫成數字，代碼之間也沒有大小或距離的意義（代碼 310 不比 101「多」），是名目的類別變數。</li>
 <li><strong>理賠件數</strong>取 0、1、2、…，雖然是離散的，但 2 件確實是 1 件的兩倍，可以相加平均，是離散的數值（計數）變數。</li>
 <li><strong>理賠金額</strong>是連續的數值變數。</li>
-</ol></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不要因為「只取整數」就判成類別變數。計數資料在第 13 章會用 Poisson 等計數模型處理，正是因為它是數值。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的質性題，含跨章節）</div><article class="exercise concept-q" id="qC1-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.2-1</b><small>仿 SOA 樣題・跨章：第 2 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following variables are categorical variables.</p>
+</ol></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不要因為「只取整數」就判成類別變數。計數資料在<a href="ch13.html">第 13 章</a>會用 Poisson 等計數模型處理，正是因為它是數值。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的質性題，含跨章節）</div><article class="exercise concept-q" id="qC1-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.2-1</b><small>仿 SOA 樣題・跨章：第 2 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following variables are categorical variables.</p>
 <div class="items">
 <p>I. Injury code (101, 205, 310, …)</p>
 <p>II. Number of claims in a year</p>
@@ -281,9 +281,9 @@ Determine which of the following statements is/are true.</p>
 <p>I. 地區應該用 5 個指標變數表示。</p>
 <p>II. 某地區指標的係數，是在其他變數固定下，該地區和基準地區期望反應的差。</p>
 <p>III. 換基準地區會改變模型的配適值。</p>
-</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：有截距時只能用 \(5-1=4\) 個指標，放 5 個會和截距完全共線，\(X&#x27;X\) 不可逆（第 2 章 2.2 節）。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：有截距時只能用 \(5-1=4\) 個指標，放 5 個會和截距完全共線，\(X&#x27;X\) 不可逆（<a href="ch02.html#s2">第 2 章 2.2 節</a>）。</p>
 <p>II 對：這是指標係數的解讀。</p>
-<p>III 錯：換基準類別只是換參數化方式，欄位空間不變，配適值與殘差完全相同，改變的是截距與指標係數（第 2 章習題 2.26、2.28）。</p></div></div></article><article class="exercise concept-q" id="qC1-2-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.2-3</b><small>仿 SOA 樣題・跨章：第 7 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
+<p>III 錯：換基準類別只是換參數化方式，欄位空間不變，配適值與殘差完全相同，改變的是截距與指標係數（<a href="ch02.html">第 2 章</a>習題 <a href="ch02.html#q2-26">2.26</a>、<a href="ch02.html#q2-28">2.28</a>）。</p></div></div></article><article class="exercise concept-q" id="qC1-2-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.2-3</b><small>仿 SOA 樣題・跨章：第 7 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
 <div class="items">
 <p>I. In subset selection, the indicator variables of a categorical variable with more than two levels may enter the model one at a time, so the final model may include only some of the levels.</p>
 <p>II. An ordinal variable such as injury severity (mild, moderate, severe) can only be modeled with indicator variables.</p>
@@ -300,7 +300,7 @@ Determine which of the following statements is/are true.</p>
 <p>I. 子集選擇時，多類別變數的指標可以一個一個進入模型，最後的模型可能只包含部分類別。</p>
 <p>II. 次序變數（輕、中、重）只能用指標變數表示。</p>
 <p>III. 有截距時，二元變數只需要一個指標變數。</p>
-</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：逐步法一次加減一個參數，沒進模型的類別等於併入基準類別（第 7 章 7.1 節）。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：逐步法一次加減一個參數，沒進模型的類別等於併入基準類別（<a href="ch07.html#s1">第 7 章 7.1 節</a>）。</p>
 <p>II 錯：次序變數也可以用一個數值分數（例如 1、2、3）放進模型，這假設相鄰等級的效果差相同；用指標變數則不做這個假設，但多用參數。兩種都可以，是建模選擇。</p>
 <p>III 對：2 類需要 \(2-1=1\) 個指標。</p></div></div></article><article class="exercise concept-q" id="qC1-2-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.2-4</b><small>仿 SOA 樣題・跨章：第 2 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A regression model for claim severity includes driver age (continuous) and gender (binary) as well as an interaction between them. Determine which of the following statements is/are true.</p>
 <div class="items">
@@ -319,7 +319,7 @@ Determine which of the following statements is/are true.</p>
 <p>I. 模型允許兩性對年齡的斜率不同。</p>
 <p>II. 交互作用項多一個參數。</p>
 <p>III. 沒有交互作用項時，兩性的直線必須平行。</p>
-</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：I、II、III 都正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>模型 \(y=\beta_0+\beta_1\text{age}+\beta_2g+\beta_3\,\text{age}\cdot g\)。\(g=0\) 的斜率是 \(\beta_1\)，\(g=1\) 的斜率是 \(\beta_1+\beta_3\)，所以 I 對；交互作用只有 \(\beta_3\) 一個參數，II 對；拿掉 \(\beta_3\) 後兩條線斜率都是 \(\beta_1\)，只差截距 \(\beta_2\)，III 對（第 2 章 2.3 節）。</p></div></div></article><article class="exercise concept-q" id="qC1-2-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.2-5</b><small>仿 SOA 樣題・跨章：第 11,13 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：I、II、III 都正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>模型 \(y=\beta_0+\beta_1\text{age}+\beta_2g+\beta_3\,\text{age}\cdot g\)。\(g=0\) 的斜率是 \(\beta_1\)，\(g=1\) 的斜率是 \(\beta_1+\beta_3\)，所以 I 對；交互作用只有 \(\beta_3\) 一個參數，II 對；拿掉 \(\beta_3\) 後兩條線斜率都是 \(\beta_1\)，只差截距 \(\beta_2\)，III 對（<a href="ch02.html#s3">第 2 章 2.3 節</a>）。</p></div></div></article><article class="exercise concept-q" id="qC1-2-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.2-5</b><small>仿 SOA 樣題・跨章：第 11,13 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
 <div class="items">
 <p>I. A claim count response variable is a quantitative variable.</p>
 <p>II. The amount of time between the reporting and the settlement of a claim is a continuous variable.</p>
@@ -337,38 +337,38 @@ Determine which of the following statements is/are true.</p>
 <p>II. 從報案到結案的時間是連續變數。</p>
 <p>III. 理賠件數是非負整數，所以絕對不能用常態線性模型。</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對（第 1.1 題的分類）。</p>
-<p>III 錯：「絕對不能」太強。常態線性模型可以用，只是假設不太適合（變異數通常隨平均增加、預測值可能為負），所以較好的選擇是卜瓦松等廣義線性模型（第 11、13 章）。</p></div></div></article></div></section><section class="unit" id="s3"><h2>1.3 圖形</h2><p>建模前先畫圖，看變數之間大致的關係、分配的形狀與有沒有異常值。講義介紹三種圖。</p>
+<p>III 錯：「絕對不能」太強。常態線性模型可以用，只是假設不太適合（變異數通常隨平均增加、預測值可能為負），所以較好的選擇是卜瓦松等廣義線性模型（第 11、13 章）。</p></div></div></article></div></section><section class="unit" id="s3"><h2>1.3 圖形</h2><p>建模前先畫圖，看變數之間大致的關係、分配的形狀與有沒有異常值。常用的有三種圖。</p>
 <h3>一、散布圖</h3>
 <p><strong>散布圖</strong>（scatter plot）把每一筆觀察畫成平面上的一點，橫軸是解釋變數、縱軸是反應變數，用來看兩個數值變數的關係：是否大致成直線、往上還是往下、有沒有彎曲、有沒有離群的點。點很多時（例如 2,000 個），點會疊在一起，要用透明度或較小的點才看得出密度。若還有一個類別變數，可以用顏色區分：如果紅點集中在下方、藍點集中在上方，表示「藍色」那一類的反應值傾向較高；如果兩種顏色均勻混在一起，表示這個類別變數和反應關係不大。</p>
-<figure><img src="assets/fig/ch01-scatter.svg" alt="散布圖的三種情況（仿講義圖 1.1、1.2）。左：點少時每一點都清楚。中：2,000 個點要用半透明才看得出哪裡密集。右：用顏色加入一個類別變數，藍點整體高於紅點，表示類別 1 的反應值較高。" loading="lazy"><figcaption>散布圖的三種情況（仿講義圖 1.1、1.2）。左：點少時每一點都清楚。中：2,000 個點要用半透明才看得出哪裡密集。右：用顏色加入一個類別變數，藍點整體高於紅點，表示類別 1 的反應值較高。</figcaption></figure>
+<figure><img src="assets/fig/ch01-scatter.svg" alt="散布圖的三種情況。左：點少時每一點都清楚。中：2,000 個點要用半透明才看得出哪裡密集。右：用顏色加入一個類別變數，藍點整體高於紅點，表示類別 1 的反應值較高。" loading="lazy"><figcaption>散布圖的三種情況。左：點少時每一點都清楚。中：2,000 個點要用半透明才看得出哪裡密集。右：用顏色加入一個類別變數，藍點整體高於紅點，表示類別 1 的反應值較高。</figcaption></figure>
 
 <h3>二、箱形圖</h3>
 <p>用一個類別變數解釋一個連續變數時，可以每一類各畫一個<strong>箱形圖</strong>（box plot）：</p>
 <ul>
-<li>箱子中間的粗線是<strong>中位數</strong>；箱子下緣是<strong>第一四分位數</strong> \(Q_1\)，上緣是<strong>第三四分位數</strong> \(Q_3\)。箱子的高度 \(Q_3-Q_1\) 叫<strong>四分位距</strong>（interquartile range，IQR）。</li>
-<li>箱子上下各有一條線，叫<strong>圍欄</strong>（fence）。讀本採用 Tukey 的定義：令 \(h=1.5(Q_3-Q_1)\)，下圍欄在 \(Q_1-h\)，上圍欄在 \(Q_3+h\)。</li>
+<li>箱子中間的粗線是<strong>中位數</strong>（median）；箱子下緣是<strong>第一四分位數</strong>（first quartile） \(Q_1\)，上緣是<strong>第三四分位數</strong>（third quartile） \(Q_3\)。箱子的高度 \(Q_3-Q_1\) 叫<strong>四分位距</strong>（interquartile range，IQR）。</li>
+<li>箱子上下各有一條線，叫<strong>圍欄</strong>（fence）。這裡採用 Tukey 的定義：令 \(h=1.5(Q_3-Q_1)\)，下圍欄在 \(Q_1-h\)，上圍欄在 \(Q_3+h\)。</li>
 <li>從箱子延伸出去的虛線（<strong>鬚</strong>，whisker）畫到圍欄<strong>以內</strong>最遠的觀察值，這些最靠近圍欄的點叫<strong>相鄰點</strong>（adjacent point）。</li>
 <li>在圍欄以外的觀察值個別畫成點，稱為<strong>可能的離群值</strong>（potential outlier）。</li>
 </ul>
 <p>不同軟體、不同作者放圍欄的位置不一樣；用 Tukey 方法時，上下圍欄和箱子的距離相等（都是 \(1.5\times\)IQR），但鬚的長度不一定相等，因為鬚只畫到實際存在的觀察值。</p>
 <figure><img src="assets/fig/ch01-boxplot.svg" alt="男女理賠金額的箱形圖（模擬資料，Tukey 圍欄）。男性的中位數線偏向箱子下方、上方的鬚與離群值比較長，表示分配右偏（大額理賠拉出長長的右尾）。女性的理賠整體較低。" loading="lazy"><figcaption>男女理賠金額的箱形圖（模擬資料，Tukey 圍欄）。男性的中位數線偏向箱子下方、上方的鬚與離群值比較長，表示分配右偏（大額理賠拉出長長的右尾）。女性的理賠整體較低。</figcaption></figure>
 
-<p>從箱形圖讀分配形狀：中位數線若在箱子中央以下、上方的鬚比下方長，表示分配<strong>右偏</strong>（往高值延伸），理賠金額通常就是這樣。</p>
+<p>從箱形圖讀分配形狀：中位數線若在箱子中央以下、上方的鬚比下方長，表示分配<strong>右偏</strong>（right-skewed，往高值延伸），理賠金額通常就是這樣。</p>
 <div class="box ex">
-<div class="box-t">例題（講義第 1.2 題的算法）</div>
+<div class="box-t">例題</div>
 <p>樣本 \(\{1,3,7,13,25,58,99\}\)，用 Tukey 方法求下圍欄。</p>
-<p>講義對 7 個點取 \(Q_1=3\)（第 2 個觀察值）、\(Q_3=58\)（第 6 個觀察值）。\(h=1.5(58-3)=82.5\)，下圍欄 \(=3-82.5=-79.5\)，上圍欄 \(=58+82.5=140.5\)。所有觀察值都在圍欄內，所以沒有離群值；下方的鬚畫到最小值 1，上方的鬚畫到最大值 99。</p>
+<p>對 7 個點取 \(Q_1=3\)（第 2 個觀察值）、\(Q_3=58\)（第 6 個觀察值）。\(h=1.5(58-3)=82.5\)，下圍欄 \(=3-82.5=-79.5\)，上圍欄 \(=58+82.5=140.5\)。所有觀察值都在圍欄內，所以沒有離群值；下方的鬚畫到最小值 1，上方的鬚畫到最大值 99。</p>
 </div>
 <div class="box warn">
 <div class="box-t">易錯提醒</div>
-<p>四分位數有很多種算法（是否內插、用 \((n+1)p\) 還是 \(np\) 定位）。講義這一題對 7 個點取第 2 與第 6 個觀察值，相當於用 \((n+1)p\) 定位：\(8\times0.25=2\)、\(8\times0.75=6\)。考試若給的是不同的定義，照題目的定義算。</p>
+<p>四分位數有很多種算法（是否內插、用 \((n+1)p\) 還是 \(np\) 定位）。這一題對 7 個點取第 2 與第 6 個觀察值，相當於用 \((n+1)p\) 定位：\(8\times0.25=2\)、\(8\times0.75=6\)。考試若給的是不同的定義，照題目的定義算。</p>
 </div>
 <h3>三、分位數圖（qq 圖）</h3>
 <p><strong>\(100q\) 百分位數</strong>又稱 <strong>\(q\) 分位數</strong>，例如第 40 百分位數是 0.4 分位數。<strong>qq 圖</strong>（quantile–quantile plot）把兩個分配的分位數兩兩配對畫在平面上，用來檢查資料是否來自某個分配。</p>
 <p>步驟如下：</p>
 <ol>
 <li>把 \(n\) 個觀察值由小到大排序，得到順序統計量 \(y_{(1)}\le y_{(2)}\le\cdots\le y_{(n)}\)。</li>
-<li>給第 \(j\) 個順序統計量一個機率位置。講義用 \(q_j=\dfrac{j}{n+1}\)（其他書也有 \(\frac{j-0.5}{n}\) 等寫法）。</li>
+<li>給第 \(j\) 個順序統計量一個機率位置。這裡用 \(q_j=\dfrac{j}{n+1}\)（其他書也有 \(\frac{j-0.5}{n}\) 等寫法）。</li>
 <li>求配適分配在 \(q_j\) 的分位數 \(\hat F^{-1}(q_j)\)。</li>
 <li>畫點 \(\big(\hat F^{-1}(q_j),\ y_{(j)}\big)\)：橫軸是配適分配的分位數，縱軸是觀察值。</li>
 </ol>
@@ -379,7 +379,7 @@ Determine which of the following statements is/are true.</p>
 指數分配的最大概似估計是 \(\hat\theta=\bar x\)（因為對數概似 \(-n\ln\theta-\sum x_i/\theta\) 對 \(\theta\) 微分得 \(-n/\theta+\sum x_i/\theta^2=0\)）。</p>
 </div>
 <div class="box ex">
-<div class="box-t">例題（講義圖 1.4）</div>
+<div class="box-t">例題</div>
 <p>觀察值 1、3、6、10、15 配適指數分配。\(\hat\theta=\bar x=35/5=7\)，\(n=5\)，機率位置是 \(1/6,2/6,\ldots,5/6\)。</p>
 <table>
 <thead>
@@ -425,15 +425,15 @@ Determine which of the following statements is/are true.</p>
 </table>
 <p>畫出 \((1.276,1)\)、\((2.838,3)\)、\((4.852,6)\)、\((7.690,10)\)、\((12.542,15)\)。</p>
 </div>
-<figure><img src="assets/fig/ch01-qq-exp.svg" alt="講義圖 1.4 的重畫：觀察值 1、3、6、10、15 對指數分配（）的 qq 圖。前四點大致在一條直線上，最後一點（15）偏離較多。" loading="lazy"><figcaption>講義圖 1.4 的重畫：觀察值 1、3、6、10、15 對指數分配（\(\theta=7\)）的 qq 圖。前四點大致在一條直線上，最後一點（15）偏離較多。</figcaption></figure>
+<figure><img src="assets/fig/ch01-qq-exp.svg" alt="觀察值 1、3、6、10、15 對指數分配（）的 qq 圖。前四點大致在一條直線上，最後一點（15）偏離較多。" loading="lazy"><figcaption>觀察值 1、3、6、10、15 對指數分配（\(\theta=7\)）的 qq 圖。前四點大致在一條直線上，最後一點（15）偏離較多。</figcaption></figure>
 
 <p>怎麼讀 qq 圖：</p>
 <ul>
 <li>若配適的是<strong>完全指定</strong>的分配（參數都給定），點落在 <strong>45° 線</strong>附近就是配適得好。</li>
-<li>更常見的用法是檢查資料是否屬於某個<strong>分配族</strong>。這時只要點落在<strong>一條直線</strong>上就夠了，不必是 45° 線：若點落在 \(y=a+bx\) 上，表示資料像是 \(F\big((x-a)/b\big)\)，也就是同一族、但位置與尺度不同的分配。所以 qq 圖可以在不知道參數的情況下判斷分配族選得對不對。參考線通常畫過兩邊的第 25 與第 75 百分位數。</li>
+<li>更常見的用法是檢查資料是否屬於某個<strong>分配族</strong>（family of distributions）。這時只要點落在<strong>一條直線</strong>上就夠了，不必是 45° 線：若點落在 \(y=a+bx\) 上，表示資料像是 \(F\big((x-a)/b\big)\)，也就是同一族、但位置與尺度不同的分配。所以 qq 圖可以在不知道參數的情況下判斷分配族選得對不對。參考線通常畫過兩邊的第 25 與第 75 百分位數。</li>
 <li>最常見的 qq 圖是<strong>常態機率圖</strong>（normal probability plot）：橫軸用標準常態的分位數。</li>
 </ul>
-<figure><img src="assets/fig/ch01-qq-examples.svg" alt="講義圖 1.5 的重畫：100 個模擬值對標準常態的 qq 圖。(a) 資料本身是標準常態，點在 45° 線上。(b) 資料是平均 6、標準差 2 的常態，點仍成一直線，只是截距與斜率改變（截距約 6、斜率約 2）。(c)  分配（3 自由度）中段和常態相近，但兩端的分位數比常態更極端，左端往下、右端往上翹，是厚尾的特徵。(d) 指數分配右偏：低分位數擠在 0 附近，高分位數拉得很長，點呈向上彎的曲線。" loading="lazy"><figcaption>講義圖 1.5 的重畫：100 個模擬值對標準常態的 qq 圖。(a) 資料本身是標準常態，點在 45° 線上。(b) 資料是平均 6、標準差 2 的常態，點仍成一直線，只是截距與斜率改變（截距約 6、斜率約 2）。(c) \(t\) 分配（3 自由度）中段和常態相近，但兩端的分位數比常態更極端，左端往下、右端往上翹，是厚尾的特徵。(d) 指數分配右偏：低分位數擠在 0 附近，高分位數拉得很長，點呈向上彎的曲線。</figcaption></figure>
+<figure><img src="assets/fig/ch01-qq-examples.svg" alt="100 個模擬值對標準常態的 qq 圖。(a) 資料本身是標準常態，點在 45° 線上。(b) 資料是平均 6、標準差 2 的常態，點仍成一直線，只是截距與斜率改變（截距約 6、斜率約 2）。(c)  分配（3 自由度）中段和常態相近，但兩端的分位數比常態更極端，左端往下、右端往上翹，是厚尾的特徵。(d) 指數分配右偏：低分位數擠在 0 附近，高分位數拉得很長，點呈向上彎的曲線。" loading="lazy"><figcaption>100 個模擬值對標準常態的 qq 圖。(a) 資料本身是標準常態，點在 45° 線上。(b) 資料是平均 6、標準差 2 的常態，點仍成一直線，只是截距與斜率改變（截距約 6、斜率約 2）。(c) \(t\) 分配（3 自由度）中段和常態相近，但兩端的分位數比常態更極端，左端往下、右端往上翹，是厚尾的特徵。(d) 指數分配右偏：低分位數擠在 0 附近，高分位數拉得很長，點呈向上彎的曲線。</figcaption></figure>
 
 <div class="box key">
 <div class="box-t">重點：qq 圖的形狀對照</div>
@@ -443,7 +443,7 @@ Determine which of the following statements is/are true.</p>
 <li>向上彎（凸）：資料右偏，例如指數、對數常態、Gamma。向下彎（凹）則是左偏。</li>
 </ul>
 </div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q1-2"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 1.2 題</b><small>・講義 p.7・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>A sample consists of the numbers \(\{1,3,7,13,25,58,99\}\).</p>
-<p>Determine the lower fence of a box plot using Tukey's method.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>樣本為 \(\{1,3,7,13,25,58,99\}\)。用 Tukey 的方法，求箱形圖的下圍欄。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(-79.5\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：找四分位數。</strong> 7 個觀察值已排序。講義取第一四分位數為第 2 個觀察值、第三四分位數為第 6 個觀察值（以 \((n+1)p\) 定位：\(8\times0.25=2\)，\(8\times0.75=6\)），所以 \(Q_1=3\)、\(Q_3=58\)。</p>
+<p>Determine the lower fence of a box plot using Tukey's method.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>樣本為 \(\{1,3,7,13,25,58,99\}\)。用 Tukey 的方法，求箱形圖的下圍欄。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(-79.5\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一步：找四分位數。</strong> 7 個觀察值已排序。這裡取第一四分位數為第 2 個觀察值、第三四分位數為第 6 個觀察值（以 \((n+1)p\) 定位：\(8\times0.25=2\)，\(8\times0.75=6\)），所以 \(Q_1=3\)、\(Q_3=58\)。</p>
 <p><strong>第二步：算圍欄寬度。</strong> \(h=1.5(Q_3-Q_1)=1.5\times(58-3)=82.5\)。</p>
 <p><strong>第三步：下圍欄。</strong> \(Q_1-h=3-82.5=-79.5\)。</p>
 <p>順便可得上圍欄 \(Q_3+h=58+82.5=140.5\)。所有觀察值都在 \([-79.5,\,140.5]\) 之內，所以這個樣本沒有可能的離群值；下方的鬚畫到 1，上方的鬚畫到 99。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>圍欄是用來判斷離群值的界線，不一定是某個觀察值；鬚才是畫到圍欄內最遠的觀察值。另外 \(h\) 要乘 1.5，不是 IQR 本身。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的質性題，含跨章節）</div><article class="exercise concept-q" id="qC1-3-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.3-1</b><small>仿 SOA 樣題・跨章：第 5 章・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A normal probability plot (normal qq plot) of standardized residuals is examined. Determine which of the following statements is/are true.</p>
@@ -463,8 +463,8 @@ Determine which of the following statements is/are true.</p>
 <p>I. 點接近一直線時，常態假設看起來合理。</p>
 <p>II. 右上方的點明顯在線的上方，表示右尾比常態長。</p>
 <p>III. qq 圖可以用來偵測殘差的序列相關。</p>
-</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對：「哪一端離開直線往外跑，哪一邊的尾巴就比常態長」（第 5 章 5.1 節）。</p>
-<p>III 錯：qq 圖把殘差排序後畫，原本的順序資訊不見了；序列相關要把殘差依時間順序畫（第 5 章習題 5.17）。</p></div></div></article><article class="exercise concept-q" id="qC1-3-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.3-2</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>For a box plot constructed with Tukey's method, determine which of the following statements is/are true.</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對：「哪一端離開直線往外跑，哪一邊的尾巴就比常態長」（<a href="ch05.html#s1">第 5 章 5.1 節</a>）。</p>
+<p>III 錯：qq 圖把殘差排序後畫，原本的順序資訊不見了；序列相關要把殘差依時間順序畫（<a href="ch05.html">第 5 章</a>習題 <a href="ch05.html#q5-17">5.17</a>）。</p></div></div></article><article class="exercise concept-q" id="qC1-3-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.3-2</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>For a box plot constructed with Tukey's method, determine which of the following statements is/are true.</p>
 <div class="items">
 <p>I. The upper and lower fences are at the same distance from the box.</p>
 <p>II. The upper and lower whiskers always have the same length.</p>
@@ -501,7 +501,7 @@ Determine which of the following statements is/are true.</p>
 <p>II. 平均數可能大於中位數。</p>
 <p>III. 上圍欄以上的點一定是資料錯誤，應該刪除。</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對：右偏分配被大額理賠拉出長右尾，平均數被拉高。</p>
-<p>III 錯：圍欄外只是「可能的」離群值。理賠金額本來就常有真實的大額案件，應該先查證，不能直接刪除（第 5 章 5.2 節對離群值的處理方式）。</p></div></div></article><article class="exercise concept-q" id="qC1-3-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.3-4</b><small>仿 SOA 樣題・跨章：第 5 章・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
+<p>III 錯：圍欄外只是「可能的」離群值。理賠金額本來就常有真實的大額案件，應該先查證，不能直接刪除（<a href="ch05.html#s2">第 5 章 5.2 節</a>對離群值的處理方式）。</p></div></div></article><article class="exercise concept-q" id="qC1-3-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.3-4</b><small>仿 SOA 樣題・跨章：第 5 章・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
 <div class="items">
 <p>I. A scatter plot of the response against an explanatory variable can reveal a nonlinear relationship.</p>
 <p>II. A plot of residuals against fitted values showing a funnel shape indicates heteroscedasticity.</p>
@@ -518,7 +518,7 @@ Determine which of the following statements is/are true.</p>
 <p>I. 反應對解釋變數的散布圖可以看出非線性關係。</p>
 <p>II. 殘差對配適值呈漏斗形，表示異質變異。</p>
 <p>III. 資料是常態但平均與變異數不同於標準常態時，對標準常態的 qq 圖不會是直線。</p>
-</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對。II 對（第 5 章 5.1 節）。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對。II 對（<a href="ch05.html#s1">第 5 章 5.1 節</a>）。</p>
 <p>III 錯：常態資料對標準常態畫 qq 圖仍是直線，只是截距等於平均、斜率等於標準差（第 1 章圖 1.5(b)）。不是直線才表示分配族不對。</p></div></div></article><article class="exercise concept-q" id="qC1-3-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C1.3-5</b><small>仿 SOA 樣題・跨章：第 5 章・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>You are comparing the distributions of a continuous response across the levels of a categorical explanatory variable. Determine which of the following statements is/are true.</p>
 <div class="items">
 <p>I. Side-by-side box plots, one for each level, are an appropriate graphical display.</p>
@@ -536,4 +536,4 @@ Determine which of the following statements is/are true.</p>
 <p>I. 每個水準各畫一個並排的箱形圖是適當的圖。</p>
 <p>II. 觀察值很多時，散布圖若不用透明度或小點，看不出點的密度。</p>
 <p>III. 各水準箱形圖的寬度差很多，可能表示反應的變異數不固定。</p>
-</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：I、II、III 都正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對（第 1 章 1.3 節）。III 對：箱子高度（IQR）反映分散程度，各類差很多就是異質變異的徵兆，可能需要轉換或加權最小平方（第 2 章 2.3 節、第 5 章 5.1 節）。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（0 題，★ 精選題已放在各節後面）</h2></section><button class="toggle-all float" type="button">隱藏全部解答</button><div class="navfoot"><a href="index.html">← 首頁</a><a href="ch02.html">第 2 章 →</a></div></main></body></html>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：I、II、III 都正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對（<a href="ch01.html#s3">第 1 章 1.3 節</a>）。III 對：箱子高度（IQR）反映分散程度，各類差很多就是異質變異的徵兆，可能需要轉換或加權最小平方（<a href="ch02.html#s3">第 2 章 2.3 節</a>、<a href="ch05.html#s1">第 5 章 5.1 節</a>）。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（0 題，★ 精選題已放在各節後面）</h2></section><button class="toggle-all float" type="button">隱藏全部解答</button><div class="navfoot"><a href="index.html">← 首頁</a><a href="ch02.html">第 2 章 →</a></div></main></body></html>
