@@ -69,3 +69,26 @@ a.concept{color:inherit;text-decoration:none;border-bottom:1.5px dashed #6d8fb3}
 .chip-note{font-size:14px;padding:4px 12px;border-radius:999px;background:#f3f0fa;border:1px solid #dcd3ef;color:#4b3a86}
 button.toggle-all{font-size:14px;padding:4px 14px;border-radius:999px;border:1px solid #1f4e78;background:#1f4e78;color:#fff;cursor:pointer}
 button.toggle-all.float{position:fixed;right:18px;bottom:18px;z-index:39;box-shadow:0 3px 12px rgba(0,0,0,.25);font-size:13.5px;padding:7px 14px}
+
+/* 2026/11/14 考點地圖、互動選擇題、數字作答框 */
+.box.map{background:#fff;border:1px solid #cfdbe8;border-top:4px solid #1c3858;box-shadow:0 1px 3px #0f1d2e12}
+.box.map .box-t{color:#1c3858;font-size:16px}
+.box.map table{margin:6px 0}
+.opts.mc p[data-k]{position:relative;margin:6px 0;padding:7px 12px;border:1px solid #e1e7ee;border-radius:9px;background:#fff;cursor:pointer;transition:border-color .12s,background .12s}
+.opts.mc:not(.done) p[data-k]:hover{border-color:#2a6fb0;background:#e8f1fa}
+.opts.mc p.is-key{border-color:#1f7a4a;background:#eaf6ef}
+.opts.mc p.is-key::after{content:" ✓";color:#1f7a4a;font-weight:700}
+.opts.mc p.is-wrong{border-color:#b4232c;background:#fdf0f1}
+.opts.mc p.is-wrong::after{content:" ✗";color:#b4232c;font-weight:700}
+.opts.mc.done p[data-k]{cursor:default}
+.opts.mc.done p[data-k]:not(.is-key):not(.is-wrong){opacity:.6}
+.mc-hint{margin:8px 0 0;font-size:12.5px;color:#728396}
+.mc-fb{margin:8px 0;padding:8px 14px;border-radius:9px;font-weight:700;font-size:14.5px}
+.mc-fb.ok{background:#eaf6ef;color:#1f7a4a}.mc-fb.bad{background:#fdf0f1;color:#b4232c}
+.mc-fb button{margin-left:10px;padding:2px 10px;border:1px solid currentColor;border-radius:7px;background:transparent;color:inherit;font:inherit;font-size:13px;cursor:pointer}
+.num-box{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:10px 0 4px;padding:10px 14px;border:1px solid #e1e7ee;border-radius:10px;background:#f7f9fc;font-size:14.5px}
+.num-box input{width:9em;height:32px;padding:0 10px;border:1px solid #b9c7d6;border-radius:8px;font:inherit;background:#fff}
+.num-box.ok input{border-color:#1f7a4a;background:#eaf6ef}.num-box.bad input{border-color:#b4232c;background:#fdf0f1}
+.num-box button{height:32px;padding:0 14px;border:0;border-radius:8px;background:#1c3858;color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.num-tip{font-size:12.5px;color:#728396}.num-res{font-weight:700}.num-box.ok .num-res{color:#1f7a4a}.num-box.bad .num-res{color:#b4232c}
+@media print{.mc-hint,.mc-fb,.num-box{display:none!important}}
