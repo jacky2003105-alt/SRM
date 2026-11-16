@@ -1,5 +1,844 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第 21 章　預測模型：平滑、季節、單根與波動｜SRM 精算筆記</title><link rel="stylesheet" href="assets/site.css"><link rel="stylesheet" href="assets/katex/katex.min.css"><script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/site.js"></script></head><body><nav aria-label="課程導覽"><a class="brand" href="index.html">SRM 精算筆記</a><label for="chapter">章節</label><select id="chapter"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html" selected>第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題與參考解答</option></select><a href="practice.html">題庫</a></nav><main><header><div class="kicker">SRM · 第 21 章</div><h1>預測模型：平滑、季節、單根與波動</h1><p>趨勢、季節、波動各要建模哪一部分？不能把所有變化都當成均值改變。</p><div class="chips"><a href="pdf/ch21.pdf">下載本章 PDF</a><a href="practice.html#chapter21">習題索引</a></div></header><section class="panel"><h2>本章閱讀順序</h2><ol><li><a href="#s1">21.1 移動平均為什麼會落後趨勢？</a></li><li><a href="#s2">21.2 指數平滑與 Brown 雙重平滑</a></li><li><a href="#s3">21.3 固定季節、季節 AR 與 Holt–Winters</a></li><li><a href="#s4">21.4 單根檢定在檢查哪一個係數？</a></li><li><a href="#s5">21.5 ARCH、GARCH：平均穩定不等於風險固定</a></li></ol><div class="minititle">優先練習 · 10 題</div><div class="chips"><a href="#q21-1">21.1</a><a href="#q21-3">21.3</a><a href="#q21-7">21.7</a><a href="#q21-8">21.8</a><a href="#q21-9">21.9</a><a href="#q21-10">21.10</a><a href="#q21-12">21.12</a><a href="#q21-14">21.14</a><a href="#q21-15">21.15</a><a href="#q21-17">21.17</a></div></section><article class="unit" id="s1"><div class="kicker">概念 01</div><h2>21.1 移動平均為什麼會落後趨勢？</h2><p>長度 \(k\) 的移動平均 \(S_t=(y_t+\cdots+y_{t-k+1})/k\)，新值取代最舊值，所以 \(S_t=S_{t-1}+(y_t-y_{t-k})/k\)。這也是用最近 \(k\) 筆、給相同權重去做局部常數最小平方的解：微分 \(\sum(y_i-a)^2\) 即得局部平均。若沒有趨勢，未來各步點預測皆可取 \(S_T\)。</p>
-<p>若真實水準直線上升，每個單次平均比當前落後 \((k-1)/2\) 期。令 \(S^{(2)}_t\) 為最近 \(k\) 個 \(S\) 的平均，二次平均再多落後同一段。因此斜率 \(b_t=2(S_t-S_t^{(2)})/(k-1)\)；若從當前水準發出預測，線性校正的水準是 \(L_t=2S_t-S_t^{(2)}\)，\(h\) 步預測 \(L_t+hb_t\)。若題目明定以 \(S_t\) 作基準，則依題用 \(S_t+hb_t\)。本節是平均平滑，不是以過去創新建模的 MA(q) 過程。</p><div class="related"><small>接著讀：<a class="concept" data-definition="弱平穩要求均值、有限變異固定，共變異只和時間間隔有關。" data-target="第 19 章 · 平穩性" href="ch19.html#s2">平穩性</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q21-7">21.7</a></div></article><article class="exercise" id="q21-7"><button class="toggle" aria-controls="a-q21-7" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 21.7 · 講義 p.384</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q21-7">題目連結</a></small><p>資料 4、5、6、12、5、10、9、15；長度 4，求最後的二次移動平均。</p><div class="solution" id="a-q21-7"><strong class="label">參考解答</strong><p>8.5（A）。</p><strong class="label">解析</strong><p>最後四個一次平均數為 7、8.25、9、9.75，再平均。</p></div></article><article class="unit" id="s2"><div class="kicker">概念 02</div><h2>21.2 指數平滑與 Brown 雙重平滑</h2><p>與一次丟掉舊資料不同，指數平滑讓有效權重逐期按 \(w\) 倍減少。講義的 \(w\) 是舊值權重：\(S_t=(1-w)y_t+wS_{t-1}\)。遞推展開為 \(S_t=(1-w)\sum_{j=0}^{t-1}w^jy_{t-j}+w^t S_0\)；各權重和為一。\(w\) 越大，記憶越久，對跳升越遲鈍。若題目明示有限截斷級數並在求和中加入 \(y_0\)，最後一個權重是 \((1-w)w^t\)，與「指定 \(S_0=y_0\)」不同。不可混用初始化。單次平滑的遠期預測皆為 \(S_T\)。選 \(w\) 應最小化真正一步預測平方誤差 \(\sum(y_t-S_{t-1})^2\)，因為 \(S_t\) 已看過 \(y_t\)。</p>
-<p>再平滑一次 \(S&#x27;_t=(1-w)S_t+wS&#x27;_{t-1}\)。線性趨勢下幾何權重的平均遲滯為 \(\sum j(1-w)w^j=w/(1-w)\)；\(S_t-S&#x27;_t\) 約等於斜率乘這段遲滯。因此 \(b_t=(1-w)(S_t-S&#x27;_t)/w\)、\(L_t=2S_t-S&#x27;_t\)，預測 \(L_t+hb_t\)。分清二次平均本身和估計斜率。</p><div class="related"><small>接著讀：<a class="concept" data-definition="弱平穩要求均值、有限變異固定，共變異只和時間間隔有關。" data-target="第 19 章 · 平穩性" href="ch19.html#s2">平穩性</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q21-1">21.1</a><a href="#q21-2">21.2</a><a href="#q21-3">21.3</a><a href="#q21-4">21.4</a><a href="#q21-5">21.5</a><a href="#q21-6">21.6</a><a href="#q21-8">21.8</a><a href="#q21-9">21.9</a><a href="#q21-10">21.10</a></div></article><article class="exercise" id="q21-1"><button class="toggle" aria-controls="a-q21-1" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 21.1 · 講義 p.383</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q21-1">題目連結</a></small><p>五期觀察為 50、50、60、44、56。採有限加權和 \(S_t=(1-w)\sum_{j=0}^{t-1}w^jy_{t-j}\)，\(w=0.6\)，求第六期預測。</p><div class="solution" id="a-q21-1"><strong class="label">參考解答</strong><p>48.512。</p><strong class="label">解析</strong><p>\((1-.6)[56+.6(44)+.6^2(60)+.6^3(50)+.6^4(50)]\)；未來各期預測皆取最後平滑量。此題用有限截斷和，勿換成指定初始平滑值的算法。</p></div></article><article class="exercise" id="q21-3"><button class="toggle" aria-controls="a-q21-3" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 21.3 · 講義 p.383</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q21-3">題目連結</a></small><p>\(y_5=90,y_6=81,S_4=70,S_6=82\)。舊值權重最小可能為多少？</p><div class="solution" id="a-q21-3"><strong class="label">參考解答</strong><p>0.20。</p><strong class="label">解析</strong><p>\(S_5=90-20w\)，代入 \(82=81(1-w)+w(90-20w)\)，兩根 .20、.25。</p></div></article><article class="exercise" id="q21-8"><button class="toggle" aria-controls="a-q21-8" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 21.8 · 講義 p.384</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q21-8">題目連結</a></small><p>初始一步預測 81，水準 80、81、89、74，\(w=.9\)，求一步預測的平均誤差。</p><div class="solution" id="a-q21-8"><strong class="label">參考解答</strong><p>−0.13225（B）。</p><strong class="label">解析</strong><p>逐期預測 81、80.9、80.91、81.719。用實際減前一刻已有的預測。</p></div></article><article class="exercise" id="q21-9"><button class="toggle" aria-controls="a-q21-9" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 21.9 · 講義 p.384</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q21-9">題目連結</a></small><p>觀察 1、4、8、11，兩次平滑初值皆零，\(w=.8\)。求第四期的趨勢。</p><div class="solution" id="a-q21-9"><strong class="label">參考解答</strong><p>0.68832。</p><strong class="label">解析</strong><p>末期一次平滑 4.0944、二次 1.34112，差乘 \((1-.8)/.8\)。</p></div></article><article class="exercise" id="q21-10"><button class="toggle" aria-controls="a-q21-10" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 21.10 · 講義 p.385</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q21-10">題目連結</a></small><p>第 99 期一次平滑 95.1、第 98 期二次平滑 89.9，第 100 期觀察 100.2。\(w=.8\)，平滑四捨五入至一位。比較第 102 期單、雙指數預測。</p><div class="solution" id="a-q21-10"><strong class="label">參考解答</strong><p>差 6.3（D）。</p><strong class="label">解析</strong><p>一次末值 96.1，二次末值 91.9，斜率 1.050。雙重預測 \(100.3+2(1.05)=102.4\)，單一為 96.1。</p></div></article><article class="unit" id="s3"><div class="kicker">概念 03</div><h2>21.3 固定季節、季節 AR 與 Holt–Winters</h2><p>同一月份總是較高時，可用季節虛擬變數（含截距留一季作基準）或 Fourier 配對 \(a_j\sin(2\pi jt/m)+b_j\cos(2\pi jt/m)\)，\(m\) 為每周期點數。不同振幅及相位可由線性係數估計；最多取到 \(\lfloor m/2\rfloor\) 階。若 \(m\) 偶數，最高階正弦在整數時點為零，應省略。另一種做法是季節自迴歸：用 \(Y_{t-m},Y_{t-2m},\ldots\) 預測本期，它讓同季的異常延續，而非假設每年季節效果完全固定。</p>
-<p>加法季節平滑把觀察拆成水準、斜率及季節差。\(L_t=(1-w_1)(y_t-s_{t-m})+w_1(L_{t-1}+b_{t-1})\)；\(b_t=(1-w_2)(L_t-L_{t-1})+w_2b_{t-1}\)；\(s_t=(1-w_3)(y_t-L_t)+w_3s_{t-m}\)。先用上周期同季修正觀察，更新水準，再評估水準變化的斜率與本次季節差，避免重複計入季節。未來第 \(h\) 期預測用 \(L_T+hb_T+\) 最近一次同季的季節差。季節成分在一個週期以總和零辨識；去掉季節項即 Holt 趨勢法。</p><div class="related"><small>接著讀：<a class="concept" data-definition="弱平穩要求均值、有限變異固定，共變異只和時間間隔有關。" data-target="第 19 章 · 平穩性" href="ch19.html#s2">平穩性</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q21-11">21.11</a><a href="#q21-12">21.12</a><a href="#q21-13">21.13</a><a href="#q21-14">21.14</a><a href="#q21-15">21.15</a><a href="#q21-16">21.16</a></div></article><article class="exercise" id="q21-12"><button class="toggle" aria-controls="a-q21-12" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 21.12 · 講義 p.385</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q21-12">題目連結</a></small><p>無季節，首期水準 80、趨勢 10；後三期 80、100、90。\(w_1=.4,w_2=.6\)，求第四期趨勢。</p><div class="solution" id="a-q21-12"><strong class="label">參考解答</strong><p>5.71456。</p><strong class="label">解析</strong><p>第二期 84/7.6，第三期 96.64/9.616，第四期水準 96.5024；新趨勢為 \(.4(-.1376)+.6(9.616)\)。</p></div></article><article class="exercise" id="q21-14"><button class="toggle" aria-controls="a-q21-14" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 21.14 · 講義 p.385</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q21-14">題目連結</a></small><p>舊水準 470，本期實際 520、新水準 504；預測下一水準 536，\(w_2=.5\)。求 \(w_1\)。</p><div class="solution" id="a-q21-14"><strong class="label">參考解答</strong><p>0.8。</p><strong class="label">解析</strong><p>趨勢 \(536-504=32\)，由 \(.5(34)+.5b_{t-1}=32\) 得舊趨勢 30；\(504=(1-w_1)520+w_1(500)\)。</p></div></article><article class="exercise" id="q21-15"><button class="toggle" aria-controls="a-q21-15" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 21.15 · 講義 p.386</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q21-15">題目連結</a></small><p>月資料：第 14 月水準 17、趨勢 2；第 15 月觀察 20，同季上一年修正 3。舊值權重依序 .8、.7、.6；求第 15 月季節項。</p><div class="solution" id="a-q21-15"><strong class="label">參考解答</strong><p>2.36。</p><strong class="label">解析</strong><p>先求水準 \(.2(20-3)+.8(17+2)=18.6\)，季節為 \(.4(20-18.6)+.6(3)\)。</p></div></article><article class="unit" id="s4"><div class="kicker">概念 04</div><h2>21.4 單根檢定在檢查哪一個係數？</h2><p>從 \(Y_t=a+bt+\phi Y_{t-1}+\epsilon_t\) 兩邊減 \(Y_{t-1}\)，得 \(\Delta Y_t=a+bt+\delta Y_{t-1}+\epsilon_t\)，其中 \(\delta=\phi-1\)。單根假設 \(H_0:\delta=0\)，表示偏離沒有回拉力量；對通常的平穩替代檢定係數是否顯著負。單根下落後水準是非平穩量，因此不能用普通 t 表，必須使用與常數及趨勢規格相符的 Dickey–Fuller 臨界值。加入落後差分 \(\sum_{i=1}^p\psi_i\Delta Y_{t-i}\) 為 ADF，目的在處理剩餘序列相關。未拒絕不等於證明單根；結構改變或樣本短都會影響判斷。</p><div class="related"><small>接著讀：<a class="concept" data-definition="弱平穩要求均值、有限變異固定，共變異只和時間間隔有關。" data-target="第 19 章 · 平穩性" href="ch19.html#s2">平穩性</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><p class="minititle">相關講義練習（跨節）：<a href="ch19.html#q19-14">19.14 · 比較單根過程的均值與變異</a></p></article><article class="unit" id="s5"><div class="kicker">概念 05</div><h2>21.5 ARCH、GARCH：平均穩定不等於風險固定</h2><p>設 \(\epsilon_t=\sqrt{h_t}z_t\)，給定過去 \(z_t\) 均值零、變異一，則 \(E(\epsilon_t^2\mid\mathcal F_{t-1})=h_t\)。ARCH 用過去誤差平方更新波動，GARCH 再加入過去預測變異：\(h_t=\omega+\sum_i\alpha_i\epsilon_{t-i}^2+\sum_j\beta_jh_{t-j}\)。取正截距與非負係數保證非負；若係數總和小於一，令各期 \(E(h_t)=v\)，由全期望法則 \(v=\omega+(\sum\alpha_i+\sum\beta_j)v\)，所以 \(v=\omega/(1-\sum\alpha_i-\sum\beta_j)\)。\(\omega\) 是截距，不是長期變異本身。</p>
-<p>GARCH(1,1) 一步預測直接代入今天已知平方誤差。往後未知平方誤差換成預測變異，得到 \(\hat h_{T+h}=v+(\alpha+\beta)^{h-1}(\hat h_{T+1}-v)\)。即：剛遇到市場震盪，明天的風險可升高；只要衝擊消退，長期平均風險仍可固定。</p><div class="related"><small>接著讀：<a class="concept" data-definition="弱平穩要求均值、有限變異固定，共變異只和時間間隔有關。" data-target="第 19 章 · 平穩性" href="ch19.html#s2">平穩性</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q21-17">21.17</a></div></article><article class="exercise" id="q21-17"><button class="toggle" aria-controls="a-q21-17" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 21.17 · 講義 p.386</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q21-17">題目連結</a></small><p>ARCH(2) 兩個滯後係數 .6 與 .2，常數項 4。求無條件誤差變異。</p><div class="solution" id="a-q21-17"><strong class="label">參考解答</strong><p>20。</p><strong class="label">解析</strong><p>設 \(v=4+.6v+.2v\)，所以 \(v=4/.2\)；當下條件變異仍取決於歷史誤差。</p></div></article><article class="unit" id="terms"><div class="kicker">TERMS</div><h2>本章中英術語</h2><table><thead><tr><th>中文</th><th>English</th><th>解題時的意思</th></tr></thead><tbody><tr><td>指數平滑</td><td>exponential smoothing</td><td>用幾何遞減的歷史權重更新預測。</td></tr><tr><td>單根</td><td>unit root</td><td>自迴歸多項式在一有根，衝擊可持續累積。</td></tr><tr><td>條件變異數</td><td>conditional variance</td><td>給定過去資訊時，下一期誤差的變異。</td></tr></tbody></table></article><section class="panel" id="remaining"><h2>章末其餘習題 · 7 題</h2><p>按講義題號排列。做題前可用各題自己的按鈕隱藏解答。</p></section><article class="exercise" id="q21-2"><button class="toggle" aria-controls="a-q21-2" aria-expanded="true">隱藏解答</button><h3>練習 · 21.2 · 講義 p.383</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q21-2">題目連結</a></small><p>\(S_{19}=110,y_{20}=100,y_{21}=101,w=.6\)，求 \(S_{21}\)。</p><div class="solution" id="a-q21-2"><strong class="label">參考解答</strong><p>104。</p><strong class="label">解析</strong><p>\(S_{20}=.4(100)+.6(110)=106\)，再取 \(.4(101)+.6(106)\)。</p></div></article><article class="exercise" id="q21-4"><button class="toggle" aria-controls="a-q21-4" aria-expanded="true">隱藏解答</button><h3>練習 · 21.4 · 講義 p.383</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q21-4">題目連結</a></small><p>\(S_{95}=7.1\)，接著五期為 7.1、8.9、5.5、8.2、7.3，舊值權重 .1。求下一期預測。</p><div class="solution" id="a-q21-4"><strong class="label">參考解答</strong><p>7.36622（最接近 D：7.4）。</p><strong class="label">解析</strong><p>依序用 \(S_t=.9y_t+.1S_{t-1}\)，最新一期權重最大。</p></div></article><article class="exercise" id="q21-5"><button class="toggle" aria-controls="a-q21-5" aria-expanded="true">隱藏解答</button><h3>練習 · 21.5 · 講義 p.383</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q21-5">題目連結</a></small><p>\(S_0=27\)，觀察 20、30、10、60、15，\(w=.9\)。求第五期平滑值。</p><div class="solution" id="a-q21-5"><strong class="label">參考解答</strong><p>27.15243（E）。</p><strong class="label">解析</strong><p>當期權重 .1，前一筆 .09；初值剩餘權重 \(.9^5\)。</p></div></article><article class="exercise" id="q21-6"><button class="toggle" aria-controls="a-q21-6" aria-expanded="true">隱藏解答</button><h3>練習 · 21.6 · 講義 p.384</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q21-6">題目連結</a></small><p>初值 15.6，五期 15.6、3.4、13.3、−4.6、−1.8；\(w=.4\)，求最後平滑值。</p><div class="solution" id="a-q21-6"><strong class="label">參考解答</strong><p>−0.3773（B）。</p><strong class="label">解析</strong><p>用 \(S_t=.6y_t+.4S_{t-1}\)；第一筆與初值相同，兩者可合併。</p></div></article><article class="exercise" id="q21-11"><button class="toggle" aria-controls="a-q21-11" aria-expanded="true">隱藏解答</button><h3>練習 · 21.11 · 講義 p.385</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q21-11">題目連結</a></small><p>無季節，首期水準 90、趨勢 10；後三期 100、120、130。\(w_1=.4,w_2=.2\)，求第四期水準。</p><div class="solution" id="a-q21-11"><strong class="label">參考解答</strong><p>130.32。</p><strong class="label">解析</strong><p>第二期水準/趨勢 100/10，第三期 116/14.8；第四期為 \(.6(130)+.4(130.8)\)。</p></div></article><article class="exercise" id="q21-13"><button class="toggle" aria-controls="a-q21-13" aria-expanded="true">隱藏解答</button><h3>練習 · 21.13 · 講義 p.385</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q21-13">題目連結</a></small><p>本期 55，前期水準 50、趨勢 10，\(w_1=.5,w_2=.2\)；無季節時預測五步。</p><div class="solution" id="a-q21-13"><strong class="label">參考解答</strong><p>97.5。</p><strong class="label">解析</strong><p>水準 57.5，新趨勢 \(.8(7.5)+.2(10)=8\)，加五期趨勢。</p></div></article><article class="exercise" id="q21-16"><button class="toggle" aria-controls="a-q21-16" aria-expanded="true">隱藏解答</button><h3>練習 · 21.16 · 講義 p.386</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q21-16">題目連結</a></small><p>承上題，下一個月份歷史同季效果為 −2，求第 16 月預測。</p><div class="solution" id="a-q21-16"><strong class="label">參考解答</strong><p>18.48。</p><strong class="label">解析</strong><p>趨勢 \(.3(18.6-17)+.7(2)=1.88\)；預測 \(18.6+1.88-2\)。</p></div></article><section class="panel"><h2>用模擬考複習本章</h2><div class="chips"><a href="exams.html#exam1">第 1 回 · 題 31</a><a href="exams.html#exam2">第 2 回 · 題 33</a><a href="exams.html#exam3">第 3 回 · 題 29</a><a href="exams.html#exam4">第 4 回 · 題 28</a><a href="exams.html#exam5">第 5 回 · 題 26</a><a href="exams.html#exam5">第 5 回 · 題 34</a><a href="exams.html#exam6">第 6 回 · 題 14</a></div></section><div class="navfoot"><a href="ch20.html">← 上一章</a><a href="practice.html">習題索引 →</a></div><footer>SRM 精算考試中文研讀筆記 · 依所附第四版教材章序編寫，中文解析為參考解答。</footer></main></body></html>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 21 章　預測模型：平滑、季節、單根與波動｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
+<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html" selected>第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 21 章</div><h1>預測模型：平滑、季節、單根與波動</h1><p class="ch-sub">時間數列單元的最後一章整理實務上的預測工具。移動平均與指數平滑用加權平均「平滑」雜訊，雙重平滑再從兩條平滑線的落差估計趨勢；季節性可以用三角函數迴歸、季節自迴歸或 Holt–Winters 遞迴處理；單根檢定判斷數列是否為隨機漫步；ARCH 與 GARCH 則讓變異數本身隨時間變化。每個公式都從「權重怎麼分配」或「期望值怎麼取」推導出來。</p><div class="chips"><a href="pdf/ch21.pdf">下載本章 PDF</a><a href="#exercises">章末習題（17 題）</a><span class="chip-note">觀念題 25 題（在各節後面）</span><button class="toggle-all" type="button">顯示全部解答</button></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">21.1 移動平均平滑</a></li><li><a href="#s2">21.2 指數平滑</a></li><li><a href="#s3">21.3 季節模型</a></li><li><a href="#s4">21.4 單根檢定</a></li><li><a href="#s5">21.5 ARCH 與 GARCH</a></li></ol><p>本章對應講義第 21 課，讀本是 Frees 第 9 章。會用到第 19 章的隨機漫步、第 20 章的 AR(1)。</p>
+<p><strong>記號。</strong> \(\hat s_t\)（或 \(\hat s^{(1)}_t\)）是平滑後的數列，\(\hat s^{(2)}_t\) 是再平滑一次；\(w\) 是指數平滑的參數（<strong>\(w\) 是放在舊資訊上的權重</strong>，\(1-w\) 放在新觀察上）；\(k\) 是移動平均的長度；\(b_{0,t}\)、\(b_{1,t}\) 是時間 \(t\) 的水準（截距）與趨勢（斜率）估計；SB 是季節週期的長度（seasonal base）。</p>
+<div class="box map">
+<div class="box-t">考點地圖：這一章在考試裡的位置</div>
+<p><strong>對應考綱</strong>：主題 3「時間數列模型」：移動平均與指數平滑（含雙重平滑）、季節模型、單根檢定、ARCH/GARCH。</p>
+<p><strong>SOA 官方樣題裡的樣子</strong>：第 46 題（單次與雙重指數平滑的兩步預測，習題 <a href="ch21.html#q21-10">21.10</a>）。其他的考法多半是計算平滑值、Holt–Winters 的一步更新、ARCH/GARCH 的無條件變異數，以及名詞概念。</p>
+<table>
+<thead>
+<tr>
+<th>會考的東西</th>
+<th>題目長什麼樣</th>
+<th>判斷或計算的依據</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>移動平均</td>
+<td>單次、雙重移動平均</td>
+<td>\(\hat s_t=\frac1k\sum_{j=0}^{k-1}y_{t-j}\)；趨勢 \(2(\hat s-\hat s^{(2)})/(k-1)\)</td>
+</tr>
+<tr>
+<td>指數平滑</td>
+<td>求平滑值、預測、反推 \(w\)</td>
+<td>\(\hat s_t=(1-w)y_t+w\hat s_{t-1}\)；預測 \(\hat y_{T+l}=\hat s_T\)</td>
+</tr>
+<tr>
+<td>雙重指數平滑</td>
+<td>求趨勢、截距、多步預測</td>
+<td>\(b_0=2\hat s-\hat s^{(2)}\)，\(b_1=\frac{1-w}w(\hat s-\hat s^{(2)})\)</td>
+</tr>
+<tr>
+<td>一步預測誤差</td>
+<td>平均誤差、\(SS(w)\)</td>
+<td>\(e_t=y_t-\hat s_{t-1}\)</td>
+</tr>
+<tr>
+<td>Holt–Winters</td>
+<td>更新水準、趨勢、季節因子，預測</td>
+<td>(21.6)、(21.7)</td>
+</tr>
+<tr>
+<td>單根檢定</td>
+<td>名詞與性質</td>
+<td>Dickey–Fuller 臨界值比一般 \(t\) 更極端；ADF 加入落後差分</td>
+</tr>
+<tr>
+<td>ARCH/GARCH</td>
+<td>無條件變異數、平穩條件</td>
+<td>\(\omega/(1-\sum\gamma_j-\sum\delta_j)\)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>讀完這一章要會</strong>：</p>
+<ol>
+<li>計算移動平均與指數平滑，說明 \(w\) 的意義，推導兩種寫法等價。</li>
+<li>推導雙重平滑的趨勢公式，用它做多步預測。</li>
+<li>用三角函數迴歸、SAR、Holt–Winters 處理季節性。</li>
+<li>說出單根檢定的設定與為什麼要特殊的臨界值。</li>
+<li>計算 ARCH/GARCH 的條件變異數與無條件變異數。</li>
+</ol>
+</div></section><section class="unit" id="s1"><h2>21.1 移動平均平滑</h2><p>把最近 \(k\) 期平均，得到較平滑的新數列：
+\[\hat s_t=\frac{y_t+y_{t-1}+\cdots+y_{t-k+1}}k=\hat s_{t-1}+\frac{y_t-y_{t-k}}k .\]
+第二個寫法說明更新時只要加入新的一期、去掉最舊的一期。</p>
+<ul>
+<li><strong>沒有趨勢</strong>時，預測 \(\hat y_{T+l}=\hat s_T\)，所有 \(l\) 都一樣。</li>
+<li>移動平均就是加權最小平方：最近 \(k\) 期權重 1，更早的權重 0。</li>
+</ul>
+<h3>雙重移動平均</h3>
+<p>有趨勢時，把 \(\hat s_t\) 再做一次 \(k\) 期移動平均，得到 \(\hat s^{(2)}_t\)。趨勢估計與預測：
+\[b_{1,T}=\frac{2(\hat s_T-\hat s^{(2)}_T)}{k-1},\qquad\hat y_{T+l}=\hat s_T+b_{1,T}\,l .\]</p>
+<div class="box derive">
+<div class="box-t">推導：雙重移動平均的趨勢公式</div>
+<p>若 \(y_t=a+bt\)（沒有雜訊），\(k\) 期平均是 \(k\) 個等間隔點的中點：
+\[\hat s_t=a+b\Big(t-\frac{k-1}2\Big),\]
+也就是比數列本身<strong>落後</strong> \(b(k-1)/2\)。對 \(\hat s_t\)（同樣是斜率 \(b\) 的直線）再平均一次，又落後 \(b(k-1)/2\)：
+\[\hat s_t-\hat s^{(2)}_t=\frac{b(k-1)}2\quad\Longrightarrow\quad b=\frac{2(\hat s_t-\hat s^{(2)}_t)}{k-1}.\]
+兩條平滑線的落差，就是斜率乘上已知的落後期數。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 21-1：雙重移動平均（習題 21.7）</div>
+<p>數列 4、5、6、12、5、10、9、15，\(k=4\)。</p>
+<p>\(\hat s_t\) 是第 \(t-3\) 到第 \(t\) 期的平均；要算 \(\hat s^{(2)}_8\)，需要 \(\hat s_5,\ldots,\hat s_8\)：</p>
+<p>\(\hat s_5=(5+6+12+5)/4=7\)，\(\hat s_6=(6+12+5+10)/4=8.25\)，\(\hat s_7=(12+5+10+9)/4=9\)，\(\hat s_8=(5+10+9+15)/4=9.75\)。</p>
+<p>\(\hat s^{(2)}_8=(7+8.25+9+9.75)/4=8.5\)。</p>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q21-7"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.7 題</b><small>・講義 p.384・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are given the following time series:</p>
+<p>4　5　6　12　5　10　9　15</p>
+<p>Calculate the double-smoothed moving average at the last observation time, \(\hat s_8^{(2)}\), using a running average length of 4.</p>
+<div class="opts">
+<p>(A) 8.5</p>
+<p>(B) 8.6875</p>
+<p>(C) 8.75</p>
+<p>(D) 8.875</p>
+<p>(E) 9.75</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>時間數列：4　5　6　12　5　10　9　15。用長度 4 的移動平均，求最後一期的雙重平滑移動平均 \(\hat s^{(2)}_8\)。</p>
+<div class="opts">
+<p>(A) 8.5　(B) 8.6875　(C) 8.75　(D) 8.875　(E) 9.75</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat s_5=7\)，\(\hat s_6=8.25\)，\(\hat s_7=9\)，\(\hat s_8=9.75\)。\(\hat s^{(2)}_8=(7+8.25+9+9.75)/4=8.5\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>(E) 9.75 是單次的 \(\hat s_8\)。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（4 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC21-1-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.1-1</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A series has \(y_1=6\), \(y_2=9\), \(y_3=12\), \(y_4=3\).</p>
+<p>Calculate the moving average \(\hat s_4\) with \(k=3\).</p>
+<div class="opts">
+<p>(A) 8</p>
+<p>(B) 7.5</p>
+<p>(C) 9</p>
+<p>(D) 6</p>
+<p>(E) 10.5</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>數列 6、9、12、3，求 \(k=3\) 的移動平均 \(\hat s_4\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\((9+12+3)/3=8\)。(B) 是四項平均。</p></div></div></article><article class="exercise concept-q" id="qC21-1-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.1-2</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For a moving average with \(k=4\), \(\hat s_{t-1}=10\), the new observation is \(y_t=16\), and the observation dropped is \(y_{t-4}=4\).</p>
+<p>Calculate \(\hat s_t\).</p>
+<div class="opts">
+<p>(A) 11.5</p>
+<p>(B) 16</p>
+<p>(C) 13</p>
+<p>(D) 14.5</p>
+<p>(E) 10</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(k=4\) 的移動平均，\(\hat s_{t-1}=10\)，新觀察 \(y_t=16\)，移出的 \(y_{t-4}=4\)。求 \(\hat s_t\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat s_t=\hat s_{t-1}+(y_t-y_{t-k})/k=10+12/4=13\)。</p></div></div></article><article class="exercise concept-q" id="qC21-1-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.1-3</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Double moving average smoothing with \(k=5\) gives \(\hat s_T=20\) and \(\hat s^{(2)}_T=16\).</p>
+<p>Calculate the estimated trend \(b_{1,T}\).</p>
+<div class="opts">
+<p>(A) 4</p>
+<p>(B) 2</p>
+<p>(C) 1</p>
+<p>(D) 0.8</p>
+<p>(E) 1.6</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(k=5\) 的雙重移動平均，\(\hat s_T=20\)、\(\hat s^{(2)}_T=16\)。求趨勢 \(b_{1,T}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(2(20-16)/(5-1)=2\)。(D) 是除以 5 再乘 1。</p></div></div></article><article class="exercise concept-q" id="qC21-1-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.1-4</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A noiseless series \(y_t=a+3t\) is smoothed by a moving average with \(k=5\).</p>
+<p>Determine how far the smoothed series lies below the original series.</p>
+<div class="opts">
+<p>(A) 3</p>
+<p>(B) 15</p>
+<p>(C) 7.5</p>
+<p>(D) 6</p>
+<p>(E) 12</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>沒有雜訊的 \(y_t=a+3t\) 用 \(k=5\) 的移動平均平滑，平滑值比原數列低多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(k\) 期平均落在中點，落後 \(b(k-1)/2=3(2)=6\)。</p></div></div></article></div></section><section class="unit" id="s2"><h2>21.2 指數平滑</h2><h3>一、權重與遞迴</h3>
+<p>移動平均的權重在第 \(k\) 期突然掉到 0。<strong>指數平滑</strong>讓權重平滑地遞減：往前第 \(k\) 期的權重與 \(w^k\) 成正比（\(0&lt;w&lt;1\)）。權重總和 \(\sum_{k\ge0}w^k=1/(1-w)\)，所以
+\[\hat s_t=\frac{y_t+wy_{t-1}+w^2y_{t-2}+\cdots}{1/(1-w)}=(1-w)\sum_{k\geq0}w^ky_{t-k}.\tag{21.1}\]</p>
+<div class="box derive">
+<div class="box-t">推導：兩種寫法等價，以及它是加權最小平方</div>
+<p>把 (21.1) 的第一項拆出來：
+\[\hat s_t=(1-w)y_t+w\Big[(1-w)\sum_{k\geq0}w^ky_{t-1-k}\Big]=(1-w)y_t+w\,\hat s_{t-1}.\tag{21.2}\]
+新的平滑值是「新觀察」與「舊平滑值」的加權平均。</p>
+<p><strong>加權最小平方</strong>：選常數 \(c\) 讓 \(\sum_kw^k(y_{t-k}-c)^2\) 最小，微分得 \(c=\sum w^ky_{t-k}/\sum w^k\)，正是 (21.1)。</p>
+</div>
+<ul>
+<li><strong>\(w\) 小</strong>：新觀察權重大，平滑很少、反應快、抖動大。</li>
+<li><strong>\(w\) 大</strong>：舊資訊權重大，平滑很多、反應慢。</li>
+<li>實務上沒有第 1 期以前的資料，(21.1) 的和只加到 \(y_1\)（或 \(y_0\)），權重總和不到 1；讀本的處理是起始值 \(\hat s_0\) 可以設為 0、數列平均或 \(y_1\)。<strong>題目會指定起始值</strong>，照做即可。</li>
+<li><strong>預測</strong>：\(\hat y_{T+l}=\hat s_T\)，對所有 \(l\)。</li>
+</ul>
+<figure><img src="assets/fig/ch21-weights.svg" alt="權重的比較。移動平均（）最近 5 期各 0.2，之後為 0；指數平滑的權重  幾何遞減， 時集中在最近幾期， 時分散得較遠。" loading="lazy"><figcaption>權重的比較。移動平均（\(k=5\)）最近 5 期各 0.2，之後為 0；指數平滑的權重 \((1-w)w^k\) 幾何遞減，\(w=0.5\) 時集中在最近幾期，\(w=0.8\) 時分散得較遠。</figcaption></figure>
+
+<figure><img src="assets/fig/ch21-smooth.svg" alt="水準在第 31 期從 20 跳到 30。 幾乎立刻跟上，但隨著雜訊上下跳； 很平滑，但花了十多期才追上新水準。移動平均（）在第 38 期左右完全反映新水準。" loading="lazy"><figcaption>水準在第 31 期從 20 跳到 30。\(w=0.3\) 幾乎立刻跟上，但隨著雜訊上下跳；\(w=0.9\) 很平滑，但花了十多期才追上新水準。移動平均（\(k=8\)）在第 38 期左右完全反映新水準。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 21-2：指數平滑（講義小測驗 21-1、習題 21.4）</div>
+<p><strong>小測驗 21-1</strong>：12、18、20、21、25，\(w=0.6\)，起始 \(y_0=0\)。用 (21.1)：
+\[\hat s_5=0.4\big(25+0.6(21)+0.36(20)+0.216(18)+0.1296(12)\big)=0.4(50.243)=20.10 .\]
+用遞迴 \(\hat s_t=0.4y_t+0.6\hat s_{t-1}\) 從 \(\hat s_0=0\) 開始，結果相同。</p>
+<p><strong>習題 <a href="ch21.html#q21-4">21.4</a></strong>：\(w=0.1\)，\(\hat s_{95}=7.1\)，\(y_{96\sim100}\) 依序 7.1、8.9、5.5、8.2、7.3。\(\hat s_t=0.9y_t+0.1\hat s_{t-1}\) 遞迴四次（\(\hat s_{96}=7.1\)）：\(\hat s_{100}=7.366\)，就是 \(y_{101}\) 的預測。\(w=0.1\) 幾乎不平滑，平滑值很接近最後一個觀察。</p>
+</div>
+<h3>二、選 \(w\)：一步預測誤差</h3>
+<p>用模型「回頭預測」過去：一步預測誤差 \(e_t=y_t-\hat s_{t-1}\)，選讓
+\[SS(w)=\sum_{t=1}^T(y_t-\hat s_{t-1})^2\]
+最小的 \(w\)。</p>
+<figure><img src="assets/fig/ch21-ssw.svg" alt="水準緩慢漂移加上雜訊的 80 期資料。 太小時預測追著雜訊跑， 太大時跟不上水準的漂移； 在  最小。" loading="lazy"><figcaption>水準緩慢漂移加上雜訊的 80 期資料。\(w\) 太小時預測追著雜訊跑，\(w\) 太大時跟不上水準的漂移；\(SS(w)\) 在 \(w\approx0.56\) 最小。</figcaption></figure>
+
+<h3>三、雙重指數平滑</h3>
+<p>有趨勢時，把 \(\hat s^{(1)}_t\) 再指數平滑一次得到 \(\hat s^{(2)}_t\)。截距、斜率與預測：
+\[b_{0,T}=2\hat s^{(1)}_T-\hat s^{(2)}_T,\qquad b_{1,T}=\frac{1-w}w\big(\hat s^{(1)}_T-\hat s^{(2)}_T\big),\qquad\hat y_{T+l}=b_{0,T}+b_{1,T}\,l .\tag{21.3}\]</p>
+<div class="box derive">
+<div class="box-t">推導：雙重指數平滑的公式</div>
+<p>若 \(y_t=a+bt\)，由 (21.1)：
+\[\hat s_t=(1-w)\sum_kw^k\big(a+b(t-k)\big)=a+bt-b(1-w)\sum_kkw^k=a+bt-b\frac w{1-w},\]
+因為 \(\sum_kkw^k=w/(1-w)^2\)。所以單次平滑<strong>落後</strong>數列 \(b\,w/(1-w)\)；同理 \(\hat s^{(2)}\) 又落後 \(\hat s^{(1)}\) 同樣的量。於是：</p>
+<ul>
+<li><strong>斜率</strong>：\(\hat s^{(1)}-\hat s^{(2)}=b\,w/(1-w)\)，\(b=\frac{1-w}w(\hat s^{(1)}-\hat s^{(2)})\)。</li>
+<li><strong>目前水準</strong>：\(y_T=\hat s^{(1)}_T+\) 落後量 \(=\hat s^{(1)}_T+(\hat s^{(1)}_T-\hat s^{(2)}_T)=2\hat s^{(1)}_T-\hat s^{(2)}_T\)。</li>
+</ul>
+</div>
+<figure><img src="assets/fig/ch21-lag.svg" alt="沒有雜訊的直線 ，。單次平滑一直比直線低 ，雙重平滑再低 8。把落差除以  就得到斜率 2。" loading="lazy"><figcaption>沒有雜訊的直線 \(y_t=10+2t\)，\(w=0.8\)。單次平滑一直比直線低 \(2\times0.8/0.2=8\)，雙重平滑再低 8。把落差除以 \(w/(1-w)=4\) 就得到斜率 2。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 21-3：單次與雙重平滑的預測（樣題 46）</div>
+<p>\(w=0.8\)，\(y_{100}=100.2\)，\(\hat s^{(1)}_{99}=95.1\)，\(\hat s^{(2)}_{98}=89.9\)；預測四捨五入到一位小數、趨勢到三位。</p>
+<p><strong>單次</strong>：\(\hat s^{(1)}_{100}=0.2(100.2)+0.8(95.1)=96.1\)，\(F=\hat y_{102}=96.1\)。</p>
+<p><strong>雙重</strong>：表中 \(\hat s^{(2)}\) 只給到第 98 期，要遞迴兩次：\(\hat s^{(2)}_{99}=0.2(95.1)+0.8(89.9)=90.9\)，\(\hat s^{(2)}_{100}=0.2(96.1)+0.8(90.9)=91.9\)。</p>
+<p>\(b_1=\frac{0.2}{0.8}(96.1-91.9)=1.05\)，\(b_0=2(96.1)-91.9=100.3\)，\(G=100.3+2(1.05)=102.4\)。</p>
+<p>\(|F-G|=6.3\)。</p>
+</div>
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li>本書的 \(w\) 是<strong>舊資訊</strong>的權重：\(\hat s_t=(1-w)y_t+w\hat s_{t-1}\)。其他教材常反過來寫，看清楚公式。</li>
+<li>預測 \(y_{T+1}\) 用的是 \(\hat s_T\)；一步預測誤差是 \(y_t-\hat s_{t-1}\)，不是 \(y_t-\hat s_t\)（習題 <a href="ch21.html#q21-8">21.8</a>）。</li>
+<li>起始值不同答案不同：習題 <a href="ch21.html#q21-1">21.1</a> 若從 \(\hat s_0=y_0=50\) 開始遞迴，會得到 52.4 而不是 48.512。用題目指定的方法。</li>
+<li>雙重平滑的 \(\hat s^{(2)}\) 是對 \(\hat s^{(1)}\) 平滑，不是對 \(y\)。</li>
+</ul>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：平滑</div>
+<ul>
+<li>計算平滑值（習題 <a href="ch21.html#q21-1">21.1</a>～<a href="ch21.html#q21-6">21.6</a>）；由兩個平滑值反推 \(w\)（習題 <a href="ch21.html#q21-3">21.3</a>，解一元二次方程式）。</li>
+<li>一步預測的平均誤差（VEE Summer 05:3、習題 <a href="ch21.html#q21-8">21.8</a>）。</li>
+<li>雙重平滑的趨勢與預測（樣題 46、習題 <a href="ch21.html#q21-9">21.9</a>）；雙重移動平均（習題 <a href="ch21.html#q21-7">21.7</a>）。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q21-1"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.1 題</b><small>・講義 p.383・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>You are given the following time series:</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y_t\)</td>
+<td>50</td>
+<td>50</td>
+<td>60</td>
+<td>44</td>
+<td>56</td>
+</tr>
+</tbody>
+</table>
+<p>You forecast this series using an exponentially weighted moving average model with \(w=0.6\).</p>
+<p>Determine the forecast of \(y_6\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>時間數列：</p>
+<p>用 \(w=0.6\) 的指數加權移動平均模型預測。求 \(y_6\) 的預測。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>48.512</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(y_6\) 與 \(y_5\) 的預測相同，都是 \(\hat s_4\)。用 (21.1)，權重 \((1-w)w^k\) 加到資料的起點：
+\[\hat s_4=0.4\big(56+0.6(44)+0.36(60)+0.216(50)+0.1296(50)\big)=0.4(121.28)=48.512 .\]
+等價於從 \(\hat s_{-1}=0\) 開始遞迴 \(\hat s_t=0.4y_t+0.6\hat s_{t-1}\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>若從 \(\hat s_0=y_0=50\) 開始遞迴，會得到 52.4。兩種起始方式答案不同；本題依講義用 (21.1) 的直接加權和。</p></div></div></article><article class="exercise" id="q21-2"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.2 題</b><small>・講義 p.383・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>You are applying exponential smoothing to a time series. You are given that \(y_{20}=100\), \(y_{21}=101\), \(\hat s_{19}=110\), \(w=0.6\).</p>
+<p>Determine \(\hat s_{21}\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>指數平滑：\(y_{20}=100\)，\(y_{21}=101\)，\(\hat s_{19}=110\)，\(w=0.6\)。求 \(\hat s_{21}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>104</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat s_{20}=0.4(100)+0.6(110)=106\)；\(\hat s_{21}=0.4(101)+0.6(106)=104\)。</p></div></div></article><article class="exercise" id="q21-4"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.4 題</b><small>・講義 p.383・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[Old exam] You are given the following information about a series of observations, \(y_t\), \(t=1,2,3,\ldots,100\):</p>
+<ul>
+<li>\(|y_t|&lt;10\) for all \(t\)</li>
+<li>\(y_{96}=7.1\), \(y_{97}=8.9\), \(y_{98}=5.5\), \(y_{99}=8.2\), \(y_{100}=7.3\)</li>
+</ul>
+<p>You are to use exponential smoothing with \(w=0.1\) to forecast values beyond the end of the observation period. You are given that the smoothed value \(\hat s_{95}=7.1\).</p>
+<p>Calculate the forecasted value of \(y_{101}\).</p>
+<div class="opts">
+<p>(A) 7.1</p>
+<p>(B) 7.2</p>
+<p>(C) 7.3</p>
+<p>(D) 7.4</p>
+<p>(E) 7.5</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（舊考題）觀察 \(y_t\)，\(t=1,\ldots,100\)，\(|y_t|&lt;10\)；\(y_{96}=7.1\)、\(y_{97}=8.9\)、\(y_{98}=5.5\)、\(y_{99}=8.2\)、\(y_{100}=7.3\)。用 \(w=0.1\) 的指數平滑預測，已知 \(\hat s_{95}=7.1\)。求 \(y_{101}\) 的預測。</p>
+<div class="opts">
+<p>(A) 7.1　(B) 7.2　(C) 7.3　(D) 7.4　(E) 7.5</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat s_t=0.9y_t+0.1\hat s_{t-1}\)：\(\hat s_{96}=7.1\)，\(\hat s_{97}=8.72\)，\(\hat s_{98}=5.822\)，\(\hat s_{99}=7.962\)，\(\hat s_{100}=7.366\)。\(\hat y_{101}=\hat s_{100}=7.366\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(w=0.1\) 是舊平滑值的權重，新觀察的權重是 0.9。</p></div></div></article><article class="exercise" id="q21-5"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.5 題</b><small>・講義 p.383・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[120-81-95:13] You use exponential smoothing with \(w=0.9\) and \(\hat s_0=27\) to forecast the following time series:</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y_t\)</td>
+<td>27</td>
+<td>20</td>
+<td>30</td>
+<td>10</td>
+<td>60</td>
+<td>15</td>
+</tr>
+</tbody>
+</table>
+<p>Determine \(\hat s_5\).</p>
+<div class="opts">
+<p>(A) 16</p>
+<p>(B) 19</p>
+<p>(C) 22</p>
+<p>(D) 26</p>
+<p>(E) 27</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（120-81-95:13）用 \(w=0.9\)、\(\hat s_0=27\) 的指數平滑預測以下數列：</p>
+<p>求 \(\hat s_5\)。</p>
+<div class="opts">
+<p>(A) 16　(B) 19　(C) 22　(D) 26　(E) 27</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>權重：\(y_5\) 0.1、\(y_4\) 0.09、\(y_3\) 0.081、\(y_2\) 0.0729、\(y_1\) 0.06561，剩下的 \(0.9^5=0.59049\) 放在 \(\hat s_0\)：
+\[\hat s_5=0.1(15)+0.09(60)+0.081(10)+0.0729(30)+0.06561(20)+0.59049(27)=27.15 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(w=0.9\) 平滑很重，起始值 27 仍占將近 60% 的權重。</p></div></div></article><article class="exercise" id="q21-8"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.8 題</b><small>・講義 p.384・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[VEE-Applied Statistics-Summer 05:3] You use exponential smoothing with \(w=0.9\) to make one-step-ahead forecasts, that is, \(\hat y_{t+1}=\hat s_t\), \(t=0,1,2,3\), for the following data:</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y_t\)</td>
+<td></td>
+<td>80</td>
+<td>81</td>
+<td>89</td>
+<td>74</td>
+</tr>
+<tr>
+<td>\(\hat y_{t+1}\)</td>
+<td>81</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Determine the mean forecast error \(\frac14\sum_{t=1}^4(y_t-\hat y_t)\).</p>
+<div class="opts">
+<p>(A) −0.5</p>
+<p>(B) −0.1</p>
+<p>(C) 0.0</p>
+<p>(D) 0.1</p>
+<p>(E) 0.5</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（VEE 應用統計 2005 夏:3）用 \(w=0.9\) 的指數平滑做一步預測，\(\hat y_{t+1}=\hat s_t\)，\(t=0,1,2,3\)：</p>
+<p>求平均預測誤差 \(\frac14\sum_{t=1}^4(y_t-\hat y_t)\)。</p>
+<div class="opts">
+<p>(A) −0.5　(B) −0.1　(C) 0.0　(D) 0.1　(E) 0.5</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat s_0=81\)；\(\hat s_1=0.1(80)+0.9(81)=80.9\)；\(\hat s_2=80.91\)；\(\hat s_3=81.719\)。</p>
+<p>誤差：\(80-81=-1\)，\(81-80.9=0.1\)，\(89-80.91=8.09\)，\(74-81.719=-7.719\)。平均 \(-0.529/4=-0.132\)。</p></div></div></article><article class="exercise" id="q21-9"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.9 題</b><small>・講義 p.384・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>You are given the time series</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y_t\)</td>
+<td>1</td>
+<td>4</td>
+<td>8</td>
+<td>11</td>
+</tr>
+</tbody>
+</table>
+<p>You perform double exponential smoothing with smoothing constant \(w=0.8\) and starting values \(\hat s_0^{(1)}=\hat s_0^{(2)}=0\).</p>
+<p>Calculate the estimated trend.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>時間數列：</p>
+<p>用平滑常數 \(w=0.8\)、起始值 \(\hat s^{(1)}_0=\hat s^{(2)}_0=0\) 做雙重指數平滑。求估計的趨勢。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.6883</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(\hat s^{(1)}_t\)</td>
+<td>0.2</td>
+<td>0.96</td>
+<td>2.368</td>
+<td>4.0944</td>
+</tr>
+<tr>
+<td>\(\hat s^{(2)}_t\)</td>
+<td>0.04</td>
+<td>0.224</td>
+<td>0.6528</td>
+<td>1.34112</td>
+</tr>
+</tbody>
+</table>
+<p>\(b_1=\frac{0.2}{0.8}(4.0944-1.34112)=0.6883\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>資料的真正斜率約 3.4，但起始值 0 離資料很遠、\(w=0.8\) 又平滑很重，四期還不夠讓估計穩定。</p></div></div></article><article class="exercise" id="q21-10"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.10 題</b><small>・講義 p.385・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #46] A time series was observed at times \(0,1,\ldots,100\). The last four observations along with estimates based on exponential and double exponential smoothing with \(w=0.8\) are:</p>
+<table>
+<thead>
+<tr>
+<th>Time (\(t\))</th>
+<th>97</th>
+<th>98</th>
+<th>99</th>
+<th>100</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Observation (\(y_t\))</td>
+<td>96.9</td>
+<td>98.1</td>
+<td>99.0</td>
+<td>100.2</td>
+</tr>
+<tr>
+<td>Estimates (\(\hat s_t^{(1)}\))</td>
+<td>93.1</td>
+<td>94.1</td>
+<td>95.1</td>
+<td></td>
+</tr>
+<tr>
+<td>Estimates (\(\hat s_t^{(2)}\))</td>
+<td>88.9</td>
+<td>89.9</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>All forecasts should be rounded to one decimal place and the trend should be rounded to three decimal places.</p>
+<p>Let \(F\) be the predicted value of \(y_{102}\) using exponential smoothing with \(w=0.8\).</p>
+<p>Let \(G\) be the predicted value of \(y_{102}\) using double exponential smoothing with \(w=0.8\).</p>
+<p>Calculate the absolute difference between \(F\) and \(G\), \(|F-G|\).</p>
+<div class="opts">
+<p>(A) 0.0</p>
+<p>(B) 2.1</p>
+<p>(C) 4.2</p>
+<p>(D) 6.3</p>
+<p>(E) 8.4</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 46 題）時間數列在時間 \(0,1,\ldots,100\) 觀察。最後四個觀察與 \(w=0.8\) 的單次、雙重指數平滑估計：</p>
+<p>所有預測四捨五入到一位小數，趨勢四捨五入到三位小數。</p>
+<p>令 \(F\) 是用 \(w=0.8\) 指數平滑對 \(y_{102}\) 的預測，\(G\) 是用 \(w=0.8\) 雙重指數平滑對 \(y_{102}\) 的預測。求 \(|F-G|\)。</p>
+<div class="opts">
+<p>(A) 0.0　(B) 2.1　(C) 4.2　(D) 6.3　(E) 8.4</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat s^{(1)}_{100}=0.2(100.2)+0.8(95.1)=96.1\)，\(F=96.1\)。</p>
+<p>\(\hat s^{(2)}_{99}=0.2(95.1)+0.8(89.9)=90.9\)；\(\hat s^{(2)}_{100}=0.2(96.1)+0.8(90.9)=91.9\)。</p>
+<p>\(b_1=\frac{0.2}{0.8}(96.1-91.9)=1.05\)，\(b_0=2(96.1)-91.9=100.3\)，\(G=100.3+2(1.05)=102.4\)。</p>
+<p>\(|F-G|=6.3\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(y_{102}\) 是從 100 往後 2 期，\(l=2\)。單次平滑的預測不隨 \(l\) 改變。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（8 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC21-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.2-1</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Exponential smoothing with \(w=0.7\) has \(\hat s_{t-1}=50\), and the new observation is \(y_t=60\).</p>
+<p>Calculate \(\hat s_t\).</p>
+<div class="opts">
+<p>(A) 53</p>
+<p>(B) 57</p>
+<p>(C) 55</p>
+<p>(D) 60</p>
+<p>(E) 50</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(w=0.7\) 的指數平滑，\(\hat s_{t-1}=50\)，新觀察 60。求 \(\hat s_t\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\((1-w)y_t+w\hat s_{t-1}=0.3(60)+0.7(50)=53\)。(B) 把權重放反了。</p></div></div></article><article class="exercise concept-q" id="qC21-2-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.2-2</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>In the exponential smoothing formula \(\hat s_t=(1-w)y_t+w\hat s_{t-1}\), determine the effect of a larger \(w\).</p>
+<div class="opts">
+<p>(A) The smoothed series reacts faster to changes</p>
+<p>(B) The forecast has a steeper trend</p>
+<p>(C) The most recent observation gets more weight</p>
+<p>(D) The smoothed series equals the data</p>
+<p>(E) More smoothing and a slower reaction to changes</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>指數平滑 \(\hat s_t=(1-w)y_t+w\hat s_{t-1}\) 中，\(w\) 變大有什麼效果？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(w\) 是舊資訊的權重：越大越平滑、越慢反應。</p></div></div></article><article class="exercise concept-q" id="qC21-2-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.2-3</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Single exponential smoothing gives \(\hat s_T=42\).</p>
+<p>Determine the forecast of \(y_{T+5}\).</p>
+<div class="opts">
+<p>(A) 42 plus 5 times the trend</p>
+<p>(B) 42</p>
+<p>(C) \(42w^5\)</p>
+<p>(D) \(42(1-w)^5\)</p>
+<p>(E) It cannot be determined without \(y_T\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>單次指數平滑 \(\hat s_T=42\)，\(y_{T+5}\) 的預測是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>單次指數平滑的預測對所有 \(l\) 都是 \(\hat s_T\)。</p></div></div></article><article class="exercise concept-q" id="qC21-2-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.2-4</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>In exponential smoothing with \(w=0.5\), determine the weight given to \(y_{t-2}\) in \(\hat s_t\) (ignoring the starting value).</p>
+<div class="opts">
+<p>(A) 0.125</p>
+<p>(B) 0.25</p>
+<p>(C) 0.5</p>
+<p>(D) 0.0625</p>
+<p>(E) 0.75</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(w=0.5\) 的指數平滑，\(\hat s_t\) 中 \(y_{t-2}\) 的權重是多少（不考慮起始值）？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\((1-w)w^2=0.5(0.25)=0.125\)。(B) 漏乘 \(1-w\)。</p></div></div></article><article class="exercise concept-q" id="qC21-2-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.2-5</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A noiseless linear series with slope 3 is exponentially smoothed with \(w=0.75\).</p>
+<p>Determine how far the smoothed series lies below the series.</p>
+<div class="opts">
+<p>(A) 3</p>
+<p>(B) 1</p>
+<p>(C) 9</p>
+<p>(D) 2.25</p>
+<p>(E) 4</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>斜率 3、沒有雜訊的直線，用 \(w=0.75\) 指數平滑，平滑值比原數列低多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>落後 \(b\,w/(1-w)=3(3)=9\)。</p></div></div></article><article class="exercise concept-q" id="qC21-2-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.2-6</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Double exponential smoothing with \(w=0.6\) gives \(\hat s^{(1)}_T=50\) and \(\hat s^{(2)}_T=46\).</p>
+<p>Calculate the forecast \(\hat y_{T+3}\).</p>
+<div class="opts">
+<p>(A) 58</p>
+<p>(B) 50</p>
+<p>(C) 56</p>
+<p>(D) 62</p>
+<p>(E) 54</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(w=0.6\) 的雙重指數平滑，\(\hat s^{(1)}_T=50\)、\(\hat s^{(2)}_T=46\)。求 \(\hat y_{T+3}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(b_0=2(50)-46=54\)，\(b_1=\frac{0.4}{0.6}(4)=2.667\)，\(\hat y_{T+3}=54+8=62\)。(E) 只有截距；(A) 用了 \(\frac w{1-w}\)。</p></div></div></article><article class="exercise concept-q" id="qC21-2-7"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.2-7</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine the one-step prediction error used in \(SS(w)\) to choose the smoothing parameter.</p>
+<div class="opts">
+<p>(A) \(y_t-\hat s_{t-1}\)</p>
+<p>(B) \(y_t-\hat s_t\)</p>
+<p>(C) \(\hat s_t-\hat s_{t-1}\)</p>
+<p>(D) \(y_t-y_{t-1}\)</p>
+<p>(E) \(y_t-\bar y\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>選平滑參數的 \(SS(w)\) 用的一步預測誤差是哪一個？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(y_t\) 的一步預測是 \(\hat s_{t-1}\)。用 \(y_t-\hat s_t\) 時 \(w\to0\) 永遠最好，沒有意義。</p></div></div></article><article class="exercise concept-q" id="qC21-2-8"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.2-8</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. Exponential smoothing is weighted least squares with geometrically declining weights.</p>
+<p>II. A \(k\)-period moving average gives equal weight to the most recent \(k\) observations.</p>
+<p>III. With single exponential smoothing, the forecast increases with the horizon when the data trend upward.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I and II only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪些正確？</p>
+<div class="items">
+<p>I. 指數平滑是權重幾何遞減的加權最小平方。</p>
+<p>II. \(k\) 期移動平均給最近 \(k\) 期相同權重。</p>
+<p>III. 單次指數平滑在資料上升時，預測隨期數增加。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>III 錯：單次平滑的預測是水平的，有趨勢時要用雙重平滑。</p></div></div></article></div></section><section class="unit" id="s3"><h2>21.3 季節模型</h2><h3>一、固定季節效果：三角函數迴歸</h3>
+<p>季節效果可以用每季的虛擬變數，或用三角函數。令 \(f_j=2\pi j/\text{SB}\)：
+\[y_t=\beta_0+\sum_{j=1}^m\big(\beta_{1j}\sin(f_jt)+\beta_{2j}\cos(f_jt)\big)+\varepsilon_t .\]
+- SB 為偶數時 \(m\) 最多 \(\text{SB}/2\)；再多會與已有的變數共線。\(m=\text{SB}/2\) 時 \(\sin(f_mt)=\sin(\pi t)\equiv0\)，要省略。
+- \(m\) 用模型比較（例如 \(F\) 檢定）選擇。</p>
+<figure><img src="assets/fig/ch21-trig.svg" alt="每月資料，季節型態在年初有尖峰。（一組正弦與餘弦）只能畫出對稱的波，； 加入半年週期，能描出尖峰與較平的谷底，。" loading="lazy"><figcaption>每月資料，季節型態在年初有尖峰。\(m=1\)（一組正弦與餘弦）只能畫出對稱的波，\(R^2=0.68\)；\(m=2\) 加入半年週期，能描出尖峰與較平的谷底，\(R^2=0.87\)。</figcaption></figure>
+
+<h3>二、季節自迴歸</h3>
+<p>AR(1) 用前一期；<strong>季節自迴歸</strong>用整數倍個季節週期以前的值：
+\[y_t=\beta_0+\beta_1y_{t-\text{SB}}+\beta_2y_{t-2\,\text{SB}}+\cdots+\beta_Py_{t-P\,\text{SB}}+\varepsilon_t,\]
+稱為 SAR(\(P\))。例如月資料 \(\text{SB}=12\) 時，今年 3 月與去年 3 月、前年 3 月相關。</p>
+<h3>三、Holt 與 Holt–Winters</h3>
+<p><strong>Holt</strong>：雙重指數平滑的推廣，水準與趨勢用不同的平滑參數 \(w_1\)、\(w_2\)：
+\[b_{0,t}=(1-w_1)y_t+w_1(b_{0,t-1}+b_{1,t-1}),\qquad b_{1,t}=(1-w_2)(b_{0,t}-b_{0,t-1})+w_2b_{1,t-1}.\]
+水準：新觀察與「上一期的預測」的加權平均。趨勢：新觀察到的水準變化與舊趨勢的加權平均。</p>
+<p><strong>Holt–Winters 季節加法模型</strong>：再加上季節因子 \(\hat S_t\)（一個週期內加總為 0），用第三個參數 \(w_3\) 更新：
+\[\begin{aligned}
+b_{0,t}&amp;=(1-w_1)(y_t-\hat S_{t-\text{SB}})+w_1(b_{0,t-1}+b_{1,t-1})\\
+b_{1,t}&amp;=(1-w_2)(b_{0,t}-b_{0,t-1})+w_2b_{1,t-1}\\
+\hat S_t&amp;=(1-w_3)(y_t-b_{0,t})+w_3\hat S_{t-\text{SB}}
+\end{aligned}\tag{21.4}\]
+預測：
+\[\hat y_{T+l}=b_{0,T}+b_{1,T}\,l+\hat S_T(l),\tag{21.5}\]
+\(\hat S_T(l)\) 是該季最近一次的季節因子：\(\hat S_{T+l-\text{SB}}\)（\(l&gt;\text{SB}\) 時再往前推整數個週期）。</p>
+<ul>
+<li>更新水準時，先把觀察值<strong>去除季節</strong>（\(y_t-\hat S_{t-\text{SB}}\)）；更新季節因子時，用觀察值<strong>減去水準</strong>。</li>
+<li>季節因子用的是<strong>一個週期前</strong>同一季的因子 \(\hat S_{t-\text{SB}}\)。</li>
+</ul>
+<figure><img src="assets/fig/ch21-holt.svg" alt="每季資料（），有上升趨勢與固定的季節型態。Holt–Winters（、、）的一步預測在前幾個週期還在學習，之後就緊貼資料；往後 8 季的預測同時延續趨勢與季節起伏。" loading="lazy"><figcaption>每季資料（\(\text{SB}=4\)），有上升趨勢與固定的季節型態。Holt–Winters（\(w_1=0.6\)、\(w_2=0.8\)、\(w_3=0.7\)）的一步預測在前幾個週期還在學習，之後就緊貼資料；往後 8 季的預測同時延續趨勢與季節起伏。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 21-4：Holt–Winters 的預測（講義例 21A）</div>
+<p>月資料，\(T=90\)，\(b_{0,90}=122\)、\(b_{1,90}=5\)、\(\hat S_{85}=-3\)。求 \(y_{121}\) 的預測。</p>
+<p>\(l=121-90=31\)。季節週期 12：\(121\)、\(109\)、\(97\)、\(85\) 是同一個月，最近的季節因子是 \(\hat S_{85}\)。</p>
+<p>\(\hat y_{121}=122+31(5)-3=274\)。</p>
+</div>
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li>水準的更新用 \(b_{0,t-1}+b_{1,t-1}\)（上一期對本期的預測），不是只用 \(b_{0,t-1}\)。</li>
+<li>趨勢的更新用<strong>新的</strong> \(b_{0,t}\) 減舊的 \(b_{0,t-1}\)。</li>
+<li>沒有季節性的題目（\(\hat S_t=0\)）就是 Holt 模型（習題 <a href="ch21.html#q21-11">21.11</a>～<a href="ch21.html#q21-14">21.14</a>）。</li>
+</ul>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：季節與 Holt–Winters</div>
+<ul>
+<li>一步或多步更新 \(b_0\)、\(b_1\)、\(\hat S\)（習題 <a href="ch21.html#q21-11">21.11</a>～<a href="ch21.html#q21-16">21.16</a>）；由更新結果反推參數（習題 <a href="ch21.html#q21-14">21.14</a>）。</li>
+<li>多步預測要找對季節因子（例題 21-4）。</li>
+<li>三角函數迴歸中 \(m\) 的上限與 \(\sin\) 項的省略。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q21-11"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.11 題</b><small>・講義 p.385・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You apply the Holt-Winters method to a time series. You are given the following data:</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(x_t\)</td>
+<td>100</td>
+<td>120</td>
+<td>130</td>
+</tr>
+</tbody>
+</table>
+<p>\(b_{0,1}=90\), \(b_{1,1}=10\), \(w_1=0.4\), \(w_2=0.2\)</p>
+<p>There is no seasonality in the data; \(\hat S_t=0\) for all \(t\).</p>
+<p>Determine \(b_{0,4}\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>對時間數列用 Holt–Winters 方法：</p>
+<p>\(b_{0,1}=90\)，\(b_{1,1}=10\)，\(w_1=0.4\)，\(w_2=0.2\)。資料沒有季節性，\(\hat S_t=0\)。求 \(b_{0,4}\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>130.32</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>\(b_{0,t}=0.6x_t+0.4(b_{0,t-1}+b_{1,t-1})\)</th>
+<th>\(b_{1,t}=0.8(b_{0,t}-b_{0,t-1})+0.2b_{1,t-1}\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>\(60+40=100\)</td>
+<td>\(8+2=10\)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>\(72+44=116\)</td>
+<td>\(12.8+2=14.8\)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>\(78+52.32=130.32\)</td>
+<td></td>
+</tr>
+</tbody>
+</table></div></div></article><article class="exercise" id="q21-13"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.13 題</b><small>・講義 p.385・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You apply the Holt-Winters method to a time series. You are given the following data:</p>
+<p>\(y_T=55\), \(b_{0,T-1}=50\), \(b_{1,T-1}=10\), \(w_1=0.5\), \(w_2=0.2\)</p>
+<p>There is no seasonality in the data; \(\hat S_t=0\) for all \(t\).</p>
+<p>Determine the 5 step lookahead forecast, \(\hat y_{T+5}\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Holt–Winters 方法：\(y_T=55\)，\(b_{0,T-1}=50\)，\(b_{1,T-1}=10\)，\(w_1=0.5\)，\(w_2=0.2\)，沒有季節性。求 5 期後的預測 \(\hat y_{T+5}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>97.5</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(b_{0,T}=0.5(55)+0.5(60)=57.5\)；\(b_{1,T}=0.8(7.5)+0.2(10)=8\)。\(\hat y_{T+5}=57.5+5(8)=97.5\)。</p></div></div></article><article class="exercise" id="q21-15"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.15 題</b><small>・講義 p.386・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You apply the Holt-Winters method to a time series. You are given that the data are monthly, \(y_2=19\), \(y_{14}=15\), \(y_{15}=20\), \(b_{0,14}=17\), \(b_{1,14}=2\), \(\hat S_3=3\), \(w_1=0.8\), \(w_2=0.7\), \(w_3=0.6\).</p>
+<p>Calculate \(\hat S_{15}\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>月資料的 Holt–Winters 方法：\(y_2=19\)，\(y_{14}=15\)，\(y_{15}=20\)，\(b_{0,14}=17\)，\(b_{1,14}=2\)，\(\hat S_3=3\)，\(w_1=0.8\)，\(w_2=0.7\)，\(w_3=0.6\)。求 \(\hat S_{15}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>2.36</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>先更新水準：\(b_{0,15}=0.2(20-\hat S_3)+0.8(17+2)=0.2(17)+15.2=18.6\)。</p>
+<p>季節因子：\(\hat S_{15}=0.4(20-18.6)+0.6\hat S_3=0.56+1.8=2.36\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(\hat S_{t-\text{SB}}=\hat S_{15-12}=\hat S_3\)；\(y_2\)、\(y_{14}\) 用不到。</p></div></div></article><article class="exercise" id="q21-16"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.16 題</b><small>・講義 p.386・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>(Use the information of 21.15.) \(\hat S_4=-2\).</p>
+<p>Calculate the forecasted value \(\hat y_{16}\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>承上題，另知 \(\hat S_4=-2\)。求預測值 \(\hat y_{16}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>18.48</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(b_{1,15}=0.3(18.6-17)+0.7(2)=1.88\)。\(\hat y_{16}=b_{0,15}+b_{1,15}+\hat S_{16-12}=18.6+1.88-2=18.48\)。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（6 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC21-3-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.3-1</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A regression with trigonometric seasonal terms is fitted to monthly data (\(\text{SB}=12\)).</p>
+<p>Determine the maximum number of distinct trigonometric explanatory variables (excluding the intercept).</p>
+<div class="opts">
+<p>(A) 12</p>
+<p>(B) 6</p>
+<p>(C) 24</p>
+<p>(D) 10</p>
+<p>(E) 11</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>月資料（SB = 12）用三角函數迴歸，最多有幾個不同的三角函數解釋變數（不含截距）？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(m\le6\)，共 6 個 \(\cos\) 與 6 個 \(\sin\)；但 \(\sin(\pi t)\equiv0\)，省略後是 11 個（與 11 個月份虛擬變數的個數相同）。</p></div></div></article><article class="exercise concept-q" id="qC21-3-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.3-2</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A seasonal autoregressive model SAR(2) is fitted to quarterly data.</p>
+<p>Determine the lagged terms used as predictors of \(y_t\).</p>
+<div class="opts">
+<p>(A) \(y_{t-1}\) and \(y_{t-2}\)</p>
+<p>(B) \(y_{t-4}\) and \(y_{t-8}\)</p>
+<p>(C) \(y_{t-2}\) and \(y_{t-4}\)</p>
+<p>(D) \(y_{t-12}\) and \(y_{t-24}\)</p>
+<p>(E) \(y_{t-1}\) and \(y_{t-4}\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>季資料的 SAR(2)，用哪些落後項預測 \(y_t\)？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>SB = 4，落後整數倍個季節週期：\(t-4\)、\(t-8\)。(D) 是月資料。</p></div></div></article><article class="exercise concept-q" id="qC21-3-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.3-3</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Holt's method with \(w_1=0.5\): \(b_{0,t-1}=100\), \(b_{1,t-1}=4\), and \(y_t=110\).</p>
+<p>Calculate \(b_{0,t}\).</p>
+<div class="opts">
+<p>(A) 107</p>
+<p>(B) 105</p>
+<p>(C) 110</p>
+<p>(D) 104</p>
+<p>(E) 102</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Holt 方法 \(w_1=0.5\)，\(b_{0,t-1}=100\)、\(b_{1,t-1}=4\)，\(y_t=110\)。求 \(b_{0,t}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(0.5(110)+0.5(100+4)=107\)。(B) 漏了上一期的趨勢。</p></div></div></article><article class="exercise concept-q" id="qC21-3-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.3-4</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Continuing, with \(w_2=0.6\): \(b_{0,t}=107\), \(b_{0,t-1}=100\), and \(b_{1,t-1}=4\).</p>
+<p>Calculate \(b_{1,t}\).</p>
+<div class="opts">
+<p>(A) 7</p>
+<p>(B) 4</p>
+<p>(C) 5.2</p>
+<p>(D) 6.4</p>
+<p>(E) 5.8</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>承上，\(w_2=0.6\)，\(b_{0,t}=107\)、\(b_{0,t-1}=100\)、\(b_{1,t-1}=4\)。求 \(b_{1,t}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\((1-w_2)(107-100)+w_2(4)=0.4(7)+2.4=5.2\)。(E) 把權重放反了。</p></div></div></article><article class="exercise concept-q" id="qC21-3-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.3-5</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A Holt–Winters model is fitted to quarterly data through \(T=40\).</p>
+<p>Determine the seasonal factor used in the forecast of \(y_{46}\).</p>
+<div class="opts">
+<p>(A) \(\hat S_{46}\)</p>
+<p>(B) \(\hat S_{42}\)</p>
+<p>(C) \(\hat S_{34}\)</p>
+<p>(D) \(\hat S_{38}\)</p>
+<p>(E) \(\hat S_{40}\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>季資料的 Holt–Winters 模型配適到 \(T=40\)。預測 \(y_{46}\) 要用哪一個季節因子？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>同一季每 4 期重複：46、42、38。42 還在未來，最近一個已估計的是 \(\hat S_{38}\)。</p></div></div></article><article class="exercise concept-q" id="qC21-3-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.3-6</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>In the Holt–Winters additive model, determine the quantity combined with \(\hat S_{t-\text{SB}}\) to update the seasonal factor \(\hat S_t\).</p>
+<div class="opts">
+<p>(A) \(y_t-b_{0,t}\)</p>
+<p>(B) \(y_t-\hat S_{t-\text{SB}}\)</p>
+<p>(C) \(b_{0,t}-b_{0,t-1}\)</p>
+<p>(D) \(y_t-y_{t-\text{SB}}\)</p>
+<p>(E) \(b_{1,t}\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Holt–Winters 加法模型中，更新季節因子 \(\hat S_t\) 時，與 \(\hat S_{t-\text{SB}}\) 加權平均的是哪一個量？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat S_t=(1-w_3)(y_t-b_{0,t})+w_3\hat S_{t-\text{SB}}\)：觀察值減去水準就是這一期觀察到的季節效果。(B) 是更新水準時用的去季節觀察值。</p></div></div></article></div></section><section class="unit" id="s4"><h2>21.4 單根檢定</h2><p>一個看起來有趨勢的數列，可能是隨機漫步、線性趨勢加平穩誤差，或自迴歸。<strong>Dickey–Fuller 檢定</strong>用迴歸
+\[y_t-y_{t-1}=\beta_0+(\phi-1)y_{t-1}+\beta_1t+\varepsilon_t\]
+檢定 \(H_0:\phi=1\)（隨機漫步，有<strong>單根</strong>）對 \(H_1:\phi&lt;1\)。</p>
+<ul>
+<li>檢定統計量是 \(\phi-1\) 的 \(t\) 統計量，但在 \(H_0\) 下它<strong>不服從</strong> \(t\) 分配。要用 Dickey 與 Fuller 編製的臨界值，比一般 \(t\) 的臨界值<strong>更極端</strong>（更負），所以比較難拒絕隨機漫步。</li>
+<li>傳統上用 10% 的顯著水準，部分彌補檢定力不足。</li>
+<li>Dickey–Fuller 假設 \(\varepsilon_t\) 沒有序列相關。<strong>增廣 Dickey–Fuller</strong>（augmented，ADF）加入落後的差分項，允許序列相關：
+\[y_t-y_{t-1}=\beta_0+(\phi-1)y_{t-1}+\beta_1t+\sum_{j=1}^p\phi_j(y_{t-j}-y_{t-j-1})+\varepsilon_t .\]
+\(p\) 該多大不明確，通常用幾個不同的 \(p\) 都做做看。</li>
+</ul>
+<figure><img src="assets/fig/ch21-df.svg" alt="在隨機漫步（ 成立）下模擬 4000 次，迴歸  統計量的分配。它整體偏向負值，5% 分位數約 −3.47；一般  分配的 5% 臨界值只有 −1.66。用一般臨界值，會把很多隨機漫步誤判成平穩。" loading="lazy"><figcaption>在隨機漫步（\(H_0\) 成立）下模擬 4000 次，迴歸 \(t\) 統計量的分配。它整體偏向負值，5% 分位數約 −3.47；一般 \(t\) 分配的 5% 臨界值只有 −1.66。用一般臨界值，會把很多隨機漫步誤判成平穩。</figcaption></figure>
+
+<div class="box exam">
+<div class="box-t">考試怎麼考：單根檢定</div>
+<ul>
+<li>名詞：虛無假設是隨機漫步（\(\phi=1\)）；臨界值比一般 \(t\) 更極端；ADF 加入落後差分以處理序列相關。</li>
+</ul>
+</div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（3 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC21-4-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.4-1</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Determine the null hypothesis of the Dickey–Fuller test based on \(y_t-y_{t-1}=\beta_0+(\phi-1)y_{t-1}+\beta_1t+\varepsilon_t\).</p>
+<div class="opts">
+<p>(A) The series is white noise</p>
+<p>(B) The series is a random walk, \(\phi=1\)</p>
+<p>(C) The series is stationary, \(\phi&lt;1\)</p>
+<p>(D) There is no linear trend, \(\beta_1=0\)</p>
+<p>(E) The errors are serially correlated</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Dickey–Fuller 檢定的虛無假設是什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(H_0:\phi=1\)（有單根，隨機漫步）；\(H_1:\phi&lt;1\)。</p></div></div></article><article class="exercise concept-q" id="qC21-4-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.4-2</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Determine how the Dickey–Fuller critical values compare with the usual \(t\) critical values.</p>
+<div class="opts">
+<p>(A) They are the same</p>
+<p>(B) They are less extreme, so rejection is easier</p>
+<p>(C) They depend only on the sample mean</p>
+<p>(D) They are positive</p>
+<p>(E) They are more extreme, so it is harder to reject the random walk hypothesis</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Dickey–Fuller 臨界值與一般 \(t\) 臨界值相比如何？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>在隨機漫步下統計量偏向負值，5% 臨界值約 −3.4（有截距與趨勢時），遠比 −1.65 極端。</p></div></div></article><article class="exercise concept-q" id="qC21-4-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.4-3</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Determine what the augmented Dickey–Fuller test adds to the Dickey–Fuller regression and why.</p>
+<div class="opts">
+<p>(A) A quadratic trend, to allow curvature</p>
+<p>(B) Seasonal dummies, to remove seasonality</p>
+<p>(C) Lagged differences \(y_{t-j}-y_{t-j-1}\), to allow serially correlated errors</p>
+<p>(D) The logarithm of \(y_t\), to stabilize variance</p>
+<p>(E) Squared residuals, to allow ARCH effects</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>增廣 Dickey–Fuller 檢定在迴歸中加入什麼？為什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>原始的檢定假設誤差無序列相關；加入落後差分項來吸收序列相關。</p></div></div></article></div></section><section class="unit" id="s5"><h2>21.5 ARCH 與 GARCH</h2><p>前面的模型都假設誤差變異數固定。金融資料常見<strong>波動聚集</strong>：大的變動之後常接著大的變動。</p>
+<p><strong>ARCH</strong>（autoregressive conditional heteroscedasticity）讓<strong>條件</strong>變異數依賴過去的誤差平方：
+\[\sigma_t^2=\mathrm{Var}(\varepsilon_t\mid\text{過去})=\omega+\sum_{j=1}^p\gamma_j\varepsilon_{t-j}^2,\qquad\omega&gt;0,\ \gamma_j\geq0,\ \sum\gamma_j&lt;1 .\]
+<strong>GARCH</strong>（generalized ARCH）再加入過去的條件變異數：
+\[\sigma_t^2=\omega+\sum_{i=1}^q\delta_i\sigma_{t-i}^2+\sum_{j=1}^p\gamma_j\varepsilon_{t-j}^2,\qquad\delta_i\geq0,\ \gamma_j\geq0,\ \sum\gamma_j+\sum\delta_i&lt;1 .\]</p>
+<div class="box derive">
+<div class="box-t">推導：無條件變異數</div>
+<p>誤差平均為 0，所以 \(\mathrm{Var}(\varepsilon_t)=\mathrm E[\varepsilon_t^2]=\mathrm E[\sigma_t^2]\)。對 GARCH 的式子取期望值，平穩時每一期的 \(\mathrm E[\varepsilon^2]\)、\(\mathrm E[\sigma^2]\) 都等於同一個 \(V\)：
+\[V=\omega+\sum_i\delta_iV+\sum_j\gamma_jV\quad\Longrightarrow\quad\mathrm{Var}(\varepsilon_t)=\frac{\omega}{1-\sum_j\gamma_j-\sum_i\delta_i}.\]
+條件 \(\sum\gamma_j+\sum\delta_i&lt;1\) 保證分母為正、無條件變異數有限。所以：<strong>條件</strong>變異數隨時間變，<strong>無條件</strong>變異數固定，數列仍是弱平穩的。ARCH 是 \(\delta_i=0\) 的特例。</p>
+</div>
+<figure><img src="assets/fig/ch21-garch.svg" alt="GARCH(1,1)，、、。上：誤差呈現大波動聚在一起的型態。下：條件標準差  在大衝擊之後升高、再慢慢回落，圍繞著無條件標準差  波動。" loading="lazy"><figcaption>GARCH(1,1)，\(\omega=0.1\)、\(\gamma=0.12\)、\(\delta=0.83\)。上：誤差呈現大波動聚在一起的型態。下：條件標準差 \(\sigma_t\) 在大衝擊之後升高、再慢慢回落，圍繞著無條件標準差 \(\sqrt{0.1/0.05}=1.41\) 波動。</figcaption></figure>
+
+<div class="box exam">
+<div class="box-t">考試怎麼考：ARCH/GARCH</div>
+<ul>
+<li>無條件變異數（習題 <a href="ch21.html#q21-17">21.17</a>）：\(\omega/(1-\sum\gamma-\sum\delta)\)。</li>
+<li>名詞：條件變異數隨時間變，無條件變異數固定；平穩條件 \(\sum\gamma+\sum\delta&lt;1\)。</li>
+</ul>
+</div>
+<div class="box key">
+<div class="box-t">本章總整理</div>
+<ul>
+<li>移動平均 \(\hat s_t=\frac1k\sum_{j&lt;k}y_{t-j}\)，落後 \(b(k-1)/2\)；雙重移動平均趨勢 \(b_1=2(\hat s-\hat s^{(2)})/(k-1)\)，預測 \(\hat s_T+b_1l\)。</li>
+<li>指數平滑 \(\hat s_t=(1-w)y_t+w\hat s_{t-1}=(1-w)\sum w^ky_{t-k}\)；\(w\) 大＝平滑多、反應慢；預測 \(\hat y_{T+l}=\hat s_T\)；用 \(SS(w)=\sum(y_t-\hat s_{t-1})^2\) 選 \(w\)。</li>
+<li>雙重指數平滑：落後 \(bw/(1-w)\)；\(b_0=2\hat s^{(1)}-\hat s^{(2)}\)，\(b_1=\frac{1-w}w(\hat s^{(1)}-\hat s^{(2)})\)，預測 \(b_0+b_1l\)。</li>
+<li>季節：三角函數迴歸（\(m\le\text{SB}/2\)）、SAR(\(P\))、Holt–Winters（水準去季節、季節減水準，預測 \(b_0+b_1l+\hat S_T(l)\)）。</li>
+<li>單根檢定：\(H_0\) 隨機漫步；Dickey–Fuller 臨界值比 \(t\) 更極端；ADF 加落後差分。</li>
+<li>ARCH/GARCH：條件變異數隨過去的誤差（與變異數）變化；無條件變異數 \(\omega/(1-\sum\gamma-\sum\delta)\)。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q21-17"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 21.17 題</b><small>・講義 p.386・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>For an ARCH model, you are given</p>
+<div class="items">
+<p>(i) \(\mathrm{Var}(\varepsilon_t\mid\varepsilon_{t-1},\varepsilon_{t-2})=\omega+0.6\varepsilon_{t-1}^2+0.2\varepsilon_{t-2}^2\)</p>
+<p>(ii) \(\omega=4\)</p>
+</div>
+<p>Calculate \(\mathrm{Var}(\varepsilon_t)\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>ARCH 模型：</p>
+<div class="items">
+<p>(i) \(\mathrm{Var}(\varepsilon_t\mid\varepsilon_{t-1},\varepsilon_{t-2})=\omega+0.6\varepsilon_{t-1}^2+0.2\varepsilon_{t-2}^2\)</p>
+<p>(ii) \(\omega=4\)</p>
+</div>
+<p>求 \(\mathrm{Var}(\varepsilon_t)\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>20</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\frac{4}{1-0.6-0.2}=20\)。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（4 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC21-5-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.5-1</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>A GARCH(1,1) model has \(\omega=0.2\), \(\gamma_1=0.1\), and \(\delta_1=0.85\).</p>
+<p>Calculate the unconditional variance \(\mathrm{Var}(\varepsilon_t)\).</p>
+<div class="opts">
+<p>(A) 0.2</p>
+<p>(B) 0.222</p>
+<p>(C) 1.333</p>
+<p>(D) 4</p>
+<p>(E) 0.235</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>GARCH(1,1) 的 \(\omega=0.2\)、\(\gamma_1=0.1\)、\(\delta_1=0.85\)，求無條件變異數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(0.2/(1-0.1-0.85)=4\)。(B) 只減了 \(\gamma\)；(E) 只減了 \(\delta\)。</p></div></div></article><article class="exercise concept-q" id="qC21-5-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.5-2</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>An ARCH(1) model has \(\sigma_t^2=\omega+\gamma_1\varepsilon_{t-1}^2\) with \(\omega=1\) and \(\gamma_1=0.5\). The previous error is \(\varepsilon_{t-1}=2\).</p>
+<p>Calculate the conditional variance \(\sigma_t^2\).</p>
+<div class="opts">
+<p>(A) 3</p>
+<p>(B) 2</p>
+<p>(C) 2.5</p>
+<p>(D) 1.5</p>
+<p>(E) 5</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>ARCH(1)：\(\omega=1\)、\(\gamma_1=0.5\)，上一期誤差 2。求條件變異數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(1+0.5(4)=3\)。(B) 用了 \(\varepsilon\) 而不是 \(\varepsilon^2\)。</p></div></div></article><article class="exercise concept-q" id="qC21-5-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.5-3</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about a GARCH model with \(\sum\gamma_j+\sum\delta_i&lt;1\) is/are true.</p>
+<div class="items">
+<p>I. The conditional variance changes over time.</p>
+<p>II. The unconditional variance is constant.</p>
+<p>III. The errors \(\varepsilon_t\) are serially correlated.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(\sum\gamma+\sum\delta&lt;1\) 的 GARCH 模型，下列哪些正確？</p>
+<div class="items">
+<p>I. 條件變異數隨時間變。</p>
+<p>II. 無條件變異數固定。</p>
+<p>III. 誤差有序列相關。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>III 錯：誤差本身不相關，相關的是誤差的<strong>平方</strong>（波動聚集）。</p></div></div></article><article class="exercise concept-q" id="qC21-5-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C21.5-4</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Determine which GARCH(1,1) parameter set does NOT give a finite unconditional variance.</p>
+<div class="opts">
+<p>(A) \(\gamma_1=0.1\), \(\delta_1=0.8\)</p>
+<p>(B) \(\gamma_1=0.3\), \(\delta_1=0.75\)</p>
+<p>(C) \(\gamma_1=0.05\), \(\delta_1=0.9\)</p>
+<p>(D) \(\gamma_1=0.2\), \(\delta_1=0.6\)</p>
+<p>(E) \(\gamma_1=0\), \(\delta_1=0.5\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>哪一組 GARCH(1,1) 參數<strong>不能</strong>得到有限的無條件變異數？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(0.3+0.75=1.05\geq1\)，分母 \(1-\gamma-\delta\) 為負，不平穩。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（4 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q21-3"><div class="ex-head"><span class="ex-tag">練習</span><b>第 21.3 題</b><small>・講義 p.383・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>You apply exponential smoothing to a time series. You are given
+\[y_5=90\qquad y_6=81\qquad\hat s_4=70\qquad\hat s_6=82\]
+Determine the lowest possible value for the smoothing constant \(w\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>指數平滑：\(y_5=90\)，\(y_6=81\)，\(\hat s_4=70\)，\(\hat s_6=82\)。求平滑常數 \(w\) 的最小可能值。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.20</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat s_5=(1-w)(90)+70w=90-20w\)。
+\[\hat s_6=81(1-w)+(90-20w)w=-20w^2+9w+81=82 .\]
+\(20w^2-9w+1=0\)，\(w=\frac{9\pm\sqrt{81-80}}{40}=0.20\) 或 \(0.25\)。最小是 0.20。</p></div></div></article><article class="exercise" id="q21-6"><div class="ex-head"><span class="ex-tag">練習</span><b>第 21.6 題</b><small>・講義 p.384・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[120-83-98:12] You are given the following observations from a time series:</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y_t\)</td>
+<td>15.6</td>
+<td>3.4</td>
+<td>13.3</td>
+<td>−4.6</td>
+<td>−1.8</td>
+</tr>
+</tbody>
+</table>
+<p>and \(\hat s_0=15.6\).</p>
+<p>Use exponential smoothing with smoothing constant \(w=0.40\) to calculate the smoothed value \(\hat s_5\) of the fifth observation.</p>
+<div class="opts">
+<p>(A) −1.8</p>
+<p>(B) −0.4</p>
+<p>(C) 1.2</p>
+<p>(D) 5.2</p>
+<p>(E) 11.3</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（120-83-98:12）時間數列：</p>
+<p>\(\hat s_0=15.6\)。用平滑常數 \(w=0.40\) 的指數平滑，求第五個觀察的平滑值 \(\hat s_5\)。</p>
+<div class="opts">
+<p>(A) −1.8　(B) −0.4　(C) 1.2　(D) 5.2　(E) 11.3</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat s_t=0.6y_t+0.4\hat s_{t-1}\)：\(\hat s_1=15.6\)，\(\hat s_2=8.28\)，\(\hat s_3=11.292\)，\(\hat s_4=1.757\)，\(\hat s_5=-0.377\)。</p></div></div></article><article class="exercise" id="q21-12"><div class="ex-head"><span class="ex-tag">練習</span><b>第 21.12 題</b><small>・講義 p.385・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You apply the Holt-Winters method to a time series. You are given the following data:</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(x_t\)</td>
+<td>80</td>
+<td>100</td>
+<td>90</td>
+</tr>
+</tbody>
+</table>
+<p>\(b_{0,1}=80\), \(b_{1,1}=10\), \(w_1=0.4\), \(w_2=0.6\)</p>
+<p>There is no seasonality in the data; \(\hat S_t=0\) for all \(t\).</p>
+<p>Determine \(b_{1,4}\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>對時間數列用 Holt–Winters 方法：</p>
+<p>\(b_{0,1}=80\)，\(b_{1,1}=10\)，\(w_1=0.4\)，\(w_2=0.6\)。資料沒有季節性。求 \(b_{1,4}\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>5.7146</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(b_{0,2}=0.6(80)+0.4(90)=84\)，\(b_{1,2}=0.4(4)+0.6(10)=7.6\)。</p>
+<p>\(b_{0,3}=0.6(100)+0.4(91.6)=96.64\)，\(b_{1,3}=0.4(12.64)+0.6(7.6)=9.616\)。</p>
+<p>\(b_{0,4}=0.6(90)+0.4(106.256)=96.502\)，\(b_{1,4}=0.4(-0.1376)+0.6(9.616)=5.7146\)。</p></div></div></article><article class="exercise" id="q21-14"><div class="ex-head"><span class="ex-tag">練習</span><b>第 21.14 題</b><small>・講義 p.385・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You apply the Holt-Winters method to a time series. You are given \(b_{0,T-1}=470\), \(y_T=520\), and \(b_{0,T}=504\), and you forecast \(b_{0,T+1}=536\). The smoothing constant \(w_2=0.5\).</p>
+<p>Determine the smoothing constant \(w_1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Holt–Winters 方法：\(b_{0,T-1}=470\)，\(y_T=520\)，\(b_{0,T}=504\)，且預測 \(b_{0,T+1}=536\)（即 \(b_{0,T}+b_{1,T}\)）。平滑常數 \(w_2=0.5\)。求 \(w_1\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.8</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(b_{1,T}=536-504=32\)。由趨勢更新：\(32=0.5(504-470)+0.5b_{1,T-1}\)，\(b_{1,T-1}=30\)。</p>
+<p>由水準更新：\(504=(1-w_1)(520)+w_1(470+30)=520-20w_1\)，\(w_1=0.8\)。</p></div></div></article></section><button class="toggle-all float" type="button">顯示全部解答</button><div class="navfoot"><a href="ch20.html">← 第 20 章</a><a href="ch22.html">第 22 章 →</a></div></main></body></html>

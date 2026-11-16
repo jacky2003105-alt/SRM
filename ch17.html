@@ -1,11 +1,953 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第 17 章　主成分分析：把多變數資料投影到少數方向｜SRM 精算筆記</title><link rel="stylesheet" href="assets/site.css"><link rel="stylesheet" href="assets/katex/katex.min.css"><script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/site.js"></script></head><body><nav aria-label="課程導覽"><a class="brand" href="index.html">SRM 精算筆記</a><label for="chapter">章節</label><select id="chapter"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html" selected>第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題與參考解答</option></select><a href="practice.html">題庫</a></nav><main><header><div class="kicker">SRM · 第 17 章</div><h1>主成分分析：把多變數資料投影到少數方向</h1><p>很多指標共同變動時，能否用少數方向保留主要資訊？</p><div class="chips"><a href="pdf/ch17.pdf">下載本章 PDF</a><a href="practice.html#chapter17">習題索引</a></div></header><section class="panel"><h2>本章閱讀順序</h2><ol><li><a href="#s1">中心化、負荷量與分數</a></li><li><a href="#s2">雙標圖如何解讀</a></li><li><a href="#s3">最小距離、低秩重建與符號</a></li><li><a href="#s4">尺度與標準化</a></li><li><a href="#s5">解釋變異比例、陡坡圖與預測</a></li></ol><div class="minititle">優先練習 · 10 題</div><div class="chips"><a href="#q17-1">17.1</a><a href="#q17-2">17.2</a><a href="#q17-3">17.3</a><a href="#q17-5">17.5</a><a href="#q17-9">17.9</a><a href="#q17-10">17.10</a><a href="#q17-11">17.11</a><a href="#q17-12">17.12</a><a href="#q17-14">17.14</a><a href="#q17-17">17.17</a></div></section><article class="unit" id="s1"><div class="kicker">概念 01</div><h2>中心化、負荷量與分數</h2><figure><svg class="chart" role="img" aria-label="主成分沿點雲最大延伸方向，垂線顯示重建誤差" viewBox="0 0 580 225" xmlns="http://www.w3.org/2000/svg"><rect width="580" height="225" rx="9" fill="#f3f6ee"/><g font-family="sans-serif" font-size="15" fill="#324b43"><path d="M60 185H520M60 185V20" stroke="#567064"/><path d="M65 180L475 34" stroke="#32806a" stroke-width="3"/><g fill="#8e633b"><circle cx="91" cy="174" r="5"/><circle cx="125" cy="157" r="5"/><circle cx="170" cy="150" r="5"/><circle cx="183" cy="131" r="5"/><circle cx="211" cy="114" r="5"/><circle cx="247" cy="120" r="5"/><circle cx="291" cy="93" r="5"/><circle cx="335" cy="79" r="5"/><circle cx="374" cy="67" r="5"/><circle cx="414" cy="45" r="5"/></g><path d="M211 114L216 126" stroke="#ab643a" stroke-dasharray="3 2"/><text x="325" y="32">第一主成分方向</text><text x="445" y="205">特徵 1</text><text x="8" y="25">特徵 2</text></g></svg><figcaption>原創示意：分數是沿軸的座標，重建誤差是點與軸的垂直距離。軸的正負號可同時翻轉，重建位置不變。</figcaption></figure><p><strong>問題</strong>：若收入與保額高度相關，用兩個數字描述每位保戶是否重複？主成分分析（PCA）不看反應值，只在解釋變數間尋找資料雲展開的方向。先將每欄減去其平均，記中心化矩陣為 \(X\)，第 \(i\) 列便是該人相對於平均保戶的位置。中心化不改變變異數，卻讓第一方向通過資料中心。</p>
-<p>給一單位方向 \(\phi=(\phi_1,...,\phi_p)^\top\)。觀察 \(i\) 的座標為內積 \(z_i=x_i^\top\phi\)，稱為分數（score）；係數 \(\phi_j\) 稱負荷量（loading），是方向對各欄位的權重。各欄已中心化，因此 \(\bar z=0\)。注意是平方和等於 1，不是權重和等於 1。若不限制長度，把所有權重乘十就能把分數變異放大一百倍，問題便沒有有限答案。</p>
-<p>令 \(S=X^\top X/(n-1)\)，分數的樣本變異為 \(z^\top z/(n-1)=\phi^\top S\phi\)。最大化它且要求 \(\phi^\top\phi=1\)，拉格朗日式為 \(\phi^\top S\phi-\lambda(\phi^\top\phi-1)\)，微分給 \(S\phi=\lambda\phi\)。故第一個負荷向量取最大特徵值的單位特徵向量，分數的變異就是特徵值。後續方向加上與先前方向垂直的限制，依特徵值遞減選取；分數之間不相關，因 \(\operatorname{Cov}(z_a,z_b)=\phi_a^\top S\phi_b=\lambda_b\phi_a^\top\phi_b=0\)。不相關不等於獨立。</p>
-<p>中心化後各列和為零，秩最多 \(\min(p,n-1)\)，所以至多這麼多個非零主成分。舉例，第一方向為 \((0.9143,0.4050)\)，第一筆中心化資料 \((-24,-21)\) 的分數約 \(-30.45\)。負號是指投影在選定方向的反側，不是離線的距離；在二維中離 PC1 直線的距離為另一個分數的絕對值。<strong>即：負荷量指定尺要朝哪裡放，分數是每個人在這把尺上的刻度。</strong></p><div class="related"><small>接著讀：<a class="concept" data-definition="對係數大小加懲罰，用一些偏差換取較低的估計變異。" data-target="第 8 章 · 收縮" href="ch08.html#s1">收縮</a> · <a class="concept" data-definition="依連結準則逐步合併群組，用樹狀圖描述不同切割高度的群組。" data-target="第 18 章 · 階層式分群" href="ch18.html#s3">階層式分群</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q17-2">17.2</a><a href="#q17-3">17.3</a><a href="#q17-4">17.4</a><a href="#q17-5">17.5</a><a href="#q17-6">17.6</a><a href="#q17-7">17.7</a><a href="#q17-8">17.8</a></div></article><article class="exercise" id="q17-2"><button class="toggle" aria-controls="a-q17-2" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 17.2</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q17-2">題目連結</a></small><p>100 筆四變數資料取 PC1、PC2。下列何者必然成立：I 兩組分數平方和相等；II 兩負荷向量內積為零；III 兩負荷向量的平方長度總和為 1。</p><div class="solution" id="a-q17-2"><strong class="label">參考解答</strong><p>只有 II（B）。</p><strong class="label">解析</strong><p>第一方向變異可大於第二，不必相等；每向量長度都是 1，兩者平方長度的和為 2。</p></div></article><article class="exercise" id="q17-3"><button class="toggle" aria-controls="a-q17-3" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 17.3</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q17-3">題目連結</a></small><p>兩變數五筆資料 (1,5)、(2,7)、(4,4)、(6,3)、(9,1)，PC1 負荷 (−0.8297,0.5583)。求第一筆分數。</p><div class="solution" id="a-q17-3"><strong class="label">參考解答</strong><p>3.37928。</p><strong class="label">解析</strong><p>欄平均為 (4.4,4)，內積為 \(-0.8297(1-4.4)+0.5583(5-4)\)。若直接用原值，會漏掉移動原點。</p></div></article><article class="exercise" id="q17-5"><button class="toggle" aria-controls="a-q17-5" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 17.5</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q17-5">題目連結</a></small><p>兩筆資料為（溫度, X1, X2）=(5,4,6)、(10,8,2)。第一方向兩負荷中，第一個為 \(1/\sqrt2\)，第二個為負。求第一筆分數。</p><div class="solution" id="a-q17-5"><strong class="label">參考解答</strong><p>約 −2.828。</p><strong class="label">解析</strong><p>不使用溫度；中心化後是 (−2,2)，單位長度決定第二個負荷為 \(-1/\sqrt2\)。因此分數 \(=-4/\sqrt2\)。</p></div></article><article class="unit" id="s2"><div class="kicker">概念 02</div><h2>雙標圖如何解讀</h2><p>雙標圖（biplot）把觀察分數和變數方向放在同一張圖。橫、縱是 PC1、PC2。觀察點的座標是 \((z_{i1},z_{i2})\)；變數 \(j\) 的箭頭由其在兩軸的負荷決定。二者常使用不同邊上的刻度，不能直接把箭頭長度與分數的數字相比。觀察點接近表示「在所顯示的方向上」相似，省略成分仍可能使原資料有差異。</p>
-<p>把一筆中心化資料在兩軸上的分數，乘以同一變數在這兩軸上的負荷再加總，就得到該變數的二維近似值。箭頭同向通常表示沿圖中方向有相似變化，若採以變數與成分相關為箭頭的相關雙標圖，且前兩成分解釋得好，夾角餘弦可近似原變數相關。一般軟體會以不同方式縮放分數與負荷；沒有指定尺度時不能把角度當作精確相關係數，也不能保證某人某個原始特徵一定高於平均。</p><div class="related"><small>接著讀：<a class="concept" data-definition="對係數大小加懲罰，用一些偏差換取較低的估計變異。" data-target="第 8 章 · 收縮" href="ch08.html#s1">收縮</a> · <a class="concept" data-definition="依連結準則逐步合併群組，用樹狀圖描述不同切割高度的群組。" data-target="第 18 章 · 階層式分群" href="ch18.html#s3">階層式分群</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q17-9">17.9</a></div></article><article class="exercise" id="q17-9"><button class="toggle" aria-controls="a-q17-9" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 17.9</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q17-9">題目連結</a></small><p>購物雙標圖的衣物與布品箭頭幾乎同向；食物與其他類別有不同方向，Abigael 第一成分分數負，Bradley 的兩分數皆正。判斷 I 衣物與布品有相似變動；II、III 可分別斷定兩人食品消費高於平均。</p><div class="solution" id="a-q17-9"><strong class="label">參考解答</strong><p>只有 I 有圖形支持（E）。</p><strong class="label">解析</strong><p>同向箭頭支持這兩變數在顯示空間的共同變動；僅憑一人一、二成分分數，不能斷定某單項原始金額高於平均，其他特徵與未顯示成分也會影響解讀。</p></div></article><article class="unit" id="s3"><div class="kicker">概念 03</div><h2>最小距離、低秩重建與符號</h2><p>沿單位方向 \(\phi\) 重建中心化觀察 \(x_i\)，其正交投影是 \((x_i^\top\phi)\phi=z_i\phi\)。依畢氏定理，殘差平方長度 \(\|x_i-z_i\phi\|^2=\|x_i\|^2-z_i^2\)。對所有人加總，第一項固定，故最大化分數變異恰好等於最小化垂直於直線的平方距離。不同於迴歸只量反應座標上的垂直誤差，PCA 對各變數一視同仁。</p>
-<p>保留 \(M\) 個正交方向時，對中心化資料的重建是 \(\hat x_{ij}=\sum_{m=1}^M z_{im}\phi_{jm}\)。要回到原尺度須加上原欄平均，若先做標準化還要乘回欄標準差。保留所有非零成分則重建精確；只留一部分時，殘差平方總和對應捨棄特徵值的和乘上 \(n-1\)。例：兩個分數為 \(-25.5751,-26.0207\)，第一變數負荷為 \(0.16741,0.90061\)，其中心化值的二成分近似為 \(-27.716\)。</p>
-<p>同時把一個方向及其所有分數乘 \(-1\)，乘積不變，重建、解釋變異與距離也不變。只有該成分的一些負荷翻號就不是同一方向。若特徵值並列，該子空間內還可以旋轉，不能宣稱每個方向除了符號外都唯一。</p><div class="related"><small>接著讀：<a class="concept" data-definition="對係數大小加懲罰，用一些偏差換取較低的估計變異。" data-target="第 8 章 · 收縮" href="ch08.html#s1">收縮</a> · <a class="concept" data-definition="依連結準則逐步合併群組，用樹狀圖描述不同切割高度的群組。" data-target="第 18 章 · 階層式分群" href="ch18.html#s3">階層式分群</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q17-1">17.1</a><a href="#q17-11">17.11</a><a href="#q17-12">17.12</a><a href="#q17-19">17.19</a><a href="#qQuiz-17-1">Quiz 17-1</a></div></article><article class="exercise" id="q17-1"><button class="toggle" aria-controls="a-q17-1" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 17.1</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q17-1">題目連結</a></small><p>判斷 PCA 是否 (I) 給最靠近資料的低維線性空間、(II) 第一成分為平方垂距最小的線、(III) 在給定維度下保留最多變異、(IV) 可用於視覺化。</p><div class="solution" id="a-q17-1"><strong class="label">參考解答</strong><p>四項皆是（E）。</p><strong class="label">解析</strong><p>投影變異最大等價於重建平方距離最小；前兩個方向可作二維圖。</p></div></article><article class="exercise" id="q17-11"><button class="toggle" aria-controls="a-q17-11" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 17.11</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q17-11">題目連結</a></small><p>三變數資料的 X1 在前兩個成分之負荷為 −0.85956、0.25890；第 3 筆分數為 −22.5603、−45.9338。用兩個成分近似該筆中心化 X1。</p><div class="solution" id="a-q17-11"><strong class="label">參考解答</strong><p>約 7.4997。</p><strong class="label">解析</strong><p>\((-22.5603)(-0.85956)+(-45.9338)(0.25890)\)。用的是同一個變數跨成分的負荷，不是取第一成分的整欄。</p></div></article><article class="exercise" id="q17-12"><button class="toggle" aria-controls="a-q17-12" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 17.12</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q17-12">題目連結</a></small><p>三成分中 X1 的前兩負荷為 −0.97932、0.03669。第 4 筆分數 (−37.1131,15.4973,14.6442)，中心化 X1=34；第 5 筆分數 (−46.5435,−14.2271,15.3719)。求第五筆 X1。</p><div class="solution" id="a-q17-12"><strong class="label">參考解答</strong><p>約 42。</p><strong class="label">解析</strong><p>設第 3 負荷 \(u\)，第 4 筆滿足 \(34=(-37.1131)(-0.97932)+15.4973(0.03669)+14.6442u\)，故 \(u\approx-0.1990\)。套入第 5 筆的相同重建公式。</p></div></article><article class="unit" id="s4"><div class="kicker">概念 04</div><h2>尺度與標準化</h2><p>換單位會改變 PCA。若將某變數乘 \(a\)，它的變異數乘 \(a^2\)，與別欄的共變異乘 \(a\)；協方差矩陣的特徵方向於是可能翻轉。以金額和件數一起分析時，即使完全沒有改變保戶風險，光把元改寫成千元就可能改變主成分。</p>
-<p>標準化 \(u_{ij}=(x_{ij}-\bar x_j)/s_j\) 使每一欄變異為 1，此時 PCA 用的是原資料的相關矩陣。標準化和中心化不同：中心化只移原點，不消除尺度差異。若所有變數原本共用有經濟意義的尺度，且希望變動金額大的欄位多占權重，保留原尺度也合理。若某欄變異為零，不能除以其標準差，需先移除或單獨處理。用於未來樣本時，保存訓練集平均、標準差及負荷向量，不能用測試集重新估計它們。</p><div class="related"><small>接著讀：<a class="concept" data-definition="對係數大小加懲罰，用一些偏差換取較低的估計變異。" data-target="第 8 章 · 收縮" href="ch08.html#s1">收縮</a> · <a class="concept" data-definition="依連結準則逐步合併群組，用樹狀圖描述不同切割高度的群組。" data-target="第 18 章 · 階層式分群" href="ch18.html#s3">階層式分群</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q17-10">17.10</a><a href="#q17-13">17.13</a></div></article><article class="exercise" id="q17-10"><button class="toggle" aria-controls="a-q17-10" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 17.10</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q17-10">題目連結</a></small><p>同四欄資料的未標準化及標準化雙標圖中，X1 與 X2 同向，X3 在未縮放圖中主導變異但縮放後明顯減弱。第 24 筆與 X4 箭頭大致同向。判斷 I X1 與 X2 比與 X3 更相關；II 題圖支持 X3 原變異最大；III 可斷言第 24 筆 X4 明顯大於平均。</p><div class="solution" id="a-q17-10"><strong class="label">參考解答</strong><p>依題圖判讀 I、II（B）。</p><strong class="label">解析</strong><p>I、II 是兩圖合看支持的相對趨勢；若只給一般雙標圖，箭頭長度不等於未縮放變數的精確變異。III 忽略未顯示成分，不能只由方向斷定其原始值。</p></div></article><article class="unit" id="s5"><div class="kicker">概念 05</div><h2>解釋變異比例、陡坡圖與預測</h2><p>每個方向解釋的變異是 \(\lambda_m\)，全部原變數總變異是 \(\operatorname{tr}(S)=\sum_j S_{jj}=\sum_r\lambda_r\)，因此</p>
-<p>\[\mathrm{PVE}_m=\frac{\lambda_m}{\sum_r\lambda_r}=\frac{\sum_i z_{im}^2}{\sum_{i,j}x_{ij}^2}.\]</p>
-<p>使用 \(n\) 或 \(n-1\) 定義變異，只要分子與分母一致，比例不變。現有二變數例的平方和為 5610 與 1520，若分母都用 20，總變異 356.5；第一成分變異 330.31，所以可保留約 92.65% 的變異。標準化後總變異應是變數個數 \(p\)。</p>
-<p>單一成分的 PVE 隨成分次序不增，累積值 \(\sum_{m=1}^M\mathrm{PVE}_m\) 不減。可選達到指定累積門檻的最小 \(M\)；或看陡坡圖（scree plot）的彎折處，當邊際貢獻迅速縮小便停止，後者是經驗判斷而非唯一最優解。若用主成分迴歸（PCR），再以訓練資料的成分預測 \(Y\)，成分數應另以預測驗證挑選；高變異方向可能和 \(Y\) 無關。<strong>即：PCA 保留的是 X 的資訊量，不保證它剛好是預測 Y 所需的資訊。</strong></p><p><strong>CA 複習例｜PVE 的分母為什麼可消掉？</strong> 若所有特徵已中心化，總樣本變異為 \(\sum_{ij}x_{ij}^2/(n-1)\)，主成分 m 的變異為 \(\sum_i z_{im}^2/(n-1)\)。兩者做比時 \(n-1\) 正好約掉。因此使用同一分母慣例時，改以 n 算兩個變異不會改變比例；只改其中一邊則不行。</p><div class="related"><small>接著讀：<a class="concept" data-definition="對係數大小加懲罰，用一些偏差換取較低的估計變異。" data-target="第 8 章 · 收縮" href="ch08.html#s1">收縮</a> · <a class="concept" data-definition="依連結準則逐步合併群組，用樹狀圖描述不同切割高度的群組。" data-target="第 18 章 · 階層式分群" href="ch18.html#s3">階層式分群</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q17-14">17.14</a><a href="#q17-15">17.15</a><a href="#q17-16">17.16</a><a href="#q17-17">17.17</a><a href="#q17-18">17.18</a><a href="#q17-20">17.20</a></div></article><article class="exercise" id="q17-14"><button class="toggle" aria-controls="a-q17-14" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 17.14</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q17-14">題目連結</a></small><p>四筆標準化資料 (−0.577,1,−1)、(−0.577,1,1)、(−0.577,−1,1)、(1.732,−1,−1)，PC1 負荷 (0.707,−0.500,−0.500)。求其 PVE。</p><div class="solution" id="a-q17-14"><strong class="label">參考解答</strong><p>約 60.5%，落在 58% 至未滿 63%（C）。</p><strong class="label">解析</strong><p>分數依次約 −0.408、−1.408、−0.408、2.225。平方和約 7.264，除以 4 得 1.816；三欄標準化變異總和約 3，因此 \(1.816/3\approx0.605\)。</p></div></article><article class="exercise" id="q17-17"><button class="toggle" aria-controls="a-q17-17" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 17.17</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q17-17">題目連結</a></small><p>100 筆四欄資料，相關矩陣中 \(r_{14}=-1,r_{12}=0.93,r_{13}=0.08,r_{23}=0.10\)。哪種累積 PVE 圖符合？</p><div class="solution" id="a-q17-17"><strong class="label">參考解答</strong><p>第三個成分即達 100%、第四個增量為零的圖 C。</p><strong class="label">解析</strong><p>標準化的 X4 與 X1 互為相反數，故至少有一個零特徵值。其餘三欄的相關子矩陣非奇異，確有三個非零成分。</p></div></article><article class="unit" id="terms"><div class="kicker">TERMS</div><h2>本章中英術語</h2><table><thead><tr><th>中文</th><th>English</th><th>解題時的意思</th></tr></thead><tbody><tr><td>負荷量</td><td>loading</td><td>主成分方向在原始變數座標下的權重。</td></tr><tr><td>分數</td><td>score</td><td>單一觀察在該主成分方向的座標。</td></tr><tr><td>解釋變異比例</td><td>proportion of variance explained</td><td>單一主成分變異占資料總變異的比例。</td></tr></tbody></table></article><section class="panel" id="remaining"><h2>章末其餘習題 · 11 題</h2><p>按講義題號排列。做題前可用各題自己的按鈕隱藏解答。</p></section><article class="exercise" id="q17-4"><button class="toggle" aria-controls="a-q17-4" aria-expanded="true">隱藏解答</button><h3>練習 · 17.4</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q17-4">題目連結</a></small><p>兩欄均已中心化。觀察 (4,10) 的 PC1 分數是 8，第一欄負荷已知為正，求它。</p><div class="solution" id="a-q17-4"><strong class="label">參考解答</strong><p>第一負荷約 0.8975。</p><strong class="label">解析</strong><p>設為 \(a,b\)，\(4a+10b=8\)、\(a^2+b^2=1\)。代入 \(b=(8-4a)/10\) 得 \(116a^2-64a-36=0\)；取正根。</p></div></article><article class="exercise" id="q17-6"><button class="toggle" aria-controls="a-q17-6" aria-expanded="true">隱藏解答</button><h3>練習 · 17.6</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q17-6">題目連結</a></small><p>已中心化的二變數觀察 \((0.4,x_2)\) 分數 0.12，第一負荷 −0.6、第二正，求 \(x_2\)。</p><div class="solution" id="a-q17-6"><strong class="label">參考解答</strong><p>0.45（E）。</p><strong class="label">解析</strong><p>第二負荷 \(\sqrt{1-0.6^2}=0.8\)；解 \(-0.6(0.4)+0.8x_2=0.12\)。</p></div></article><article class="exercise" id="q17-7"><button class="toggle" aria-controls="a-q17-7" aria-expanded="true">隱藏解答</button><h3>練習 · 17.7</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q17-7">題目連結</a></small><p>四欄資料的 PC1 前三個負荷為 0.68、0.65、0.32，第四負荷為負。求中心化觀察 (2,−1,3,5) 的分數。</p><div class="solution" id="a-q17-7"><strong class="label">參考解答</strong><p>約 1.107（C，最接近 1.1）。</p><strong class="label">解析</strong><p>第四負荷取 \(-\sqrt{1-0.68^2-0.65^2-0.32^2}\approx-0.1127\)。將四個座標與負荷逐項相乘相加。</p></div></article><article class="exercise" id="q17-8"><button class="toggle" aria-controls="a-q17-8" aria-expanded="true">隱藏解答</button><h3>練習 · 17.8</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q17-8">題目連結</a></small><p>五張圖為同一二維資料畫出兩軸：I 互相垂直且第一軸沿最長方向；II 交換第一、第二軸；III 軸不垂直；IV 第一軸未沿主要變異方向；V 用曲線作軸。何者可代表 PCA？</p><div class="solution" id="a-q17-8"><strong class="label">參考解答</strong><p>I（A）。</p><strong class="label">解析</strong><p>主軸必為穿過中心的直線、彼此正交，且第一軸投影變異最大，排除其餘四者。</p></div></article><article class="exercise" id="q17-13"><button class="toggle" aria-controls="a-q17-13" aria-expanded="true">隱藏解答</button><h3>練習 · 17.13</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q17-13">題目連結</a></small><p>X 與 Y 的 PC1 負荷逐項互為相反數；W 與 X 僅部分符號不同；Z 的負荷大小也不同。判斷 I 符號慣例可解釋 X/Y；II 標準化設定可解釋 Z/Y；III 符號慣例可解釋 W/X。</p><div class="solution" id="a-q17-13"><strong class="label">參考解答</strong><p>I、II（B）。</p><strong class="label">解析</strong><p>整向量翻號才代表同一直線。標準化改變協方差矩陣，可導致完全不同的方向與係數大小。</p></div></article><article class="exercise" id="q17-15"><button class="toggle" aria-controls="a-q17-15" aria-expanded="true">隱藏解答</button><h3>練習 · 17.15</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q17-15">題目連結</a></small><p>判斷 I 新增一個成分的個別 PVE 不會下降；II 累積 PVE 不會下降；III 所有成分一起用一定最好理解；IV 陡坡圖能輔助選擇成分數。</p><div class="solution" id="a-q17-15"><strong class="label">參考解答</strong><p>II、IV（E）。</p><strong class="label">解析</strong><p>特徵值依序遞減或相等；每項非負，累積才單調不減。保留全部可能犧牲可解釋性。</p></div></article><article class="exercise" id="q17-16"><button class="toggle" aria-controls="a-q17-16" aria-expanded="true">隱藏解答</button><h3>練習 · 17.16</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q17-16">題目連結</a></small><p>500 筆、五個預測變數，給定第一成分分數平方和 750、總變異 4，求第一成分 PVE。</p><div class="solution" id="a-q17-16"><strong class="label">參考解答</strong><p>按給定總變異為 0.375（C）。</p><strong class="label">解析</strong><p>以 \(1/n\) 計第一成分變異 \(750/500=1.5\)，再除 4 得 0.375。若五欄均使用相同分母標準化至變異 1，總變異應為 5，該替代假設的答案為 0.30；作答要說明採用哪個給定條件。</p></div></article><article class="exercise" id="q17-18"><button class="toggle" aria-controls="a-q17-18" aria-expanded="true">隱藏解答</button><h3>練習 · 17.18</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q17-18">題目連結</a></small><p>四點為 (−2,1)、(−1,−2)、(−1,0)、(4,1)。PC1 負荷 (0.973402,0.229106)。求 PVE。</p><div class="solution" id="a-q17-18"><strong class="label">參考解答</strong><p>約 0.81944。</p><strong class="label">解析</strong><p>資料已中心化；各欄平方和總計 28。四個內積約 −1.718、−1.432、−0.973、4.123；平方和約 22.9443，PVE=22.9443/28。</p></div></article><article class="exercise" id="q17-19"><button class="toggle" aria-controls="a-q17-19" aria-expanded="true">隱藏解答</button><h3>練習 · 17.19</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q17-19">題目連結</a></small><p>四變數取四主成分，判斷 I 負荷唯一；II 每個成分負荷平方和為 1；III 四成分解釋全部變異。</p><div class="solution" id="a-q17-19"><strong class="label">參考解答</strong><p>II、III（D）。</p><strong class="label">解析</strong><p>至少有整向量符號不唯一，重根時子空間內方向也不唯一。完整正交基底保留所有投影，不損失變異。</p></div></article><article class="exercise" id="q17-20"><button class="toggle" aria-controls="a-q17-20" aria-expanded="true">隱藏解答</button><h3>練習 · 17.20</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q17-20">題目連結</a></small><p>陡坡圖顯示 PC1 解釋超過 60% 但未達 80%，PC2 貢獻略高於 20%。至少要幾個才能達 80%？</p><div class="solution" id="a-q17-20"><strong class="label">參考解答</strong><p>兩個（B）。</p><strong class="label">解析</strong><p>一個不足；前兩個累積超過 80%。題意是累計，不是尋找個別 PVE 超過 80% 的方向。</p></div></article><article class="exercise" id="qQuiz-17-1"><button class="toggle" aria-controls="a-qQuiz-17-1" aria-expanded="true">隱藏解答</button><h3>練習 · Quiz 17-1</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#qQuiz-17-1">題目連結</a></small><p>第一筆 (−24,−21) 對第一主軸投影分數約 −30.45，求到該主軸直線的垂距。</p><div class="solution" id="a-qQuiz-17-1"><strong class="label">參考解答</strong><p>約 9.48。</p><strong class="label">解析</strong><p>直角三角形的斜邊平方為 \(24^2+21^2\)，投影長平方約 \(30.45^2\)，相減再開根號即垂距。在二維中亦等於第二分數絕對值。</p></div></article><section class="panel"><h2>用模擬考複習本章</h2><div class="chips"><a href="exams.html#exam1">第 1 回 · 題 17</a><a href="exams.html#exam2">第 2 回 · 題 26</a><a href="exams.html#exam2">第 2 回 · 題 32</a><a href="exams.html#exam3">第 3 回 · 題 2</a><a href="exams.html#exam3">第 3 回 · 題 22</a><a href="exams.html#exam4">第 4 回 · 題 12</a><a href="exams.html#exam5">第 5 回 · 題 9</a><a href="exams.html#exam5">第 5 回 · 題 16</a><a href="exams.html#exam6">第 6 回 · 題 9</a><a href="exams.html#exam6">第 6 回 · 題 28</a></div></section><div class="navfoot"><a href="ch16.html">← 上一章</a><a href="ch18.html">下一章 →</a></div><footer>SRM 精算考試中文研讀筆記 · 依所附第四版教材章序編寫，中文解析為參考解答。</footer></main></body></html>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 17 章　主成分分析：把多變數資料投影到少數方向｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
+<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html" selected>第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 17 章</div><h1>主成分分析：把多變數資料投影到少數方向</h1><p class="ch-sub">主成分分析（PCA）是非監督式學習：沒有反應變數，只想用少數幾個新變數概括許多彼此相關的變數。本章從「找變異數最大的方向」出發，推導出主成分就是共變異數矩陣的特徵向量、變異數就是特徵值；再學會讀載荷、分數與雙標圖，理解為什麼要標準化，最後用解釋變異比例與陡坡圖決定要用幾個主成分。</p><div class="chips"><a href="pdf/ch17.pdf">下載本章 PDF</a><a href="#exercises">章末習題（20 題）</a><span class="chip-note">觀念題 25 題（在各節後面）</span><button class="toggle-all" type="button">顯示全部解答</button></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">17.1 載荷與分數</a></li><li><a href="#s2">17.2 雙標圖</a></li><li><a href="#s3">17.3 用主成分近似資料</a></li><li><a href="#s4">17.4 標準化</a></li><li><a href="#s5">17.5 解釋變異比例與陡坡圖</a></li></ol><p>本章對應講義第 17 課，讀本是 ISLR 10.2（第一版）或 12.2（第二版）。會用到第 8 章的主成分迴歸（PCR）與特徵值的白話說明。</p>
+<p><strong>記號。</strong> \(n\) 筆觀察、\(p\) 個變數 \(X_1,\ldots,X_p\)，都已<strong>置中</strong>（平均為 0）。第 \(m\) 個主成分 \(Z_m=\sum_j\phi_{jm}X_j\)；\(\phi_{jm}\) 是<strong>載荷</strong>（loading），\(z_{im}=\sum_j\phi_{jm}x_{ij}\) 是第 \(i\) 筆觀察的<strong>分數</strong>（score）。</p>
+<div class="box map">
+<div class="box-t">考點地圖：這一章在考試裡的位置</div>
+<p><strong>對應考綱</strong>：主題 5「非監督式學習」（占 10～15%）：主成分分析的定義、載荷與分數的計算與解讀、雙標圖、標準化、解釋變異比例。</p>
+<p><strong>SOA 官方樣題裡的樣子</strong>：第 5 題（PCA 的四種描述哪些正確）、第 6 題（解釋變異比例、陡坡圖）、第 30 題（載荷的性質）、第 35 題（從陡坡圖讀出需要幾個主成分）、第 37 題（不同軟體得到不同載荷的原因：正負號、是否標準化）。CAS MAS 考題常考分數的計算、雙標圖解讀、累積解釋變異圖。</p>
+<table>
+<thead>
+<tr>
+<th>會考的東西</th>
+<th>題目長什麼樣</th>
+<th>判斷或計算的依據</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>分數</td>
+<td>給載荷與觀察值，求分數</td>
+<td>先置中，再 \(z_{im}=\sum_j\phi_{jm}x_{ij}\)</td>
+</tr>
+<tr>
+<td>載荷的限制</td>
+<td>補出缺的載荷、判斷敘述</td>
+<td>\(\sum_j\phi_{jm}^2=1\)；不同主成分的載荷向量正交</td>
+</tr>
+<tr>
+<td>正負號</td>
+<td>為什麼不同軟體的載荷不同</td>
+<td>整個載荷向量可同時變號</td>
+</tr>
+<tr>
+<td>近似</td>
+<td>用前 \(M\) 個主成分還原觀察值</td>
+<td>\(x_{ij}\approx\sum_{m=1}^Mz_{im}\phi_{jm}\)</td>
+</tr>
+<tr>
+<td>雙標圖</td>
+<td>哪些變數相關、標準化前後差在哪</td>
+<td>箭頭方向相近＝正相關；未標準化時變異數大的變數主導</td>
+</tr>
+<tr>
+<td>PVE</td>
+<td>求第 \(m\) 個主成分解釋的比例</td>
+<td>\(\frac{\sum_iz_{im}^2}{\sum_j\sum_ix_{ij}^2}\)；標準化時分母是 \(np\)</td>
+</tr>
+<tr>
+<td>選主成分個數</td>
+<td>陡坡圖、累積 PVE</td>
+<td>找手肘；或達到指定比例的最少個數</td>
+</tr>
+</tbody>
+</table>
+<p><strong>讀完這一章要會</strong>：</p>
+<ol>
+<li>寫出第一主成分的最佳化問題，說出它和特徵向量、特徵值的關係。</li>
+<li>計算分數、補出缺少的載荷，用前幾個主成分近似原始資料。</li>
+<li>讀雙標圖，說出標準化的影響與載荷正負號的任意性。</li>
+<li>計算 PVE 與累積 PVE，用陡坡圖決定主成分個數。</li>
+</ol>
+</div></section><section class="unit" id="s1"><h2>17.1 載荷與分數</h2><h3>一、目的</h3>
+<p>PCA 用少數幾個新變數（主成分）來概括一組彼此相關的變數，方便視覺化或當作迴歸的輸入（<a href="ch08.html">第 8 章</a>的 PCR）。它是<strong>非監督式</strong>的：只看 \(X\)，不看任何反應變數。</p>
+<p>先把每個變數<strong>置中</strong>：\(x_{ij}\leftarrow x_{ij}-\bar x_j\)，讓 \(\sum_ix_{ij}=0\)。這不改變變異數，之後的分數平均也是 0。</p>
+<h3>二、第一主成分：變異數最大的方向</h3>
+<p>在所有長度為 1 的方向 \((\phi_{11},\ldots,\phi_{p1})\) 中，找讓分數的變異數最大的那一個：
+\[\max_{\phi_{11},\ldots,\phi_{p1}}\ \frac1n\sum_{i=1}^n\Big(\sum_{j=1}^p\phi_{j1}x_{ij}\Big)^2\qquad\text{subject to}\qquad\sum_{j=1}^p\phi_{j1}^2=1 .\]
+限制長度是必要的，否則把載荷放大，變異數就能無限大。</p>
+<p><strong>第二主成分</strong>：在和 \(Z_1\) <strong>不相關</strong>（等價於載荷向量<strong>正交</strong>，\(\sum_j\phi_{j1}\phi_{j2}=0\)）的方向中，找變異數最大的。之後的主成分依此類推。主成分最多有 \(\min(n-1,p)\) 個。</p>
+<div class="box derive">
+<div class="box-t">推導：主成分就是共變異數矩陣的特徵向量</div>
+<p>令 \(S=\frac1nX&#x27;X\) 是（已置中資料的）共變異數矩陣，\(\boldsymbol\phi\) 是載荷向量。分數的變異數是
+\[\frac1n\sum_i(\mathbf x_i&#x27;\boldsymbol\phi)^2=\frac1n\boldsymbol\phi&#x27;X&#x27;X\boldsymbol\phi=\boldsymbol\phi&#x27;S\boldsymbol\phi .\]
+在 \(\boldsymbol\phi&#x27;\boldsymbol\phi=1\) 的限制下最大化，用 Lagrange 乘數：
+\[\frac{\partial}{\partial\boldsymbol\phi}\Big[\boldsymbol\phi&#x27;S\boldsymbol\phi-\lambda(\boldsymbol\phi&#x27;\boldsymbol\phi-1)\Big]=2S\boldsymbol\phi-2\lambda\boldsymbol\phi=0\ \Longrightarrow\ S\boldsymbol\phi=\lambda\boldsymbol\phi .\]
+所以 \(\boldsymbol\phi\) 必須是 \(S\) 的<strong>特徵向量</strong>，而且此時變異數 \(\boldsymbol\phi&#x27;S\boldsymbol\phi=\lambda\boldsymbol\phi&#x27;\boldsymbol\phi=\lambda\)。要變異數最大，就選<strong>最大的特徵值</strong>對應的特徵向量。</p>
+<p>第二主成分是第二大特徵值的特徵向量；對稱矩陣不同特徵值的特徵向量自動正交。</p>
+<p><strong>一個重要的結論</strong>：所有特徵值的總和等於 \(S\) 的對角線總和（trace），也就是所有變數變異數的總和。這就是 <a href="ch17.html#s5">17.5 節</a>「解釋變異比例」的根據。</p>
+</div>
+<p><strong>不需要手算特徵向量</strong>；考題會給載荷。</p>
+<h3>三、分數的幾何意義</h3>
+<p>把每個點垂直投影到主成分的方向上，投影點到原點的（帶正負號的）距離就是分數。在 \((Z_1,Z_2)\) 座標系中，觀察 \(i\) 的座標就是 \((z_{i1},z_{i2})\)。</p>
+<div class="box ex">
+<div class="box-t">例題 17-1：兩個變數的例子（講義 17.1 節）</div>
+<p>20 筆已置中的資料 \((X_1,X_2)\)，第一主成分載荷 \((0.9144,0.4047)\)、第二主成分 \((-0.4047,0.9144)\)（兩者正交，各自平方和為 1）。</p>
+<p>觀察 1 是 \((-24,-21)\)：
+\[z_{11}=0.9144(-24)+0.4047(-21)=-30.45,\qquad z_{12}=-0.4047(-24)+0.9144(-21)=-9.49 .\]
+觀察 1 到第一主成分直線的距離：由畢氏定理，\(\sqrt{24^2+21^2-30.45^2}=9.48\)，正好是 \(|z_{12}|\)（講義小測驗 17-1）。</p>
+</div>
+<figure><img src="assets/fig/ch17-pc2d.svg" alt="講義 17.1 節的 20 筆資料。實線是第一主成分方向（沿著資料拉長的方向），虛線是與它垂直的第二主成分方向。綠色：觀察 1 垂直投影到實線上，投影點到原點的距離就是 ，投影線的長度是 。金色：觀察 12  的分數是 9.83 與 9.86；它的  比觀察 13  小，但因為  大，第一主成分分數反而比較大。" loading="lazy"><figcaption>講義 17.1 節的 20 筆資料。實線是第一主成分方向（沿著資料拉長的方向），虛線是與它垂直的第二主成分方向。綠色：觀察 1 垂直投影到實線上，投影點到原點的距離就是 \(|z_{11}|=30.45\)，投影線的長度是 \(|z_{12}|=9.49\)。金色：觀察 12 \((5,13)\) 的分數是 9.83 與 9.86；它的 \(X_1\) 比觀察 13 \((6,4)\) 小，但因為 \(X_2\) 大，第一主成分分數反而比較大。</figcaption></figure>
+
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li><strong>先置中</strong>：題目給的是原始資料時，要先減掉平均再乘載荷（習題 <a href="ch17.html#q17-3">17.3</a>、<a href="ch17.html#q17-5">17.5</a>）。</li>
+<li>載荷不是「權重」：它們的<strong>平方和</strong>是 1，不是總和是 1。</li>
+<li>已知一部分載荷，用平方和為 1 補出最後一個，注意題目指定的正負號（習題 <a href="ch17.html#q17-6">17.6</a>、<a href="ch17.html#q17-7">17.7</a>）。</li>
+</ul>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：載荷與分數</div>
+<ul>
+<li>計算分數；補出缺的載荷；從分數反推載荷（解一元二次方程式，習題 <a href="ch17.html#q17-4">17.4</a>）。</li>
+<li>概念（樣題 5）：主成分給出最接近資料的低維線性曲面；第一主成分是最接近資料的直線；PCA 找保留最多變異的低維表示；PCA 是視覺化工具。四個都對。</li>
+<li>概念（樣題 30、MAS-II-S19:41）：每個主成分的載荷平方和是 1；不同主成分的載荷正交；載荷只唯一到正負號；全部主成分解釋 100% 的變異。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q17-1"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.1 題</b><small>・講義 p.315・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #5] Consider the following statements:</p>
+<div class="items">
+<p>I. Principal Components Analysis (PCA) provides low-dimensional linear surfaces that are closest to the observations.</p>
+<p>II. The first principal component is the line in \(p\)-dimensional space that is closest to the observations.</p>
+<p>III. PCA finds a low dimension representation of a dataset that contains as much variation as possible.</p>
+<p>IV. PCA serves as a tool for data visualization.</p>
+</div>
+<p>Determine which of the statements are correct.</p>
+<div class="opts">
+<p>(A) Statements I, II, and III only</p>
+<p>(B) Statements I, II, and IV only</p>
+<p>(C) Statements I, III, and IV only</p>
+<p>(D) Statements II, III, and IV only</p>
+<p>(E) Statements I, II, III, and IV are all correct</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 5 題）考慮以下敘述：</p>
+<div class="items">
+<p>I. 主成分分析（PCA）給出最接近觀察值的低維線性曲面。</p>
+<p>II. 第一主成分是 \(p\) 維空間中最接近觀察值的直線。</p>
+<p>III. PCA 找出保留盡可能多變異的低維資料表示。</p>
+<p>IV. PCA 可以作為資料視覺化的工具。</p>
+</div>
+<p>哪些正確？</p>
+<div class="opts">
+<p>(A) 只有 I、II、III　(B) 只有 I、II、IV　(C) 只有 I、III、IV　(D) 只有 II、III、IV　(E) I、II、III、IV 都正確</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>四個都是 ISLR 對 PCA 的描述：I、II 是「最接近資料」的解釋（<a href="ch17.html#s3">17.3 節</a>）；III 是「最大變異」的解釋（<a href="ch17.html#s1">17.1 節</a>）；IV 是 PCA 的主要用途之一。</p></div></div></article><article class="exercise" id="q17-3"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.3 題</b><small>・講義 p.315・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are given the following 5 observations of 2 variables:</p>
+<table>
+<thead>
+<tr>
+<th>\(X_1\)</th>
+<th>1</th>
+<th>2</th>
+<th>4</th>
+<th>6</th>
+<th>9</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(X_2\)</td>
+<td>5</td>
+<td>7</td>
+<td>4</td>
+<td>3</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>The loadings of the first principal component are −0.8297 and 0.5583.</p>
+<p>Calculate the first principal component's score for the first observation.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個變數的 5 筆觀察：\((1,5)\)、\((2,7)\)、\((4,4)\)、\((6,3)\)、\((9,1)\)。第一主成分的載荷是 \(-0.8297\) 與 \(0.5583\)。求第一筆觀察在第一主成分的分數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>3.3793</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>先置中：\(\bar x_1=4.4\)、\(\bar x_2=4\)。
+\[z_{11}=-0.8297(1-4.4)+0.5583(5-4)=2.8210+0.5583=3.3793 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>沒有置中直接算會得到 \(-0.8297+2.7915=1.96\)。</p></div></div></article><article class="exercise" id="q17-5"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.5 題</b><small>・講義 p.316・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:26 fixed] You are given the following daily temperature readings, which are modeled as a function of two independent variables:</p>
+<table>
+<thead>
+<tr>
+<th>Observation</th>
+<th>Temperature</th>
+<th>\(X_1\)</th>
+<th>\(X_2\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>5</td>
+<td>4</td>
+<td>6</td>
+</tr>
+<tr>
+<td>2</td>
+<td>10</td>
+<td>8</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>The data set consists only of these two observations.</li>
+<li>The first principal component loading for \(X_1\), \(\phi_{11}\), is \(1/\sqrt2\).</li>
+<li>The first principal component loading for \(X_2\), \(\phi_{21}\), is negative.</li>
+</ul>
+<p>Calculate the principal component score for Observation 1.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 春季 MAS-I 第 26 題，已修正）每日溫度以兩個自變數建模：</p>
+<p>資料只有這兩筆。第一主成分在 \(X_1\) 的載荷 \(\phi_{11}=1/\sqrt2\)，在 \(X_2\) 的載荷 \(\phi_{21}\) 為負。求觀察 1 的主成分分數。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>−2.828</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\phi_{21}=-\sqrt{1-1/2}=-1/\sqrt2\)。PCA 只用解釋變數，溫度不用。</p>
+<p>置中：\(\bar x_1=6\)、\(\bar x_2=4\)，觀察 1 變成 \((-2,2)\)。
+\[z_{11}=\frac{1}{\sqrt2}(-2)-\frac{1}{\sqrt2}(2)=-\frac{4}{\sqrt2}=-2.828 .\]</p></div></div></article><article class="exercise" id="q17-7"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.7 題</b><small>・講義 p.316・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>A set of 100 observations of 4 variables is analyzed using principal components analysis. The loadings of the first three variables on the first principal component are 0.68, 0.65, and 0.32. The fourth loading is negative.</p>
+<p>Calculate the first principal component score of the observation \((2,-1,3,5)\).</p>
+<div class="opts">
+<p>(A) 0.3</p>
+<p>(B) 0.7</p>
+<p>(C) 1.1</p>
+<p>(D) 1.3</p>
+<p>(E) 1.7</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>100 筆觀察、4 個變數的 PCA。前三個變數在第一主成分的載荷是 0.68、0.65、0.32，第四個為負。求觀察 \((2,-1,3,5)\) 的第一主成分分數。</p>
+<div class="opts">
+<p>(A) 0.3　(B) 0.7　(C) 1.1　(D) 1.3　(E) 1.7</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>第四個載荷 \(-\sqrt{1-0.68^2-0.65^2-0.32^2}=-\sqrt{0.0127}=-0.1127\)。</p>
+<p>分數 \(=0.68(2)+0.65(-1)+0.32(3)-0.1127(5)=1.36-0.65+0.96-0.5635=1.107\)。</p>
+<p>（題目的觀察值視為已置中。）</p></div></div></article><article class="exercise" id="q17-8"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.8 題</b><small>・講義 p.317・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F18:38] You are given a series of plots of a single data set containing two variables:</p>
+<figure><img src="assets/fig/ch17-ex8.svg" alt="依題目原圖重畫的示意。圖 I：實線沿著資料的走向、虛線與它垂直；圖 II：兩者互換；圖 III：實線沿資料走向、虛線是垂直線（與實線不垂直）；圖 IV：實線水平、虛線垂直；圖 V：兩條都是曲線。" loading="lazy"><figcaption>依題目原圖重畫的示意。圖 I：實線沿著資料的走向、虛線與它垂直；圖 II：兩者互換；圖 III：實線沿資料走向、虛線是垂直線（與實線不垂直）；圖 IV：實線水平、虛線垂直；圖 V：兩條都是曲線。</figcaption></figure>
+
+<p>Determine which of the above plots accurately represent the first and second principal components (PC1 and PC2, respectively) of this dataset.</p>
+<div class="opts">
+<p>(A) I</p>
+<p>(B) II</p>
+<p>(C) III</p>
+<p>(D) IV</p>
+<p>(E) V</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 秋季 MAS-I 第 38 題）同一組兩個變數的資料，畫了五張圖，每張都標出 PC1（實線）與 PC2（虛線）：</p>
+<p>哪一張正確表示了這組資料的第一、第二主成分？</p>
+<div class="opts">
+<p>(A) I　(B) II　(C) III　(D) IV　(E) V</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>PC1 是最接近資料（變異數最大）的直線；PC2 必須與 PC1 垂直。</p>
+<p>圖 II 把兩者顛倒；圖 III 的兩條線不垂直；圖 IV 的實線不是最接近資料的直線；圖 V 不是直線。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（7 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC17-1-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.1-1</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For two centered variables, the first principal component loading on \(X_1\) is 0.8, and the loading on \(X_2\) is negative.</p>
+<p>Calculate the score of the observation \((x_1,x_2)=(2,1)\) on the first principal component.</p>
+<div class="opts">
+<p>(A) 1.0</p>
+<p>(B) 2.2</p>
+<p>(C) 1.4</p>
+<p>(D) 0.6</p>
+<p>(E) 1.6</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個已置中的變數，第一主成分在 \(X_1\) 的載荷是 0.8，在 \(X_2\) 的載荷為負。求觀察 \((2,1)\) 的第一主成分分數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\phi_{21}=-\sqrt{1-0.64}=-0.6\)。分數 \(=0.8(2)-0.6(1)=1.0\)。</p>
+<p>(B) 用了 \(+0.6\)；(C) 是 \(0.8+0.6\)；(E) 只算了 \(0.8\times2\)。</p></div></div></article><article class="exercise concept-q" id="qC17-1-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.1-2</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following correctly describes the first principal component loading vector of a centered data matrix.</p>
+<div class="opts">
+<p>(A) The eigenvector of the sample covariance matrix with the largest eigenvalue</p>
+<p>(B) The vector of variable means</p>
+<p>(C) The vector of regression coefficients of the first variable on the others</p>
+<p>(D) The eigenvector of the covariance matrix with the smallest eigenvalue</p>
+<p>(E) A vector whose entries sum to 1</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪一個正確描述了已置中資料的第一主成分載荷向量？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>最大化 \(\boldsymbol\phi&#x27;S\boldsymbol\phi\)（限制 \(\boldsymbol\phi&#x27;\boldsymbol\phi=1\)）得到 \(S\boldsymbol\phi=\lambda\boldsymbol\phi\)，變異數等於 \(\lambda\)，所以取最大特徵值的特徵向量。(E) 錯：是平方和為 1。</p></div></div></article><article class="exercise concept-q" id="qC17-1-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.1-3</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For a principal components analysis, the variance of the scores on the first principal component equals 330.3.</p>
+<p>Determine what this number represents.</p>
+<div class="opts">
+<p>(A) The largest eigenvalue of the covariance matrix</p>
+<p>(B) The sum of the variances of all variables</p>
+<p>(C) The sum of squared loadings</p>
+<p>(D) The number of observations times the PVE</p>
+<p>(E) The variance of the first variable</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>PCA 中第一主成分分數的變異數是 330.3，這個數字代表什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>第一主成分的變異數就是共變異數矩陣最大的特徵值。(B) 是所有特徵值的總和（講義例子中是 356.5）。</p></div></div></article><article class="exercise concept-q" id="qC17-1-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.1-4</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about principal components is/are true.</p>
+<div class="items">
+<p>I. The scores on different principal components are uncorrelated.</p>
+<p>II. The loading vectors of different principal components are orthogonal.</p>
+<p>III. The loadings of each principal component sum to 1.</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於主成分，下列哪些正確？</p>
+<div class="items">
+<p>I. 不同主成分的分數不相關。</p>
+<p>II. 不同主成分的載荷向量正交。</p>
+<p>III. 每個主成分的載荷總和為 1。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對（兩者等價）。III 錯：是平方和為 1。</p></div></div></article><article class="exercise concept-q" id="qC17-1-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.1-5</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Data on two variables are not yet centered. The means are \(\bar x_1=10\) and \(\bar x_2=20\). The first principal component loadings are 0.6 and 0.8.</p>
+<p>Calculate the score of the observation \((12,17)\).</p>
+<div class="opts">
+<p>(A) 20.8</p>
+<p>(B) 3.6</p>
+<p>(C) −1.2</p>
+<p>(D) 1.2</p>
+<p>(E) −3.6</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>資料尚未置中，平均 \(\bar x_1=10\)、\(\bar x_2=20\)。第一主成分載荷 0.6、0.8。求觀察 \((12,17)\) 的分數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>置中後 \((2,-3)\)：\(0.6(2)+0.8(-3)=-1.2\)。(A) 沒置中；(D) 正負號錯。</p></div></div></article><article class="exercise concept-q" id="qC17-1-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.1-6</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A data set has \(n=10\) observations of \(p=25\) variables.</p>
+<p>Determine the maximum number of distinct (non-trivial) principal components.</p>
+<div class="opts">
+<p>(A) 25</p>
+<p>(B) 10</p>
+<p>(C) 9</p>
+<p>(D) 24</p>
+<p>(E) 35</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>10 筆觀察、25 個變數，最多有幾個有意義的主成分？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\min(n-1,p)=\min(9,25)=9\)。置中後資料只在 \(n-1\) 維的空間中變動。</p></div></div></article><article class="exercise concept-q" id="qC17-1-7"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.1-7</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>The first principal component loading vector for three variables has \(\phi_{11}=0.6\), \(\phi_{31}=0\), and \(\phi_{21}&lt;0\).</p>
+<p>Determine \(\phi_{21}\).</p>
+<div class="opts">
+<p>(A) −0.8</p>
+<p>(B) −0.4</p>
+<p>(C) −0.6</p>
+<p>(D) 0.8</p>
+<p>(E) −0.64</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>三個變數的第一主成分載荷 \(\phi_{11}=0.6\)、\(\phi_{31}=0\)、\(\phi_{21}&lt;0\)，求 \(\phi_{21}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平方和為 1：\(\phi_{21}^2=1-0.36=0.64\)，取負號 \(-0.8\)。(B) 是用「總和為 1」的錯誤條件。</p></div></div></article></div></section><section class="unit" id="s2"><h2>17.2 雙標圖</h2><p><strong>雙標圖</strong>（biplot）把兩樣東西畫在同一張圖上：</p>
+<ul>
+<li><strong>點</strong>：每筆觀察在前兩個主成分的分數 \((z_{i1},z_{i2})\)（下方與左方的刻度）。</li>
+<li><strong>箭頭</strong>：每個變數在前兩個主成分的載荷 \((\phi_{j1},\phi_{j2})\)（上方與右方的刻度）。</li>
+</ul>
+<p><strong>怎麼讀</strong>：</p>
+<ol>
+<li><strong>兩個變數的箭頭方向相近</strong> → 它們高度正相關；方向相反 → 負相關；接近垂直 → 幾乎無關。</li>
+<li>箭頭在某個主成分方向的分量大 → 該主成分主要由這個變數決定。</li>
+<li><strong>一筆觀察落在某個箭頭的方向上</strong>，<strong>不能</strong>直接推論它在那個變數上很大：分數是所有變數的加權和，可能是其他變數造成的（習題 <a href="ch17.html#q17-9">17.9</a>、MAS-II-S19:40 的陷阱）。</li>
+</ol>
+<figure><img src="assets/fig/ch17-biplot.svg" alt="60 位顧客在四類商品的消費（已標準化）。服飾、寢具、家電的箭頭都指向右邊，彼此正相關，主導第一主成分（解釋 63%）；食品主要在第二主成分（29%）。顧客 14 的第一、第二分數都高，他的服飾（標準化值 2.16）、寢具（1.81）、食品（1.45）都高；顧客 27 在第一主成分很負，但他的食品其實高於平均（1.62）：分數低是因為服飾、寢具、家電都很低（−1.82、−1.47、−2.89）。只看位置會誤判他的食品消費。" loading="lazy"><figcaption>60 位顧客在四類商品的消費（已標準化）。服飾、寢具、家電的箭頭都指向右邊，彼此正相關，主導第一主成分（解釋 63%）；食品主要在第二主成分（29%）。顧客 14 的第一、第二分數都高，他的服飾（標準化值 2.16）、寢具（1.81）、食品（1.45）都高；顧客 27 在第一主成分很負，但他的食品其實高於平均（1.62）：分數低是因為服飾、寢具、家電都很低（−1.82、−1.47、−2.89）。只看位置會誤判他的食品消費。</figcaption></figure>
+
+<div class="box exam">
+<div class="box-t">考試怎麼考：雙標圖</div>
+<ul>
+<li>相關性：箭頭方向（MAS-II-S19:40 的 I、習題 <a href="ch17.html#q17-9">17.9</a> 的 I）。</li>
+<li>觀察的位置只能說明分數，不能直接推論某個變數的值（兩題的 III）。</li>
+<li>標準化前後的比較：見 <a href="ch17.html#s4">17.4 節</a>。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q17-9"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.9 題</b><small>・講義 p.318・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>A department store performs principal components analysis to visualize the purchases of customers in four categories. You are given the following biplot, with the scores for two customers.</p>
+<figure><img src="assets/fig/ch17-ex9.svg" alt="依題目原圖重畫的示意：食品的箭頭指向左上（PC1 略負、PC2 很正）；服飾與寢具的箭頭幾乎同方向，指向右方略偏上；家電指向右下。Bradley 在右上方（兩個分數都為正），Abigael 在左下方（兩個分數都為負）。" loading="lazy"><figcaption>依題目原圖重畫的示意：食品的箭頭指向左上（PC1 略負、PC2 很正）；服飾與寢具的箭頭幾乎同方向，指向右方略偏上；家電指向右下。Bradley 在右上方（兩個分數都為正），Abigael 在左下方（兩個分數都為負）。</figcaption></figure>
+
+<p>Your colleague draws the following conclusions from this biplot:</p>
+<div class="items">
+<p>I. Customers who purchase a lot of clothes tend to purchase a lot of linens.</p>
+<p>II. Abigael purchases more food than the average customer.</p>
+<p>III. Bradley purchases more food than the average customer.</p>
+</div>
+<p>Which of these statements are correct?</p>
+<div class="opts">
+<p>(A) None of I, II, or III is true</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The answer is not given by (A), (B), (C), or (D)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>百貨公司用 PCA 視覺化顧客在四類商品的消費，雙標圖如下，標出兩位顧客的分數：</p>
+<p>同事的結論：</p>
+<div class="items">
+<p>I. 買很多服飾的顧客，也傾向買很多寢具。</p>
+<p>II. Abigael 買的食品比一般顧客多。</p>
+<p>III. Bradley 買的食品比一般顧客多。</p>
+</div>
+<p>哪些正確？</p>
+<div class="opts">
+<p>(A) 都不正確　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：服飾與寢具的箭頭方向幾乎相同，高度正相關。</p>
+<p>II 不能下結論：Abigael 的第一分數為負，可能是因為食品多（食品在 PC1 的載荷為負），也可能是服飾、寢具、家電少。</p>
+<p>III 不能下結論：Bradley 的第二分數為正，可能是食品多，也可能是其他組合；而且食品多會讓第一分數偏負，他的第一分數卻是正的。</p>
+<p>只有 I 正確，不在 (A)～(D) 中。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（2 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC17-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.2-1</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>In a biplot, the arrows for variables \(X_1\) and \(X_2\) point in nearly the same direction, while the arrow for \(X_3\) is nearly perpendicular to them.</p>
+<p>Determine the most reasonable conclusion.</p>
+<div class="opts">
+<p>(A) \(X_1\) and \(X_2\) are strongly positively correlated, and nearly uncorrelated with \(X_3\)</p>
+<p>(B) \(X_1\) and \(X_2\) are strongly negatively correlated</p>
+<p>(C) \(X_3\) has the largest variance</p>
+<p>(D) Observations near the \(X_3\) arrow have large values of \(X_3\)</p>
+<p>(E) \(X_1\) and \(X_2\) have equal means</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>雙標圖中 \(X_1\)、\(X_2\) 的箭頭幾乎同方向，\(X_3\) 的箭頭與它們幾乎垂直。最合理的結論是？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>方向相近＝正相關，接近垂直＝幾乎無關。(D) 是常見陷阱：觀察的位置由所有變數共同決定。(C) 要比較標準化前後才能判斷。</p></div></div></article><article class="exercise concept-q" id="qC17-2-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.2-2</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>In a biplot, an observation lies far in the direction of the arrow for variable \(X_4\).</p>
+<p>Determine which statement is correct.</p>
+<div class="opts">
+<p>(A) The observation must have a large value of \(X_4\)</p>
+<p>(B) The observation must have small values of all other variables</p>
+<p>(C) The observation's scores are large in that direction, which may come from \(X_4\) or from other variables</p>
+<p>(D) The observation is an outlier</p>
+<p>(E) The observation has \(X_4=0\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>雙標圖中某觀察遠遠落在 \(X_4\) 箭頭的方向上。哪一句正確？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>分數是所有變數的加權和，可能是 \(X_4\) 大，也可能是其他載荷為負的變數很小（MAS-II-S19:40 的 III、習題 <a href="ch17.html#q17-9">17.9</a>）。</p></div></div></article></div></section><section class="unit" id="s3"><h2>17.3 用主成分近似資料</h2><p>主成分的另一個解釋：前 \(M\) 個主成分張成的超平面，是到所有觀察的歐氏距離平方和最小的 \(M\) 維超平面。用它來近似原始資料：
+\[x_{ij}\approx\sum_{m=1}^Mz_{im}\phi_{jm}.\tag{17.1}\]</p>
+<div class="box derive">
+<div class="box-t">推導：用全部主成分時近似是精確的</div>
+<p>把載荷排成矩陣 \(\Phi\)（第 \(m\) 欄是第 \(m\) 個載荷向量），它是正交矩陣：\(\Phi&#x27;\Phi=\Phi\Phi&#x27;=I\)。分數 \(Z=X\Phi\)。於是
+\[Z\Phi&#x27;=X\Phi\Phi&#x27;=X .\]
+逐元素寫出來：\(\sum_{m=1}^pz_{im}\phi_{jm}=x_{ij}\)。只用前 \(M\) 欄時就是近似，捨棄的是變異數最小的那些方向。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 17-2：還原觀察值（習題 17.11）</div>
+<p>三個變數，載荷：\(Z_1\)：\((-0.85956,-0.18960,0.47457)\)；\(Z_2\)：\((0.25890,0.63908,0.72426)\)。第三筆觀察的分數 \(-22.5603\)、\(-45.9338\)。</p>
+<p>\[x_{31}\approx(-22.5603)(-0.85956)+(-45.9338)(0.25890)=19.392-11.892=7.50 .\]</p>
+</div>
+<p><strong>載荷只唯一到正負號</strong>：整個載荷向量同時變號，方向不變，所有分數也一起變號；近似公式中兩個負號相消，結果不變。所以不同軟體可能得到正負號相反的載荷（樣題 37），但<strong>只把部分載荷變號</strong>是不行的。</p>
+<div class="box exam">
+<div class="box-t">考試怎麼考：近似與唯一性</div>
+<ul>
+<li>用 (17.1) 近似某個觀察值；或從一筆已知觀察反推缺少的載荷，再近似另一筆（習題 <a href="ch17.html#q17-12">17.12</a>）。</li>
+<li>樣題 37：X 與 Y 的載荷剛好全部相反，可以是正負號的任意選擇；W 與 X 只有一個載荷變號，不行；Z 的數字完全不同，可能是有沒有標準化的差別。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q17-12"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.12 題</b><small>・講義 p.320・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You are performing a principal components analysis of three variables, \(X_1\), \(X_2\), and \(X_3\). Their loadings on two principal components \(Z_1\) and \(Z_2\) are</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>\(X_1\)</th>
+<th>\(X_2\)</th>
+<th>\(X_3\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(Z_1\)</td>
+<td>−0.97932</td>
+<td>−0.18906</td>
+<td>0.70210</td>
+</tr>
+<tr>
+<td>\(Z_2\)</td>
+<td>0.03669</td>
+<td>0.18452</td>
+<td>0.98214</td>
+</tr>
+</tbody>
+</table>
+<p>The scores of the fourth and fifth observations on the three components are</p>
+<table>
+<thead>
+<tr>
+<th>\(i\)</th>
+<th>\(z_{i1}\)</th>
+<th>\(z_{i2}\)</th>
+<th>\(z_{i3}\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4</td>
+<td>−37.1131</td>
+<td>15.4973</td>
+<td>14.6442</td>
+</tr>
+<tr>
+<td>5</td>
+<td>−46.5435</td>
+<td>−14.2271</td>
+<td>15.3719</td>
+</tr>
+</tbody>
+</table>
+<p>The fourth observation's first component \(x_{41}=34\).</p>
+<p>Determine the fifth observation's first component \(x_{51}\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>三個變數的 PCA，載荷（第三個主成分在 \(X_1\) 的載荷未知）：</p>
+<p>第四、五筆觀察在三個主成分的分數：</p>
+<p>第四筆觀察的 \(x_{41}=34\)。求第五筆觀察的 \(x_{51}\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>42.00</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>三個主成分全部用上，近似是精確的：\(x_{i1}=\sum_mz_{im}\phi_{1m}\)。</p>
+<p><strong>反推 \(\phi_{13}\)</strong>：\((-0.97932)(-37.1131)+(0.03669)(15.4973)+\phi_{13}(14.6442)=34\)，即 \(36.9142+14.6442\phi_{13}=34\)，\(\phi_{13}=-0.19900\)。</p>
+<p><strong>算 \(x_{51}\)</strong>：\((-0.97932)(-46.5435)+(0.03669)(-14.2271)+(-0.19900)(15.3719)=45.581-0.522-3.059=42.00\)。</p>
+<p>（題目的載荷表中，每一列是一個主成分，所以 \(X_1\) 在三個主成分的載荷是第一欄。）</p></div></div></article><article class="exercise" id="q17-13"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.13 題</b><small>・講義 p.320・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #37] Analysts W, X, Y, and Z are each performing principal components analysis on the same data set with three variables. They use different programs with their default settings and discover that they have different factor loadings for the first principal component. Their loadings are:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Variable 1</th>
+<th>Variable 2</th>
+<th>Variable 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W</td>
+<td>−0.549</td>
+<td>−0.594</td>
+<td>0.587</td>
+</tr>
+<tr>
+<td>X</td>
+<td>−0.549</td>
+<td>0.594</td>
+<td>0.587</td>
+</tr>
+<tr>
+<td>Y</td>
+<td>0.549</td>
+<td>−0.594</td>
+<td>−0.587</td>
+</tr>
+<tr>
+<td>Z</td>
+<td>0.140</td>
+<td>−0.570</td>
+<td>−0.809</td>
+</tr>
+</tbody>
+</table>
+<p>Determine which of the following is/are plausible explanations for the different loadings.</p>
+<div class="items">
+<p>I. Loadings are unique up to a sign flip and hence X's and Y's programs could make different arbitrary sign choices.</p>
+<p>II. Z's program defaults to not scaling the variables while Y's program defaults to scaling them.</p>
+<p>III. Loadings are unique up to a sign flip and hence W's and X's programs could make different arbitrary sign choices.</p>
+</div>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 37 題）W、X、Y、Z 四位分析師對同一組三個變數的資料做 PCA，用不同程式的預設設定，得到不同的第一主成分載荷：</p>
+<p>下列哪些是合理的解釋？</p>
+<div class="items">
+<p>I. 載荷只唯一到正負號，所以 X 與 Y 的程式可能做了不同的任意正負號選擇。</p>
+<p>II. Z 的程式預設不標準化，Y 的程式預設標準化。</p>
+<p>III. 載荷只唯一到正負號，所以 W 與 X 的程式可能做了不同的任意正負號選擇。</p>
+</div>
+<div class="opts">
+<p>(A) 都不是　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：Y 的三個載荷正好都是 X 的相反數。III 錯：W 與 X 只有變數 2 的正負號不同，不能只翻一個。II 對：Z 的數值完全不同，是否標準化可以解釋。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC17-3-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.3-1</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Using two principal components, an observation has scores \(z_1=3\) and \(z_2=-1\). Variable \(X_2\) has loadings \(\phi_{21}=0.5\) and \(\phi_{22}=0.7\).</p>
+<p>Calculate the approximation of the observation's (centered) value of \(X_2\).</p>
+<div class="opts">
+<p>(A) 2.2</p>
+<p>(B) 0.8</p>
+<p>(C) 1.5</p>
+<p>(D) −0.7</p>
+<p>(E) 3.5</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>用兩個主成分，某觀察分數 \(z_1=3\)、\(z_2=-1\)。\(X_2\) 的載荷 \(\phi_{21}=0.5\)、\(\phi_{22}=0.7\)。求該觀察 \(X_2\)（已置中）的近似值。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(x\approx z_1\phi_{21}+z_2\phi_{22}=1.5-0.7=0.8\)。(A) 正負號錯；(C) 只用了第一個主成分。</p></div></div></article><article class="exercise concept-q" id="qC17-3-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.3-2</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine when the principal component approximation \(x_{ij}\approx\sum_{m=1}^Mz_{im}\phi_{jm}\) is exact for every observation.</p>
+<div class="opts">
+<p>(A) When \(M=1\)</p>
+<p>(B) When the variables are standardized</p>
+<p>(C) When \(M\) equals the number of variables (and \(n&gt;p\))</p>
+<p>(D) Never</p>
+<p>(E) When the loadings are all positive</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>主成分近似 \(x_{ij}\approx\sum_{m\le M}z_{im}\phi_{jm}\) 什麼時候對所有觀察都精確？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>用全部主成分時，\(Z\Phi&#x27;=X\Phi\Phi&#x27;=X\)，因為載荷矩陣是正交矩陣。</p></div></div></article><article class="exercise concept-q" id="qC17-3-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.3-3</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Two programs give first principal component loadings \((0.6,-0.8)\) and \((-0.6,0.8)\) for the same data.</p>
+<p>Determine which statement is correct.</p>
+<div class="opts">
+<p>(A) One of the programs made an error</p>
+<p>(B) The data must have been scaled differently</p>
+<p>(C) Both are valid; loadings are unique only up to sign, and the scores also flip sign</p>
+<p>(D) The scores are identical in both programs</p>
+<p>(E) The approximations of the data differ between programs</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個程式對同一組資料給出第一主成分載荷 \((0.6,-0.8)\) 與 \((-0.6,0.8)\)。哪一句正確？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>整個向量變號，方向不變，分數也一起變號，近似值不變（(E) 錯）。分數正負相反，所以 (D) 錯。</p></div></div></article><article class="exercise concept-q" id="qC17-3-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.3-4</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following is NOT a valid sign flip of the loading vector \((0.5,-0.5,0.7071)\).</p>
+<div class="opts">
+<p>(A) \((-0.5,0.5,-0.7071)\)</p>
+<p>(B) \((0.5,-0.5,0.7071)\)</p>
+<p>(C) Multiplying the whole vector by \(-1\)</p>
+<p>(D) \((-0.5,-0.5,0.7071)\)</p>
+<p>(E) Keeping the vector unchanged</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪一個<strong>不是</strong>載荷向量 \((0.5,-0.5,0.7071)\) 合法的變號？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>只能整個向量一起變號（或不變）。(D) 只改了一個元素，方向變了（樣題 37 的 W 與 X）。</p></div></div></article><article class="exercise concept-q" id="qC17-3-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.3-5</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Using only the first principal component, with loadings \((0.8,0.6)\), an observation has score \(z_1=5\).</p>
+<p>Determine the approximation of the (centered) observation.</p>
+<div class="opts">
+<p>(A) \((5,5)\)</p>
+<p>(B) \((0.16,0.12)\)</p>
+<p>(C) \((4,3)\)</p>
+<p>(D) \((3,4)\)</p>
+<p>(E) \((6.25,8.33)\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>只用第一主成分（載荷 \((0.8,0.6)\)），某觀察分數 5。這筆（已置中）觀察的近似值是？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(x_j\approx z_1\phi_{j1}\)：\((5\times0.8,5\times0.6)=(4,3)\)。(E) 是除以載荷。</p></div></div></article></div></section><section class="unit" id="s4"><h2>17.4 標準化</h2><p>線性迴歸中，變數乘上常數只會讓係數除以同一個常數，預測不變。<strong>PCA 不是這樣</strong>：變數放大，變異數變大，PCA 為了最大化變異數，會把載荷集中在它身上。</p>
+<ul>
+<li>變數單位不同（例如金額與年齡）時，通常把每個變數<strong>標準化</strong>（除以標準差，變異數變成 1）。</li>
+<li>如果所有變數單位相同、而且變異數的差別本身有意義，可以不標準化。</li>
+</ul>
+<figure><img src="assets/fig/ch17-scaling.svg" alt="三個變數：、 高度相關、變異數約 1.25； 與它們無關、變異數約 100。不標準化（左）：第一主成分幾乎就是 （載荷 1.00），解釋 98% 的變異，、 被擠到第二主成分。標準化（右）：、 的共同變動成為第一主成分（載荷各 0.71，解釋 61%）， 變成第二主成分。" loading="lazy"><figcaption>三個變數：\(X_1\)、\(X_2\) 高度相關、變異數約 1.25；\(X_3\) 與它們無關、變異數約 100。不標準化（左）：第一主成分幾乎就是 \(X_3\)（載荷 1.00），解釋 98% 的變異，\(X_1\)、\(X_2\) 被擠到第二主成分。標準化（右）：\(X_1\)、\(X_2\) 的共同變動成為第一主成分（載荷各 0.71，解釋 61%），\(X_3\) 變成第二主成分。</figcaption></figure>
+
+<div class="box exam">
+<div class="box-t">考試怎麼考：標準化</div>
+<ul>
+<li>未標準化時，變異數最大的變數主導第一主成分；從「未標準化的雙標圖中某變數的箭頭特別長／特別貼近 PC1，標準化後明顯縮小」可以推論它的變異數最大（MAS-II-S19:40 的 II）。</li>
+<li>樣題 37：不同軟體的預設是否標準化不同，會得到不同的載荷。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q17-10"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.10 題</b><small>・講義 p.319・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-S19:40] You perform two separate principal component analyses on the same four variables in a particular data set: X1, X2, X3, and X4. The first analysis centers but does not scale the variables, and the second analysis centers and scales the variables. The biplots of the first two principal components produced from these analyses are shown below. The location of Observation 24 is labeled on the plots as well.</p>
+<figure><img src="assets/fig/ch17-ex10.svg" alt="依題目原圖重畫的示意。不標準化：X3 的箭頭很長、幾乎水平指向左（PC1）；X1、X2 的箭頭垂直向下（PC2），方向相同；X4 的箭頭極短；觀察 24 在右上方。標準化：X3 的箭頭變成主要指向上方（PC2）；X1、X2 指向左下、方向相近；X4 指向右方；觀察 24 在最右邊，靠近 X4 箭頭的方向。" loading="lazy"><figcaption>依題目原圖重畫的示意。不標準化：X3 的箭頭很長、幾乎水平指向左（PC1）；X1、X2 的箭頭垂直向下（PC2），方向相同；X4 的箭頭極短；觀察 24 在右上方。標準化：X3 的箭頭變成主要指向上方（PC2）；X1、X2 指向左下、方向相近；X4 指向右方；觀察 24 在最右邊，靠近 X4 箭頭的方向。</figcaption></figure>
+
+<p>Given the following statements:</p>
+<div class="items">
+<p>I. X1 is more highly correlated with X2 than with X3.</p>
+<p>II. X3 has the highest variance of these four variables.</p>
+<p>III. Observation 24 has a relatively large, positive value for X4.</p>
+</div>
+<p>Determine which of the preceding statements are demonstrated in the biplots shown above.</p>
+<div class="opts">
+<p>(A) None of I, II, or III are demonstrated in the biplots</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The answer is not given by (A), (B), (C), or (D)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 春季 MAS-II 第 40 題）對同樣四個變數 X1～X4 做兩次 PCA：第一次只置中、不標準化；第二次置中且標準化。兩次的前兩個主成分的雙標圖如下，並標出觀察 24 的位置。</p>
+<div class="items">
+<p>I. X1 與 X2 的相關，比 X1 與 X3 的相關高。</p>
+<p>II. 四個變數中 X3 的變異數最大。</p>
+<p>III. 觀察 24 的 X4 值相對大且為正。</p>
+</div>
+<p>雙標圖顯示了哪些敘述？</p>
+<div class="opts">
+<p>(A) 都沒有顯示　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：兩張圖中 X1、X2 的箭頭方向都很接近。</p>
+<p>II 對：不標準化時 X3 主導第一主成分；標準化後它在 PC1 的載荷大幅下降、其他變數上升。這表示 X3 原本的變異數最大。</p>
+<p>III 不能下結論：觀察 24 落在 X4 箭頭的方向，可能只是因為 X1、X2、X3 很小（它們在 PC1 的載荷為負）。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（4 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC17-4-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.4-1</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Determine the main reason variables are usually standardized before PCA.</p>
+<div class="opts">
+<p>(A) PCA requires normally distributed variables</p>
+<p>(B) Without scaling, variables with large variance (due to their units) dominate the principal components</p>
+<p>(C) Standardizing makes all loadings positive</p>
+<p>(D) Standardizing increases the number of principal components</p>
+<p>(E) Linear regression requires it</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>PCA 之前通常把變數標準化，主要原因是什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>PCA 最大化變異數，單位造成的大變異數會讓該變數主導（本章「標準化」圖：不標準化時 \(X_3\) 一個變數就解釋 98%）。</p></div></div></article><article class="exercise concept-q" id="qC17-4-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.4-2</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Determine which statement about the effect of rescaling a variable is correct.</p>
+<div class="opts">
+<p>(A) In linear regression, rescaling a predictor changes the fitted values</p>
+<p>(B) In PCA, rescaling a variable leaves the loadings unchanged</p>
+<p>(C) In both linear regression and PCA, rescaling has no effect on any output</p>
+<p>(D) In PCA, multiplying a variable by a large constant increases its loading on the first principal component</p>
+<p>(E) In PCA, rescaling only affects the scores, not the loadings</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於把某個變數乘上常數的影響，哪一句正確？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>線性迴歸中只有係數反比例改變，配適值不變；PCA 中變數的變異數變大，第一主成分會把更多載荷放在它身上。</p></div></div></article><article class="exercise concept-q" id="qC17-4-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.4-3</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>A data set has variables with variances 100, 4, and 1, which are standardized before PCA.</p>
+<p>Calculate the total variance used in the denominator of the PVE.</p>
+<div class="opts">
+<p>(A) 105</p>
+<p>(B) 1</p>
+<p>(C) 35</p>
+<p>(D) 3</p>
+<p>(E) 100</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>三個變數變異數 100、4、1，做 PCA 前先標準化。PVE 分母的總變異數是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>標準化後每個變數變異數 1，總和 \(=p=3\)。(A) 是未標準化的總變異數。</p></div></div></article><article class="exercise concept-q" id="qC17-4-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.4-4</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Two centered, uncorrelated variables have variances 9 and 1. PCA is performed without scaling.</p>
+<p>Determine the proportion of variance explained by the first principal component.</p>
+<div class="opts">
+<p>(A) 0.5</p>
+<p>(B) 0.75</p>
+<p>(C) 1.0</p>
+<p>(D) 0.1</p>
+<p>(E) 0.9</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個已置中、不相關的變數，變異數 9 與 1，不標準化做 PCA。第一主成分的 PVE 是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>不相關時主成分就是原變數本身，第一主成分是變異數 9 的 \(X_1\)，PVE \(=9/10\)。標準化後兩者變異數都是 1，PVE 變成 0.5（(A)）。</p></div></div></article></div></section><section class="unit" id="s5"><h2>17.5 解釋變異比例與陡坡圖</h2><h3>一、公式</h3>
+<p>總變異數（已置中）：
+\[\sum_{j=1}^p\mathrm{Var}(X_j)=\sum_{j=1}^p\frac1n\sum_{i=1}^nx_{ij}^2 .\tag{17.2}\]
+標準化時每個變數變異數 1，總變異數 \(=p\)。</p>
+<p>第 \(m\) 個主成分的變異數：
+\[\mathrm{Var}(Z_m)=\frac1n\sum_{i=1}^nz_{im}^2 .\tag{17.3}\]
+<strong>解釋變異比例</strong>（proportion of variance explained，PVE）\(=\dfrac{\mathrm{Var}(Z_m)}{\sum_j\mathrm{Var}(X_j)}\)。\(\frac1n\) 會相消，可以直接用平方和相除。所有主成分的 PVE 加起來是 1（特徵值總和＝總變異數）。</p>
+<div class="box ex">
+<div class="box-t">例題 17-3：PVE（習題 17.18）</div>
+<p>四筆已置中的觀察 \((X_1,X_2)\)：\((-2,1)\)、\((-1,-2)\)、\((-1,0)\)、\((4,1)\)。第一主成分載荷 \((0.973402,0.229106)\)。</p>
+<p><strong>分數</strong>：\(-1.7177\)、\(-1.4316\)、\(-0.9734\)、\(4.1227\)，平方和 22.944。</p>
+<p><strong>總平方和</strong>：\(4+1+1+16+1+4+0+1=28\)。</p>
+<p>PVE \(=22.944/28=0.8194\)。</p>
+</div>
+<h3>二、要用幾個主成分</h3>
+<p>非監督式學習沒有反應變數，不能用交叉驗證。常見做法：</p>
+<ul>
+<li><strong>累積 PVE</strong>：選達到某個比例（例如 80%）所需的最少個數。累積 PVE 永遠不會下降。</li>
+<li><strong>陡坡圖</strong>（scree plot）：把每個主成分的 PVE 依序畫出，找「手肘」：之後的主成分幾乎沒有再解釋多少。這個方法是經驗性的。</li>
+<li>個別 PVE 依序<strong>遞減</strong>（第一個最大），不是遞增。</li>
+<li>用全部主成分並不會「最了解資料」；PCA 的目的就是用少數幾個概括。</li>
+</ul>
+<figure><img src="assets/fig/ch17-scree.svg" alt="習題 17.17 的相關矩陣（4 個變數， 與  的相關係數 −1）。特徵值 2.919、0.989、0.093、0，PVE 0.730、0.247、0.023、0；累積 0.730、0.977、1.000、1.000。 與  完全負相關，等於只有三個獨立的資訊，所以第四個主成分解釋 0。" loading="lazy"><figcaption>習題 17.17 的相關矩陣（4 個變數，\(X_1\) 與 \(X_4\) 的相關係數 −1）。特徵值 2.919、0.989、0.093、0，PVE 0.730、0.247、0.023、0；累積 0.730、0.977、1.000、1.000。\(X_1\) 與 \(X_4\) 完全負相關，等於只有三個獨立的資訊，所以第四個主成分解釋 0。</figcaption></figure>
+
+<div class="box exam">
+<div class="box-t">考試怎麼考：PVE</div>
+<ul>
+<li>計算：分數平方和 ÷ 資料平方和（MAS-II-F18:41、MAS-II-F19:41）；注意分母是不是已標準化（\(np\)）。</li>
+<li>讀陡坡圖（樣題 35）：累加到超過指定比例。</li>
+<li>概念（樣題 6）：個別 PVE 遞減、累積 PVE 不減、陡坡圖可用來決定個數、全部主成分不一定最好理解。</li>
+<li>從相關矩陣判斷累積 PVE 圖：完全相關的變數讓最後的主成分解釋 0（MAS-II-F19:39）。</li>
+</ul>
+</div>
+<div class="box key">
+<div class="box-t">本章總整理</div>
+<ul>
+<li>置中後，\(Z_m=\sum_j\phi_{jm}X_j\)；\(\sum_j\phi_{jm}^2=1\)；不同主成分的載荷正交、分數不相關。</li>
+<li>第一主成分＝變異數最大的方向＝共變異數矩陣最大特徵值的特徵向量，變異數＝該特徵值。</li>
+<li>分數 \(z_{im}=\sum_j\phi_{jm}x_{ij}\)（先置中）；近似 \(x_{ij}\approx\sum_{m\le M}z_{im}\phi_{jm}\)，用全部主成分時精確。</li>
+<li>載荷只唯一到整體正負號。</li>
+<li>雙標圖：箭頭方向相近＝相關；觀察的位置不能直接推論單一變數的值。</li>
+<li>未標準化時變異數大的變數主導；單位不同時應標準化。</li>
+<li>PVE \(=\sum_iz_{im}^2/\sum_{i,j}x_{ij}^2\)；個別 PVE 遞減、累積不減；用陡坡圖的手肘或累積比例決定個數。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q17-14"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.14 題</b><small>・講義 p.321・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-F18:41] You are provided with the following normalized and scaled data set:</p>
+<table>
+<thead>
+<tr>
+<th>\(i\)</th>
+<th>\(X_1\)</th>
+<th>\(X_2\)</th>
+<th>\(X_3\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>−0.577</td>
+<td>1</td>
+<td>−1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>−0.577</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>−0.577</td>
+<td>−1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>4</td>
+<td>1.732</td>
+<td>−1</td>
+<td>−1</td>
+</tr>
+</tbody>
+</table>
+<p>The first principal component loading vector of the data set is (0.707, −0.500, −0.500).</p>
+<p>Calculate the proportion of variance explained by the first principal component.</p>
+<div class="opts">
+<p>(A) Less than 53%</p>
+<p>(B) At least 53%, but less than 58%</p>
+<p>(C) At least 58%, but less than 63%</p>
+<p>(D) At least 63%, but less than 68%</p>
+<p>(E) At least 68%</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 秋季 MAS-II 第 41 題）已標準化的資料：</p>
+<p>第一主成分的載荷向量是 \((0.707,-0.500,-0.500)\)。求第一主成分的解釋變異比例。</p>
+<div class="items">
+<p>(B) 至少 53%，小於 58%</p>
+<p>(C) 至少 58%，小於 63%</p>
+<p>(D) 至少 63%，小於 68%</p>
+<p>(E) 至少 68%</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>分數</strong>：\(0.707(-0.577)=-0.4079\)，\(1.732(0.707)=1.2245\)。
+\(z_1=-0.4079-0.5+0.5=-0.4079\)；\(z_2=-0.4079-0.5-0.5=-1.4079\)；\(z_3=-0.4079+0.5-0.5=-0.4079\)；\(z_4=1.2245+0.5+0.5=2.2245\)。</p>
+<p><strong>變異數</strong>：\(\frac{0.1664+1.9823+0.1664+4.9485}{4}=1.8159\)。</p>
+<p><strong>總變異數</strong>：已標準化，三個變數各 1，共 3。</p>
+<p>PVE \(=1.8159/3=60.5\%\)。</p></div></div></article><article class="exercise" id="q17-15"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.15 題</b><small>・講義 p.321・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #6] Consider the following statements:</p>
+<div class="items">
+<p>I. The proportion of variance explained by an additional principal component never decreases as more principal components are added.</p>
+<p>II. The cumulative proportion of variance explained never decreases as more principal components are added.</p>
+<p>III. Using all possible principal components provides the best understanding of the data.</p>
+<p>IV. A scree plot provides a method for determining the number of principal components to use.</p>
+</div>
+<p>Determine which of the statements are correct.</p>
+<div class="opts">
+<p>(A) Statements I and II only</p>
+<p>(B) Statements I and III only</p>
+<p>(C) Statements I and IV only</p>
+<p>(D) Statements II and III only</p>
+<p>(E) Statements II and IV only</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 6 題）考慮以下敘述：</p>
+<div class="items">
+<p>I. 增加主成分時，新增主成分的解釋變異比例永遠不會減少。</p>
+<p>II. 增加主成分時，累積解釋變異比例永遠不會減少。</p>
+<p>III. 使用全部的主成分可以最了解資料。</p>
+<p>IV. 陡坡圖提供了決定主成分個數的方法。</p>
+</div>
+<p>哪些正確？</p>
+<div class="opts">
+<p>(A) 只有 I、II　(B) 只有 I、III　(C) 只有 I、IV　(D) 只有 II、III　(E) 只有 II、IV</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：個別 PVE 依序遞減。II 對。III 錯：PCA 的目的是用少數主成分概括資料。IV 對。</p></div></div></article><article class="exercise" id="q17-17"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.17 題</b><small>・講義 p.322・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-F19:39] Dataset Z contains 4 variables and 100 records and has the following correlation matrix.
+\[\begin{pmatrix}1.00&amp;0.93&amp;0.08&amp;-1.00\\0.93&amp;1.00&amp;0.10&amp;-0.93\\0.08&amp;0.10&amp;1.00&amp;-0.08\\-1.00&amp;-0.93&amp;-0.08&amp;1.00\end{pmatrix}\]
+Determine which of the following plots of cumulative proportional variance is produced by principal components analysis on dataset Z.</p>
+<figure><img src="assets/fig/ch17-ex17.svg" alt="依題目原圖重畫的五張累積 PVE 圖：(A) 25、50、75、100；(B) 約 37、77、88、100；(C) 約 57、86、100、100；(D) 約 57、100、100、100；(E) 約 45、55、72、100。" loading="lazy"><figcaption>依題目原圖重畫的五張累積 PVE 圖：(A) 25、50、75、100；(B) 約 37、77、88、100；(C) 約 57、86、100、100；(D) 約 57、100、100、100；(E) 約 45、55、72、100。</figcaption></figure>
+
+<div class="opts">
+<p>(A) (A)</p>
+<p>(B) (B)</p>
+<p>(C) (C)</p>
+<p>(D) (D)</p>
+<p>(E) (E)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 秋季 MAS-II 第 39 題）資料集 Z 有 4 個變數、100 筆記錄，相關矩陣：
+哪一張累積解釋變異比例圖是對 Z 做 PCA 的結果？</p>
+<div class="opts">
+<p>(A) (A)　(B) (B)　(C) (C)　(D) (D)　(E) (E)</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(X_1\) 與 \(X_4\) 的相關係數 −1，完全線性相關，所以只有三個獨立的資訊：最後一個主成分解釋 0，累積 PVE 在第 3 個就達到 100%。</p>
+<p>(A)、(B)、(E) 第 4 個主成分還有增加；(D) 的第 3 個主成分沒有增加，但 \(X_3\) 與其他變數幾乎無關，它自己就貢獻約 1 的變異數，第 3 個主成分不可能是 0。只有 (C) 符合。</p>
+<p>（實際的特徵值 2.919、0.989、0.093、0，累積 73%、98%、100%、100%；圖 (C) 的第一個點畫得偏低，但形狀只有它對。）</p></div></div></article><article class="exercise" id="q17-20"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 17.20 題</b><small>・講義 p.324・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #35] Using the following scree plot, determine the minimum number of principal components that are needed to explain at least 80% of the variance of the original dataset.</p>
+<figure><img src="assets/fig/ch17-ex20.svg" alt="依題目原圖重畫：第 1～5 個主成分的 PVE 約為 0.62、0.23、0.08、0.05、0.02。" loading="lazy"><figcaption>依題目原圖重畫：第 1～5 個主成分的 PVE 約為 0.62、0.23、0.08、0.05、0.02。</figcaption></figure>
+
+<div class="opts">
+<p>(A) One</p>
+<p>(B) Two</p>
+<p>(C) Three</p>
+<p>(D) Four</p>
+<p>(E) It cannot be determined from the information given.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 35 題）由下面的陡坡圖，判斷至少要幾個主成分才能解釋原資料至少 80% 的變異。</p>
+<div class="opts">
+<p>(A) 一個　(B) 兩個　(C) 三個　(D) 四個　(E) 無法從題目資訊判斷</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>第一個約 0.62，不到 80%；加上第二個約 0.23，累積約 0.85，超過 80%。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（7 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC17-5-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.5-1</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>For centered data with 5 observations, the sum of squares of all entries is \(\sum_i\sum_jx_{ij}^2=40\), and the sum of squared first principal component scores is \(\sum_iz_{i1}^2=30\).</p>
+<p>Calculate the PVE of the first principal component.</p>
+<div class="opts">
+<p>(A) 0.25</p>
+<p>(B) 0.75</p>
+<p>(C) 0.15</p>
+<p>(D) 1.33</p>
+<p>(E) 0.60</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>5 筆已置中的資料，所有元素的平方和 40，第一主成分分數的平方和 30。求第一主成分的 PVE。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\frac{30/5}{40/5}=0.75\)，\(1/n\) 相消。(D) 分子分母顛倒。</p></div></div></article><article class="exercise concept-q" id="qC17-5-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.5-2</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>The PVEs of the first four principal components are 0.45, 0.30, 0.15, and 0.10.</p>
+<p>Determine the minimum number of components needed to explain at least 85% of the variance.</p>
+<div class="opts">
+<p>(A) 1</p>
+<p>(B) 2</p>
+<p>(C) 4</p>
+<p>(D) 3</p>
+<p>(E) It cannot be determined</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>前四個主成分的 PVE 是 0.45、0.30、0.15、0.10。至少要幾個才能解釋至少 85% 的變異？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>累積：0.45、0.75、0.90、1.00。第 3 個時超過 85%。</p></div></div></article><article class="exercise concept-q" id="qC17-5-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.5-3</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about the proportion of variance explained (PVE) is/are true.</p>
+<div class="items">
+<p>I. The PVE of each successive principal component is no larger than that of the previous one.</p>
+<p>II. The cumulative PVE can decrease when more components are added.</p>
+<p>III. The PVEs of all principal components sum to 1.</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於 PVE，下列哪些正確？</p>
+<div class="items">
+<p>I. 每個後續主成分的 PVE 不大於前一個。</p>
+<p>II. 加入更多主成分時累積 PVE 可能下降。</p>
+<p>III. 所有主成分的 PVE 總和為 1。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：主成分依變異數由大到小排列。II 錯。III 對：特徵值總和等於總變異數。</p></div></div></article><article class="exercise concept-q" id="qC17-5-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.5-4</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Determine why the number of principal components cannot be chosen by cross-validation in the usual way.</p>
+<div class="opts">
+<p>(A) PCA is unsupervised: there is no response variable whose prediction error could be estimated</p>
+<p>(B) PCA always uses all components</p>
+<p>(C) Cross-validation requires standardized data</p>
+<p>(D) The scores are not unique</p>
+<p>(E) PCA has no tuning parameter at all</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>為什麼主成分的個數不能像平常一樣用交叉驗證選擇？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>交叉驗證要估計預測誤差，需要反應變數；PCA 沒有。只能用陡坡圖或累積 PVE 這類經驗方法。（如果主成分用在 PCR 中，就有反應變數，可以用交叉驗證選個數，<a href="ch08.html">第 8 章</a>。）</p></div></div></article><article class="exercise concept-q" id="qC17-5-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.5-5</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Three standardized variables have a correlation matrix in which \(X_1\) and \(X_2\) are perfectly correlated (\(r=1\)) and \(X_3\) is uncorrelated with both.</p>
+<p>Determine the PVEs of the three principal components.</p>
+<div class="opts">
+<p>(A) 1/3, 1/3, 1/3</p>
+<p>(B) 1, 0, 0</p>
+<p>(C) 2/3, 1/3, 0</p>
+<p>(D) 1/2, 1/2, 0</p>
+<p>(E) 2/3, 0, 1/3</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>三個標準化變數，\(X_1\) 與 \(X_2\) 完全相關（\(r=1\)），\(X_3\) 與兩者都不相關。三個主成分的 PVE 是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(X_1+X_2\) 的方向變異數 2（載荷 \((0.707,0.707,0)\)），\(X_3\) 方向變異數 1，\(X_1-X_2\) 方向變異數 0。總變異數 3，PVE 為 2/3、1/3、0。(E) 的順序錯：PVE 必須遞減。</p></div></div></article><article class="exercise concept-q" id="qC17-5-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.5-6</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>PCA on four standardized variables gives eigenvalues 2.4, 1.0, 0.4, and 0.2.</p>
+<p>Calculate the cumulative PVE of the first two principal components.</p>
+<div class="opts">
+<p>(A) 0.60</p>
+<p>(B) 0.85</p>
+<p>(C) 0.25</p>
+<p>(D) 3.4</p>
+<p>(E) 0.90</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>四個標準化變數的 PCA，特徵值 2.4、1.0、0.4、0.2。求前兩個主成分的累積 PVE。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>總變異數 \(p=4\)；\((2.4+1.0)/4=0.85\)。(A) 只有第一個。</p></div></div></article><article class="exercise concept-q" id="qC17-5-7"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C17.5-7</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Two standardized variables have correlation 0.6.</p>
+<p>Calculate the PVE of the first principal component.</p>
+<div class="opts">
+<p>(A) 0.6</p>
+<p>(B) 0.5</p>
+<p>(C) 0.36</p>
+<p>(D) 0.8</p>
+<p>(E) 0.64</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個標準化變數的相關係數 0.6，第一主成分的 PVE 是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>相關矩陣 \(\begin{pmatrix}1&amp;0.6\\0.6&amp;1\end{pmatrix}\) 的特徵值 \(1\pm0.6\)，即 1.6 與 0.4，載荷 \((0.707,\pm0.707)\)。PVE \(=1.6/2=0.8\)。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（7 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q17-2"><div class="ex-head"><span class="ex-tag">練習</span><b>第 17.2 題</b><small>・講義 p.315・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-S19:41] You are reviewing a dataset with 100 observations in four variables: \(X_1\), \(X_2\), \(X_3\), and \(X_4\). You analyze this data using two principal components:
+\[Z_1=\phi_{11}X_1+\phi_{21}X_2+\phi_{31}X_3+\phi_{41}X_4,\qquad Z_2=\phi_{12}X_1+\phi_{22}X_2+\phi_{32}X_3+\phi_{42}X_4\]
+You are given the following statements:</p>
+<div class="items">
+<p>I. \(\sum_{i=1}^{100}\Big(\sum_{j=1}^4\phi_{j1}x_{ij}\Big)^2=\sum_{i=1}^{100}\Big(\sum_{j=1}^4\phi_{j2}x_{ij}\Big)^2\)</p>
+<p>II. \(\sum_{j=1}^4\phi_{j1}\phi_{j2}=0\)</p>
+<p>III. \(\sum_{j=1}^4\phi_{j1}^2+\sum_{j=1}^4\phi_{j2}^2=1\)</p>
+</div>
+<p>Determine which of the preceding statements are always true.</p>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 春季 MAS-II 第 41 題）100 筆觀察、四個變數 \(X_1\)～\(X_4\)，用兩個主成分分析：\(Z_1=\sum_j\phi_{j1}X_j\)、\(Z_2=\sum_j\phi_{j2}X_j\)。下列哪些<strong>一定</strong>成立？</p>
+<div class="items">
+<p>I. \(\sum_{i=1}^{100}\Big(\sum_{j=1}^4\phi_{j1}x_{ij}\Big)^2=\sum_{i=1}^{100}\Big(\sum_{j=1}^4\phi_{j2}x_{ij}\Big)^2\)</p>
+<p>II. \(\sum_{j=1}^4\phi_{j1}\phi_{j2}=0\)</p>
+<p>III. \(\sum_{j=1}^4\phi_{j1}^2+\sum_{j=1}^4\phi_{j2}^2=1\)</p>
+</div>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：兩邊除以 100 是兩個主成分的變異數，第一主成分的較大，一般不相等。II 對：載荷向量正交。III 錯：<strong>每個</strong>主成分的載荷平方和是 1，兩個加起來是 2。</p></div></div></article><article class="exercise" id="q17-4"><div class="ex-head"><span class="ex-tag">練習</span><b>第 17.4 題</b><small>・講義 p.316・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>For a principal components analysis on two variables, the means of the two variables are 0. You are given the following observation and its score on the first principal component: \(X_1=4\), \(X_2=10\), Score \(=8\).</p>
+<p>Calculate the first principal component's loading on the first variable, assuming that it is positive.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個變數的 PCA，平均都是 0。某觀察 \(X_1=4\)、\(X_2=10\)，第一主成分分數 8。假設第一主成分在第一個變數的載荷為正，求它。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.8975</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\phi_2=\pm\sqrt{1-\phi_1^2}\)。\(4\phi_1+10\phi_2=8\)，所以 \(10\phi_2=8-4\phi_1\)，兩邊平方：
+\[100(1-\phi_1^2)=64-64\phi_1+16\phi_1^2\ \Longrightarrow\ 116\phi_1^2-64\phi_1-36=0 .\]
+\(\phi_1=\frac{64\pm\sqrt{64^2+4(116)(36)}}{232}=\frac{64\pm144.22}{232}\)，取正根 0.8975。</p>
+<p>檢查：\(\phi_2=\sqrt{1-0.8055}=0.4410\)，\(4(0.8975)+10(0.4410)=8.0\)。</p></div></div></article><article class="exercise" id="q17-6"><div class="ex-head"><span class="ex-tag">練習</span><b>第 17.6 題</b><small>・講義 p.316・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>In a principal components analysis, there are 2 variables. The loading of the first principal component on the first variable is −0.6 and the loading of the first principal component on the second variable is positive. The variables have been centered at 0.</p>
+<p>For the observation \((0.4,x_2)\), the first principal component score is 0.12.</p>
+<p>Determine \(x_2\).</p>
+<div class="opts">
+<p>(A) 0.25</p>
+<p>(B) 0.30</p>
+<p>(C) 0.35</p>
+<p>(D) 0.40</p>
+<p>(E) 0.45</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個變數的 PCA，第一主成分在第一個變數的載荷是 \(-0.6\)，在第二個變數的載荷為正，變數已置中。觀察 \((0.4,x_2)\) 的第一主成分分數是 0.12。求 \(x_2\)。</p>
+<div class="opts">
+<p>(A) 0.25　(B) 0.30　(C) 0.35　(D) 0.40　(E) 0.45</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>第二個載荷 \(\sqrt{1-0.36}=0.8\)。\(-0.6(0.4)+0.8x_2=0.12\)，\(x_2=0.36/0.8=0.45\)。</p></div></div></article><article class="exercise" id="q17-11"><div class="ex-head"><span class="ex-tag">練習</span><b>第 17.11 題</b><small>・講義 p.319・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You are performing a principal components analysis of three variables, \(X_1\), \(X_2\), and \(X_3\). Their loadings on two principal components \(Z_1\) and \(Z_2\) are</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>\(X_1\)</th>
+<th>\(X_2\)</th>
+<th>\(X_3\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(Z_1\)</td>
+<td>−0.85956</td>
+<td>−0.18960</td>
+<td>0.47457</td>
+</tr>
+<tr>
+<td>\(Z_2\)</td>
+<td>0.25890</td>
+<td>0.63908</td>
+<td>0.72426</td>
+</tr>
+</tbody>
+</table>
+<p>The scores of the third observation on the two components are, in order, −22.5603 and −45.9338.</p>
+<p>Calculate an approximation of the third observation of \(X_1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>三個變數 X1、X2、X3 的 PCA，兩個主成分的載荷：</p>
+<p>第三筆觀察在兩個主成分的分數依序是 −22.5603、−45.9338。求第三筆觀察 \(X_1\) 的近似值。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>7.50</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(x_{31}\approx(-22.5603)(-0.85956)+(-45.9338)(0.25890)=19.392-11.892=7.50\)。</p></div></div></article><article class="exercise" id="q17-16"><div class="ex-head"><span class="ex-tag">練習</span><b>第 17.16 題</b><small>・講義 p.321・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-F19:41] You are given:</p>
+<div class="items">
+<p>(i) A data set contains 500 observations for five predictor variables \(\{X_1,X_2,X_3,X_4,X_5\}\).</p>
+<p>(ii) Each predictor has been standardized to have mean 0 and standard deviation 1.</p>
+<p>(iii) Each of the 500 observations takes the form \((x_{i1},x_{i2},x_{i3},x_{i4},x_{i5})\) for \(i\) ranging from 1 to 500.</p>
+<p>(iv) For each observation, a new predictor \(Z\) is calculated by projecting onto the first principal component.</p>
+<p>(v) The projection for the \(i\)th observation is denoted by \(z_i\).</p>
+</div>
+<p>The total variance present in the data set is equal to 4 and \(\sum_{i=1}^{500}z_i^2=750\).</p>
+<p>Calculate the proportion of variance explained for the first principal component.</p>
+<div class="opts">
+<p>(A) Less than 0.20</p>
+<p>(B) At least 0.20, but less than 0.30</p>
+<p>(C) At least 0.30, but less than 0.40</p>
+<p>(D) At least 0.40, but less than 0.50</p>
+<p>(E) At least 0.50</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 秋季 MAS-II 第 41 題）500 筆觀察、5 個預測變數，每個都標準化為平均 0、標準差 1。每筆觀察投影到第一主成分得到 \(z_i\)。資料的總變異數為 4，\(\sum_{i=1}^{500}z_i^2=750\)。求第一主成分的解釋變異比例。</p>
+<div class="items">
+<p>(B) 至少 0.20，小於 0.30</p>
+<p>(C) 至少 0.30，小於 0.40</p>
+<p>(D) 至少 0.40，小於 0.50</p>
+<p>(E) 至少 0.50</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>第一主成分的變異數 \(=750/500=1.5\)。PVE \(=1.5/4=0.375\)。</p>
+<p>（題目說標準化的 5 個變數總變異數是 4，其實應該是 5；若用 5，PVE 是 0.30，仍落在 (C)。照題目給的數字作答。）</p></div></div></article><article class="exercise" id="q17-18"><div class="ex-head"><span class="ex-tag">練習</span><b>第 17.18 題</b><small>・講義 p.323・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>You are given the following four observations for two variables:</p>
+<table>
+<thead>
+<tr>
+<th>\(X_1\)</th>
+<th>−2</th>
+<th>−1</th>
+<th>−1</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(X_2\)</td>
+<td>1</td>
+<td>−2</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>The first principal component has loadings of 0.973402 on \(X_1\) and 0.229106 on \(X_2\).</p>
+<p>Calculate the proportion of variance explained by the first principal component.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>四筆觀察、兩個變數：\((-2,1)\)、\((-1,-2)\)、\((-1,0)\)、\((4,1)\)。第一主成分載荷 \(X_1\) 0.973402、\(X_2\) 0.229106。求第一主成分的解釋變異比例。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.8194</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>兩個變數的平均都是 0，已置中。</p>
+<p>分數：\(-1.717698\)、\(-1.431614\)、\(-0.973402\)、\(4.122714\)，平方和 22.9443。資料的平方和 \(4+1+1+16+1+4+0+1=28\)。</p>
+<p>PVE \(=22.9443/28=0.8194\)。</p></div></div></article><article class="exercise" id="q17-19"><div class="ex-head"><span class="ex-tag">練習</span><b>第 17.19 題</b><small>・講義 p.323・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #30] Sarah is applying principal component analysis to a large data set with four variables. Loadings for the first four principal components are estimated.</p>
+<p>Determine which of the following statements is/are true with respect to the loadings.</p>
+<div class="items">
+<p>I. The loadings are unique.</p>
+<p>II. For a given principal component, the sum of the squares of the loadings across the four variables is one.</p>
+<p>III. Together, the four principal components explain 100% of the variance.</p>
+</div>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 30 題）Sarah 對有四個變數的大型資料做 PCA，估計了前四個主成分的載荷。關於載荷，下列哪些正確？</p>
+<div class="items">
+<p>I. 載荷是唯一的。</p>
+<p>II. 對某一個主成分，四個變數的載荷平方和為 1。</p>
+<p>III. 四個主成分合起來解釋 100% 的變異。</p>
+</div>
+<div class="opts">
+<p>(A) 都不正確　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：只唯一到正負號。II 對。III 對：四個主成分和原變數同維度，解釋全部變異。</p></div></div></article></section><button class="toggle-all float" type="button">顯示全部解答</button><div class="navfoot"><a href="ch16.html">← 第 16 章</a><a href="ch18.html">第 18 章 →</a></div></main></body></html>

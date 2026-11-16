@@ -1,5 +1,1614 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第 12 章　類別反應：二元、名目與次序模型｜SRM 精算筆記</title><link rel="stylesheet" href="assets/site.css"><link rel="stylesheet" href="assets/katex/katex.min.css"><script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/site.js"></script></head><body><nav aria-label="課程導覽"><a class="brand" href="index.html">SRM 精算筆記</a><label for="chapter">章節</label><select id="chapter"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html" selected>第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題與參考解答</option></select><a href="practice.html">題庫</a></nav><main><header><div class="kicker">SRM · 第 12 章</div><h1>類別反應：二元、名目與次序模型</h1><p>用線性預測式描述類別機率，同時確保預測仍落在合法範圍。</p><div class="chips"><a href="pdf/ch12.pdf">下載本章 PDF</a><a href="practice.html#chapter12">習題索引</a></div></header><section class="panel"><h2>本章閱讀順序</h2><ol><li><a href="#s1">12.1 二元機率、勝算與潛在門檻</a></li><li><a href="#s2">12.2 無自然排序：名目多項 logit</a></li><li><a href="#s3">12.3 有自然排序：累積機率不等於單一類別機率</a></li></ol><div class="minititle">優先練習 · 10 題</div><div class="chips"><a href="#q12-1">12.1</a><a href="#q12-5">12.5</a><a href="#q12-6">12.6</a><a href="#q12-12">12.12</a><a href="#q12-13">12.13</a><a href="#q12-18">12.18</a><a href="#q12-23">12.23</a><a href="#q12-26">12.26</a><a href="#q12-32">12.32</a><a href="#q12-39">12.39</a></div></section><article class="unit" id="s1"><div class="kicker">概念 01</div><h2>12.1 二元機率、勝算與潛在門檻</h2><p>將事故發生記為 1、未發生記為 0，則 \(E(Y|x)=p\)、\(\operatorname{Var}(Y|x)=p(1-p)\)。直接回歸 0/1，直線可預測負機率或大於一，誤差並非等變異常態，殘差圖僅沿兩條帶狀分布。GLM 以 Bernoulli 或分組二項概似，透過反連結確保合法機率。\(m\) 次獨立試驗的成功件數均值 \(mp\)、變異 \(mp(1-p)\)；建模成功比例時其變異還要除以 \(m\)。</p>
-<p>勝算（odds）是 \(p/(1-p)\)；logit 將它取對數變成無界尺度：\(\eta=\log[p/(1-p)]\)，解出 \(p=e^\eta/(1+e^\eta)\)。某變數增加一單位、其餘固定且無交互時，log 勝算增加 \(\beta\)，勝算乘 \(e^\beta\)；機率的差卻依原本機率而變。例：\(\eta=0\) 改到 \(\log2\)，勝算加倍，但機率由 \(1/2\) 到 \(2/3\)。二元模型的 Bernoulli 對數概似為 \(\sum[y_i\eta_i-\log(1+e^{\eta_i})]\)；其導數 \(\sum x_i(y_i-p_i)\) 是預測校準的來源。</p>
-<p>潛在門檻模型設 \(Y^*=\eta+\epsilon\)，觀察 \(Y=1\) 表示 \(Y^*&gt;0\)。若誤差的分布對稱，\(p=1-F(-\eta)=F(\eta)\)，所以連結是 \(F^{-1}\)。標準常態得 probit \(g(p)=\Phi^{-1}(p)\)；標準 logistic 得 logit。兩者形狀相似、尺度不同；相同數值係數不代表相同機率。 complementary log-log 是 \(g(p)=\log[-\log(1-p)]\)，反轉得 \(p=1-\exp(-e^\eta)\)；其曲線不對稱。選連結須看事件機制與兩尾表現。</p><div class="related"><small>接著讀：<a class="concept" data-definition="把條件平均轉成可由解釋變數線性表示的尺度。" data-target="第 11 章 · 連結函數" href="ch11.html#s2">連結函數</a> · <a class="concept" data-definition="將飽和模型與目前模型的對數概似差轉成衡量損失程度的統計量。" data-target="第 14 章 · 偏差統計量" href="ch14.html#s3">偏差統計量</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q12-1">12.1</a><a href="#q12-2">12.2</a><a href="#q12-3">12.3</a><a href="#q12-4">12.4</a><a href="#q12-5">12.5</a><a href="#q12-6">12.6</a><a href="#q12-7">12.7</a><a href="#q12-8">12.8</a><a href="#q12-9">12.9</a><a href="#q12-10">12.10</a><a href="#q12-11">12.11</a><a href="#q12-12">12.12</a><a href="#q12-13">12.13</a><a href="#q12-14">12.14</a><a href="#q12-15">12.15</a><a href="#q12-16">12.16</a><a href="#q12-17">12.17</a><a href="#q12-18">12.18</a><a href="#q12-19">12.19</a><a href="#q12-20">12.20</a><a href="#q12-21">12.21</a><a href="#q12-22">12.22</a><a href="#q12-23">12.23</a><a href="#q12-43">12.43</a></div></article><article class="exercise" id="q12-1"><button class="toggle" aria-controls="a-q12-1" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 12.1 · 講義 p.201</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-1">題目連結</a></small><p>比較線性機率、logistic、probit 模型：何者錯稱後兩種機率曲線差異很大？</p><div class="solution" id="a-q12-1"><strong class="label">參考解答</strong><p>該說法為原題 E。</p><strong class="label">解析</strong><p>兩者機率反應曲線均為 S 形，尺度調整後通常接近；注意 logit、probit 是連結，S 形是反連結。</p></div></article><article class="exercise" id="q12-5"><button class="toggle" aria-controls="a-q12-5" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 12.5 · 講義 p.203</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-5">題目連結</a></small><p>都市駕駛事故的 logit 線性值 \(-2.358+.905\)。求事故機率。</p><div class="solution" id="a-q12-5"><strong class="label">參考解答</strong><p>0.1895（D）。</p><strong class="label">解析</strong><p>先算勝算 \(e^{-1.453}=.23387\)，再除以 \(1+.23387\)。</p></div></article><article class="exercise" id="q12-6"><button class="toggle" aria-controls="a-q12-6" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 12.6 · 講義 p.203</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-6">題目連結</a></small><p>潛在門檻誤差密度 \(.5e^{-|u|}\)，求二元連結。</p><div class="solution" id="a-q12-6"><strong class="label">參考解答</strong><p>\(p\le.5\) 用 \(\log(2p)\)；否則用 \(-\log[2(1-p)]\)。</p><strong class="label">解析</strong><p>Laplace 累積在負半為 \(.5e^\eta\)，正半為 \(1-.5e^{-\eta}\)；逐段反解。</p></div></article><article class="exercise" id="q12-12"><button class="toggle" aria-controls="a-q12-12" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 12.12 · 講義 p.207</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-12">題目連結</a></small><p>單一 x 的 logit 模型在 x=4、6 預測 .88877、.96562；求截距。</p><div class="solution" id="a-q12-12"><strong class="label">參考解答</strong><p>−.4359（B）。</p><strong class="label">解析</strong><p>取 logit 得 2.07824、3.33530；斜率為差除 2，截距為第一值減四倍斜率。</p></div></article><article class="exercise" id="q12-13"><button class="toggle" aria-controls="a-q12-13" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 12.13 · 講義 p.207</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-13">題目連結</a></small><p>違約機率逾 .10 拒貸；四客的線性預測 −2.030、−.047、−2.267、−1.571。拒絕幾件？</p><div class="solution" id="a-q12-13"><strong class="label">參考解答</strong><p>3 件（D）。</p><strong class="label">解析</strong><p>\(\operatorname{logit}(.1)=-2.1972\)；只有第三位低於門檻。</p></div></article><article class="exercise" id="q12-18"><button class="toggle" aria-controls="a-q12-18" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 12.18 · 講義 p.209</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-18">題目連結</a></small><p>兩種連結的係數皆為截距 .02、斜率 .3，x=4。比較 logit 與 probit 機率。</p><div class="solution" id="a-q12-18"><strong class="label">參考解答</strong><p>絕對差 .1167（B）。</p><strong class="label">解析</strong><p>同一線性值 1.22 在 logistic 反連結下是 .7721，常態 CDF 是 .8888。</p></div></article><article class="exercise" id="q12-23"><button class="toggle" aria-controls="a-q12-23" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 12.23 · 講義 p.210</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-23">題目連結</a></small><p>補對數對數模型截距 −1.5，x=1 時機率 .375；求斜率。</p><div class="solution" id="a-q12-23"><strong class="label">參考解答</strong><p>.7450。</p><strong class="label">解析</strong><p>\(\beta=\log[-\log(.625)]+1.5\)。</p></div></article><article class="unit" id="s2"><div class="kicker">概念 02</div><h2>12.2 無自然排序：名目多項 logit</h2><p>保戶選轎車、休旅車或廂型車，三者沒有等距或次序。選一類 c 作基準，對其餘類別分別建 \(\eta_j=\log(p_j/p_c)=x^\top\beta_j\)。因 \(p_j=e^{\eta_j}p_c\)，所有類別加總為一即得 \(p_c=1/(1+\sum_{j&lt;c}e^{\eta_j})\)，\(p_j=e^{\eta_j}p_c\)。分母的 1 是基準類別，不能漏掉；兩類模型才可直接用單一 logistic 轉換。</p>
-<p>比較任意兩類時 \(p_j/p_k=e^{\eta_j-\eta_k}\)，只關心這兩類則條件機率為 \(p_j/(p_j+p_k)\)。無關替代項獨立（IIA）意指在標準多項 logit 的規格下，上述相對勝算不取決於其他類別的分數；如果兩個選項是近乎相同的替代品，這項限制可能不合理。改基準會改參數呈現，不改原始機率。</p><div class="related"><small>接著讀：<a class="concept" data-definition="把條件平均轉成可由解釋變數線性表示的尺度。" data-target="第 11 章 · 連結函數" href="ch11.html#s2">連結函數</a> · <a class="concept" data-definition="將飽和模型與目前模型的對數概似差轉成衡量損失程度的統計量。" data-target="第 14 章 · 偏差統計量" href="ch14.html#s3">偏差統計量</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q12-24">12.24</a><a href="#q12-25">12.25</a><a href="#q12-26">12.26</a><a href="#q12-27">12.27</a><a href="#q12-28">12.28</a><a href="#q12-29">12.29</a><a href="#q12-30">12.30</a></div></article><article class="exercise" id="q12-26"><button class="toggle" aria-controls="a-q12-26" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 12.26 · 講義 p.211</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q12-26">題目連結</a></small><p>20 歲男性買廂型車、SUV 相對轎車分數 −.01、.16，求 SUV 機率。</p><div class="solution" id="a-q12-26"><strong class="label">參考解答</strong><p>.37095。</p><strong class="label">解析</strong><p>\(e^{.16}/(1+e^{-.01}+e^{.16})\)。</p></div></article><article class="unit" id="s3"><div class="kicker">概念 03</div><h2>12.3 有自然排序：累積機率不等於單一類別機率</h2><p>對低、中、高風險，設 \(F_j=P(Y\le j\mid x)\)，比例勝算模型為 \(\log[F_j/(1-F_j)]=a_j+x^\top\beta\)。不同門檻有各自截距，但斜率共享；提高某一變數一單位，各門檻的累積勝算均乘相同倍數，這才是「比例」的意思。若各門檻斜率不同，要另檢查預測的 \(F_j\) 單調不減。得到中類機率必須相減：\(p_j=F_j-F_{j-1}\)，首尾補 \(F_0=0,F_c=1\)。例如低及中以下機率為 .60、.85，中類只有 .25。</p>
-<p>累積連結也能用 probit 或 complementary log-log，只需相應更換反連結再相減；只有 logit 且平行斜率時才可說各門檻有共同勝算比。常見另一寫法 \(a_j-x^\top\beta\)，對高低方向解讀相反，作答先按題目定義。</p><div class="related"><small>接著讀：<a class="concept" data-definition="把條件平均轉成可由解釋變數線性表示的尺度。" data-target="第 11 章 · 連結函數" href="ch11.html#s2">連結函數</a> · <a class="concept" data-definition="將飽和模型與目前模型的對數概似差轉成衡量損失程度的統計量。" data-target="第 14 章 · 偏差統計量" href="ch14.html#s3">偏差統計量</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q12-31">12.31</a><a href="#q12-32">12.32</a><a href="#q12-33">12.33</a><a href="#q12-34">12.34</a><a href="#q12-35">12.35</a><a href="#q12-36">12.36</a><a href="#q12-37">12.37</a><a href="#q12-38">12.38</a><a href="#q12-39">12.39</a><a href="#q12-40">12.40</a><a href="#q12-41">12.41</a><a href="#q12-42">12.42</a></div></article><article class="exercise" id="q12-32"><button class="toggle" aria-controls="a-q12-32" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 12.32 · 講義 p.214</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-32">題目連結</a></small><p>低／中以下的兩個累積 logit 分數為 1.53、1.93。求正好中等風險機率。</p><div class="solution" id="a-q12-32"><strong class="label">參考解答</strong><p>.05124。</p><strong class="label">解析</strong><p>將兩個反連結值 .87325、.82201 相減。</p></div></article><article class="exercise" id="q12-39"><button class="toggle" aria-controls="a-q12-39" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 12.39 · 講義 p.215</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-39">題目連結</a></small><p>紐約低風險 .724、中以下 .944；芝加哥低風險 .698。假設比例勝算，芝加哥中風險機率？</p><div class="solution" id="a-q12-39"><strong class="label">參考解答</strong><p>.239。</p><strong class="label">解析</strong><p>低風險勝算比為 \((.698/.302)/(.724/.276)\)；將紐約中以下勝算乘此倍，再轉機率 .93692，減 .698。</p></div></article><article class="unit" id="terms"><div class="kicker">TERMS</div><h2>本章中英術語</h2><table><thead><tr><th>中文</th><th>English</th><th>解題時的意思</th></tr></thead><tbody><tr><td>勝算</td><td>odds</td><td>事件機率與不發生機率的比值。</td></tr><tr><td>參照類別</td><td>reference category</td><td>多類 logit 用來比較相對勝算的基準類。</td></tr><tr><td>比例勝算</td><td>proportional odds</td><td>序位模型中不同累積門檻共用斜率的假設。</td></tr></tbody></table></article><section class="panel" id="remaining"><h2>章末其餘習題 · 33 題</h2><p>按講義題號排列。做題前可用各題自己的按鈕隱藏解答。</p></section><article class="exercise" id="q12-2"><button class="toggle" aria-controls="a-q12-2" aria-expanded="true">隱藏解答</button><h3>練習 · 12.2 · 講義 p.202</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-2">題目連結</a></small><p>反應值介於 0 至 100，殘差散布隨預測值增大；比較 \(\log(1+y)\)、平方根、直接 logit(y) 的適用性。</p><div class="solution" id="a-q12-2"><strong class="label">參考解答</strong><p>前兩者可嘗試（B）。</p><strong class="label">解析</strong><p>壓縮大值可能穩定變異；原始 y 並非 (0,1) 內機率，不能直接取 logit。</p></div></article><article class="exercise" id="q12-3"><button class="toggle" aria-controls="a-q12-3" aria-expanded="true">隱藏解答</button><h3>練習 · 12.3 · 講義 p.202</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-3">題目連結</a></small><p>欲預測某人是否住院，應選何反應分配與連結？</p><div class="solution" id="a-q12-3"><strong class="label">參考解答</strong><p>二項搭配 logit（D）。</p><strong class="label">解析</strong><p>個人結果是兩類，逆 logit 可保證預測值介於零與一。</p></div></article><article class="exercise" id="q12-4"><button class="toggle" aria-controls="a-q12-4" aria-expanded="true">隱藏解答</button><h3>練習 · 12.4 · 講義 p.202</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-4">題目連結</a></small><p>線性機率模型預測超出 [0,1]，應刪樣本、硬截斷，還是改連結？</p><div class="solution" id="a-q12-4"><strong class="label">參考解答</strong><p>用 logit 連結建二項模型（C）。</p><strong class="label">解析</strong><p>線性值可以無界，交給反連結產生機率。</p></div></article><article class="exercise" id="q12-7"><button class="toggle" aria-controls="a-q12-7" aria-expanded="true">隱藏解答</button><h3>練習 · 12.7 · 講義 p.204</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-7">題目連結</a></small><p>女性個案適用 logit 截距 −1.485、其餘兩項 −1.175、−.101，求理賠機率。</p><div class="solution" id="a-q12-7"><strong class="label">參考解答</strong><p>0.05947（D）。</p><strong class="label">解析</strong><p>\(\eta=-2.761\)，代入 logistic 反連結。</p></div></article><article class="exercise" id="q12-8"><button class="toggle" aria-controls="a-q12-8" aria-expanded="true">隱藏解答</button><h3>練習 · 12.8 · 講義 p.204</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-8">題目連結</a></small><p>男性個案 probit 線性值為 \(-1.485-1.047-.025\)，求理賠機率。</p><div class="solution" id="a-q12-8"><strong class="label">參考解答</strong><p>\(\Phi(-2.557)\approx.0053\)。</p><strong class="label">解析</strong><p>用常態累積分配，不是 logistic。</p></div></article><article class="exercise" id="q12-9"><button class="toggle" aria-controls="a-q12-9" aria-expanded="true">隱藏解答</button><h3>練習 · 12.9 · 講義 p.205</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-9">題目連結</a></small><p>續約模型：probit 截距 .427、調整 −.092、225 千元保額係數 .0015。求機率。</p><div class="solution" id="a-q12-9"><strong class="label">參考解答</strong><p>約 .75（C）。</p><strong class="label">解析</strong><p>\(\eta=.6725\)；依常態表取 .67 得 .7486。</p></div></article><article class="exercise" id="q12-10"><button class="toggle" aria-controls="a-q12-10" aria-expanded="true">隱藏解答</button><h3>練習 · 12.10 · 講義 p.206</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-10">題目連結</a></small><p>3 名駕駛、費率改變 5% 的 logit 續約模型，線性預測 \(1.53+.735-.031\)。</p><div class="solution" id="a-q12-10"><strong class="label">參考解答</strong><p>.90326（D）。</p><strong class="label">解析</strong><p>勝算 \(e^{2.234}=9.3371\)，再轉機率。</p></div></article><article class="exercise" id="q12-11"><button class="toggle" aria-controls="a-q12-11" aria-expanded="true">隱藏解答</button><h3>練習 · 12.11 · 講義 p.206</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-11">題目連結</a></small><p>最低年齡為基準，選 B 相對 A 的 log 勝算是 −.535；求選 B 機率。</p><div class="solution" id="a-q12-11"><strong class="label">參考解答</strong><p>.3694（B）。</p><strong class="label">解析</strong><p>勝算 .5857，機率為 \(.5857/1.5857\)。</p></div></article><article class="exercise" id="q12-14"><button class="toggle" aria-controls="a-q12-14" aria-expanded="true">隱藏解答</button><h3>練習 · 12.14 · 講義 p.207</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-14">題目連結</a></small><p>logit 模型 \(3.56+.42x\)；x=5 的勝算？</p><div class="solution" id="a-q12-14"><strong class="label">參考解答</strong><p>287.15。</p><strong class="label">解析</strong><p>勝算是 \(\exp(5.66)\)，不是機率。</p></div></article><article class="exercise" id="q12-15"><button class="toggle" aria-controls="a-q12-15" aria-expanded="true">隱藏解答</button><h3>練習 · 12.15 · 講義 p.208</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-15">題目連結</a></small><p>logit 截距 5、斜率 −.65，x=5。求續約勝算。</p><div class="solution" id="a-q12-15"><strong class="label">參考解答</strong><p>5.7546（C）。</p><strong class="label">解析</strong><p>\(e^{5-.65(5)}=e^{1.75}\)。</p></div></article><article class="exercise" id="q12-16"><button class="toggle" aria-controls="a-q12-16" aria-expanded="true">隱藏解答</button><h3>練習 · 12.16 · 講義 p.208</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-16">題目連結</a></small><p>第 2 年齡組/C區/其他車型事故率 .22，其 log 勝算相對基準加 \(.064-.371\)。求第 3 年齡組/C區/轎車（基準）的勝算。</p><div class="solution" id="a-q12-16"><strong class="label">參考解答</strong><p>.3834（E）。</p><strong class="label">解析</strong><p>求 \(\log(.22/.78)-.064+.371=-.9587\)，再取指數。</p></div></article><article class="exercise" id="q12-17"><button class="toggle" aria-controls="a-q12-17" aria-expanded="true">隱藏解答</button><h3>練習 · 12.17 · 講義 p.209</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-17">題目連結</a></small><p>probit 截距 −3、斜率 .8，x=2 的續約勝算？</p><div class="solution" id="a-q12-17"><strong class="label">參考解答</strong><p>.0879。</p><strong class="label">解析</strong><p>\(p=\Phi(-1.4)=.0808\)，再除以 \(1-p\)。</p></div></article><article class="exercise" id="q12-19"><button class="toggle" aria-controls="a-q12-19" aria-expanded="true">隱藏解答</button><h3>練習 · 12.19 · 講義 p.209</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-19">題目連結</a></small><p>55 歲、持有五年、無理賠的保戶，logit 線性值 \(.22+.15(5)+.18\)，求續約機率。</p><div class="solution" id="a-q12-19"><strong class="label">參考解答</strong><p>.7595。</p><strong class="label">解析</strong><p>對 1.15 取反連結。</p></div></article><article class="exercise" id="q12-20"><button class="toggle" aria-controls="a-q12-20" aria-expanded="true">隱藏解答</button><h3>練習 · 12.20 · 講義 p.209</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-20">題目連結</a></small><p>logit 線性式 \(.24+.57x\)，x 從 2 增到 3，機率增加多少？</p><div class="solution" id="a-q12-20"><strong class="label">參考解答</strong><p>.07646。</p><strong class="label">解析</strong><p>分別反轉得到 .79899、.87545，再相減。</p></div></article><article class="exercise" id="q12-21"><button class="toggle" aria-controls="a-q12-21" aria-expanded="true">隱藏解答</button><h3>練習 · 12.21 · 講義 p.210</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-21">題目連結</a></small><p>probit 式 \(.2+.4x_1+.6x_2\)；x=(1,2)，求機率。</p><div class="solution" id="a-q12-21"><strong class="label">參考解答</strong><p>.9641。</p><strong class="label">解析</strong><p>\(\Phi(1.8)\)。</p></div></article><article class="exercise" id="q12-22"><button class="toggle" aria-controls="a-q12-22" aria-expanded="true">隱藏解答</button><h3>練習 · 12.22 · 講義 p.210</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-22">題目連結</a></small><p>補對數對數模型 \(.02+.04x_1+.06x_2\)，x=(1,2)，求勝算。</p><div class="solution" id="a-q12-22"><strong class="label">參考解答</strong><p>2.3109。</p><strong class="label">解析</strong><p>\(p=1-\exp[-\exp(.18)]=.6980\)，再用 \(p/(1-p)\)。</p></div></article><article class="exercise" id="q12-24"><button class="toggle" aria-controls="a-q12-24" aria-expanded="true">隱藏解答</button><h3>練習 · 12.24 · 講義 p.210</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q12-24">題目連結</a></small><p>多項模型以民主黨為基準；大學畢業、收入十萬以上，支持共和黨的相對分數為 \(-.33+.37+.65\)。求相對勝算。</p><div class="solution" id="a-q12-24"><strong class="label">參考解答</strong><p>1.9937。</p><strong class="label">解析</strong><p>直接取 \(e^{.69}\)；題求兩黨機率比，不必算所有政黨機率。</p></div></article><article class="exercise" id="q12-25"><button class="toggle" aria-controls="a-q12-25" aria-expanded="true">隱藏解答</button><h3>練習 · 12.25 · 講義 p.211</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q12-25">題目連結</a></small><p>廂型車相對轎車模型中女性虛擬變數係數 −.18。女性相對男性的勝算比？</p><div class="solution" id="a-q12-25"><strong class="label">參考解答</strong><p>.83527。</p><strong class="label">解析</strong><p>\(e^{-.18}\)；是兩個相對勝算之比，不是女性買車機率。</p></div></article><article class="exercise" id="q12-27"><button class="toggle" aria-controls="a-q12-27" aria-expanded="true">隱藏解答</button><h3>練習 · 12.27 · 講義 p.211</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q12-27">題目連結</a></small><p>三類名目模型，x=2 的前兩類相對基準勝算為 1.94838、1.78069。求基準機率。</p><div class="solution" id="a-q12-27"><strong class="label">參考解答</strong><p>.21146。</p><strong class="label">解析</strong><p>\(1/(1+1.94838+1.78069)\)。</p></div></article><article class="exercise" id="q12-28"><button class="toggle" aria-controls="a-q12-28" aria-expanded="true">隱藏解答</button><h3>練習 · 12.28 · 講義 p.212</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q12-28">題目連結</a></small><p>四人家庭兩週假期，活動型、海灘型分數 −.07、−.26，相對第三類，求活動型機率。</p><div class="solution" id="a-q12-28"><strong class="label">參考解答</strong><p>.3449。</p><strong class="label">解析</strong><p>活動型相對權重除三類權重和。</p></div></article><article class="exercise" id="q12-29"><button class="toggle" aria-controls="a-q12-29" aria-expanded="true">隱藏解答</button><h3>練習 · 12.29 · 講義 p.212</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q12-29">題目連結</a></small><p>收入分低、中、高，中為基準；研究所畢業的低、高分數 −.47、.45，求高收入機率。</p><div class="solution" id="a-q12-29"><strong class="label">參考解答</strong><p>.49112。</p><strong class="label">解析</strong><p>\(e^{.45}/(1+e^{-.47}+e^{.45})\)；依題採名目模型。</p></div></article><article class="exercise" id="q12-30"><button class="toggle" aria-controls="a-q12-30" aria-expanded="true">隱藏解答</button><h3>練習 · 12.30 · 講義 p.213</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q12-30">題目連結</a></small><p>數學主修且 SRM 8 分，以定價為基準，另兩工作分數 .2、.6；求投資部門（後者）機率。</p><div class="solution" id="a-q12-30"><strong class="label">參考解答</strong><p>.45063（B）。</p><strong class="label">解析</strong><p>\(e^{.6}/(1+e^{.2}+e^{.6})\)。</p></div></article><article class="exercise" id="q12-31"><button class="toggle" aria-controls="a-q12-31" aria-expanded="true">隱藏解答</button><h3>練習 · 12.31 · 講義 p.213</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-31">題目連結</a></small><p>122 張保單中件數 0–3 各有 45、32、27、10 張。求不超過 3 件的 log 累積勝算。</p><div class="solution" id="a-q12-31"><strong class="label">參考解答</strong><p>2.6568（D）。</p><strong class="label">解析</strong><p>\(\log(114/8)\)，而不是只取正好 3 件的 10 張。</p></div></article><article class="exercise" id="q12-33"><button class="toggle" aria-controls="a-q12-33" aria-expanded="true">隱藏解答</button><h3>練習 · 12.33 · 講義 p.214</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-33">題目連結</a></small><p>比例勝算模型中某二元特徵斜率 .056；給定其餘特徵，比較 1 相對 0 的累積勝算。</p><div class="solution" id="a-q12-33"><strong class="label">參考解答</strong><p>1.0576 倍。</p><strong class="label">解析</strong><p>\(e^{.056}\)，各門檻相同。</p></div></article><article class="exercise" id="q12-34"><button class="toggle" aria-controls="a-q12-34" aria-expanded="true">隱藏解答</button><h3>練習 · 12.34 · 講義 p.214</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-34">題目連結</a></small><p>三種傷害程度，在 x=(0,5) 時兩門檻累積 logit 為 \(.4+.082(5)\)、\(.6+.082(5)\)；求中間類（受傷）率。</p><div class="solution" id="a-q12-34"><strong class="label">參考解答</strong><p>.04091。</p><strong class="label">解析</strong><p>\(.733020-.692110\)。</p></div></article><article class="exercise" id="q12-35"><button class="toggle" aria-controls="a-q12-35" aria-expanded="true">隱藏解答</button><h3>練習 · 12.35 · 講義 p.214</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-35">題目連結</a></small><p>累積比例勝算模型，x=1 相對 0 在第一門檻勝算比 1.5，第二門檻呢？</p><div class="solution" id="a-q12-35"><strong class="label">參考解答</strong><p>仍是 1.5。</p><strong class="label">解析</strong><p>共享斜率使門檻截距在比值中抵消。</p></div></article><article class="exercise" id="q12-36"><button class="toggle" aria-controls="a-q12-36" aria-expanded="true">隱藏解答</button><h3>練習 · 12.36 · 講義 p.215</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-36">題目連結</a></small><p>x=1 時第一及第二類個別機率 .627148、.126841；求第二與第一截距差。</p><div class="solution" id="a-q12-36"><strong class="label">參考解答</strong><p>.60。</p><strong class="label">解析</strong><p>取兩個累積機率的 logit 為 .52、1.12，同一 x 的斜率抵消。</p></div></article><article class="exercise" id="q12-37"><button class="toggle" aria-controls="a-q12-37" aria-expanded="true">隱藏解答</button><h3>練習 · 12.37 · 講義 p.215</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-37">題目連結</a></small><p>承上題，x=2 時第一類機率 .719100，求第一截距。</p><div class="solution" id="a-q12-37"><strong class="label">參考解答</strong><p>.10。</p><strong class="label">解析</strong><p>第一門檻在 x=2 的 logit 為 .94，斜率 .94−.52=.42；截距 .52−.42。</p></div></article><article class="exercise" id="q12-38"><button class="toggle" aria-controls="a-q12-38" aria-expanded="true">隱藏解答</button><h3>練習 · 12.38 · 講義 p.215</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-38">題目連結</a></small><p>年雨量 40 英寸，前兩類累積 logit 為 \(-.07-.01(40)\)。最高「非常重要」機率？</p><div class="solution" id="a-q12-38"><strong class="label">參考解答</strong><p>.61538。</p><strong class="label">解析</strong><p>先求 \(F_2=.38462\)，最高類取補數。</p></div></article><article class="exercise" id="q12-40"><button class="toggle" aria-controls="a-q12-40" aria-expanded="true">隱藏解答</button><h3>練習 · 12.40 · 講義 p.216</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-40">題目連結</a></small><p>全尺寸車、時速 40 的累積 probit，在死亡以下門檻的分數為 1.21。求死亡機率。</p><div class="solution" id="a-q12-40"><strong class="label">參考解答</strong><p>.1131。</p><strong class="label">解析</strong><p>\(1-\Phi(1.21)\)，最高類是超過門檻而非落在門檻以下。</p></div></article><article class="exercise" id="q12-41"><button class="toggle" aria-controls="a-q12-41" aria-expanded="true">隱藏解答</button><h3>練習 · 12.41 · 講義 p.216</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-41">題目連結</a></small><p>累積 probit 的第 2、3 門檻截距 .150、.370，共同線性項 \(.1(2)+.5(1.5)\)，求正好第三類機率。</p><div class="solution" id="a-q12-41"><strong class="label">參考解答</strong><p>.0423。</p><strong class="label">解析</strong><p>\(\Phi(1.32)-\Phi(1.10)\)。</p></div></article><article class="exercise" id="q12-42"><button class="toggle" aria-controls="a-q12-42" aria-expanded="true">隱藏解答</button><h3>練習 · 12.42 · 講義 p.216</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q12-42">題目連結</a></small><p>成績達 6 及格；200 小時、使用手冊者，5 分以下的累積 complementary log-log 分數為 −1.9。求通過機率。</p><div class="solution" id="a-q12-42"><strong class="label">參考解答</strong><p>.86108。</p><strong class="label">解析</strong><p>\(P(Y\le5)=1-\exp[-\exp(-1.9)]\)，再取補數。</p></div></article><article class="exercise" id="q12-43"><button class="toggle" aria-controls="a-q12-43" aria-expanded="true">隱藏解答</button><h3>練習 · 12.43 · 講義 p.217</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q12-43">題目連結</a></small><p>補對數對數連結截距 .6、斜率 .4，x=.8；求平均。</p><div class="solution" id="a-q12-43"><strong class="label">參考解答</strong><p>.9187（A）。</p><strong class="label">解析</strong><p>\(1-\exp[-\exp(.92)]\)。</p></div></article><section class="panel"><h2>用模擬考複習本章</h2><div class="chips"><a href="exams.html#exam1">第 1 回 · 題 2</a><a href="exams.html#exam2">第 2 回 · 題 6</a><a href="exams.html#exam2">第 2 回 · 題 11</a><a href="exams.html#exam2">第 2 回 · 題 17</a><a href="exams.html#exam4">第 4 回 · 題 24</a><a href="exams.html#exam5">第 5 回 · 題 4</a><a href="exams.html#exam5">第 5 回 · 題 11</a><a href="exams.html#exam6">第 6 回 · 題 2</a><a href="exams.html#exam6">第 6 回 · 題 6</a></div></section><div class="navfoot"><a href="ch11.html">← 上一章</a><a href="ch13.html">下一章 →</a></div><footer>SRM 精算考試中文研讀筆記 · 依所附第四版教材章序編寫，中文解析為參考解答。</footer></main></body></html>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 12 章　類別反應：二元、名目與次序模型｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
+<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html" selected>第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 12 章</div><h1>類別反應：二元、名目與次序模型</h1><p class="ch-sub">反應變數是類別時（會不會理賠、買哪一種車、事故嚴重程度），GLM 要預測的是「每一類的機率」。本章先處理只有兩類的二元反應：logit、probit、互補 log-log 三種連結，勝算與勝算比怎麼解讀，以及背後的潛在變數（門檻）解釋。接著推廣到沒有順序的多類別（名目）與有順序的多類別（次序），重點是把係數表一步一步換成各類別的機率。</p><div class="chips"><a href="pdf/ch12.pdf">下載本章 PDF</a><a href="#exercises">章末習題（43 題）</a><span class="chip-note">觀念題 26 題（在各節後面）</span><button class="toggle-all" type="button">顯示全部解答</button></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">12.1 二元反應：logit、probit 與互補 log-log</a></li><li><a href="#s2">12.2 名目反應：廣義 logit 模型</a></li><li><a href="#s3">12.3 次序反應：累積 logit 與比例勝算</a></li></ol><p>本章對應講義第 12 課，讀本是 Frees 11.1～11.2、11.4～11.6 節。會用到第 11 章的連結函數、線性預測式與二項分配。</p>
+<p><strong>記號。</strong> 類別 \(j\) 的機率 \(\pi_j\)（二元時直接寫 \(\pi=\Pr(y=1)\)）；線性預測式 \(\eta=\beta_0+\beta_1x_1+\cdots+\beta_kx_k\)；\(\Phi\) 是標準常態的分配函數。</p>
+<div class="box map">
+<div class="box-t">考點地圖：這一章在考試裡的位置</div>
+<p><strong>對應考綱</strong>：主題 2「線性模型」（占 40～50%）。學習成果 c：「選擇適當的分配與連結」；d：「計算並解讀 GLM 的預測值」，包括類別反應的機率與勝算。</p>
+<p><strong>SOA 官方樣題裡的樣子</strong>：第 7 題（住院與否：二項＋logit）、第 14 題（logit 轉換只能用在 0 和 1 之間的值）、第 20 題（線性模型預測出 0～1 以外的機率怎麼辦）、第 42 題（線性機率、logistic、probit 的敘述，哪一個錯）。第 67、72 題是 logistic 迴歸的概似比檢定與係數顯著性，放在<a href="ch14.html">第 14 章</a>。歷年 S、MAS-I 考題大量出現「logit 或 probit 的係數表 → 求機率或勝算」。講義作者認為名目與次序模型考得很少，但它們的計算規則簡單，值得拿分。</p>
+<table>
+<thead>
+<tr>
+<th>會考的東西</th>
+<th>題目長什麼樣</th>
+<th>判斷或計算的依據</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>二元反應的機率</td>
+<td>logit 或 probit 的係數表，求某人的機率</td>
+<td>\(\pi=\frac{e^\eta}{1+e^\eta}\)；\(\pi=\Phi(\eta)\)；\(\pi=1-e^{-e^\eta}\)</td>
+</tr>
+<tr>
+<td>勝算</td>
+<td>求勝算、或從機率反推係數</td>
+<td>勝算 \(=\pi/(1-\pi)\)；logit 下勝算 \(=e^\eta\)</td>
+</tr>
+<tr>
+<td>係數的解讀</td>
+<td>指標變數的係數代表什麼</td>
+<td>\(e^{\beta}\) 是勝算比</td>
+</tr>
+<tr>
+<td>從機率反推</td>
+<td>給兩個 \(x\) 的機率，求截距或斜率</td>
+<td>先取 logit，再解聯立方程式</td>
+</tr>
+<tr>
+<td>門檻（潛在變數）解釋</td>
+<td>給誤差的分配，求連結</td>
+<td>\(\pi=\Pr(\varepsilon&gt;-\eta)\)</td>
+</tr>
+<tr>
+<td>名目反應</td>
+<td>每個非基準類別一組係數，求某一類的機率</td>
+<td>\(\pi_j=\frac{e^{\eta_j}}{1+\sum e^{\eta_i}}\)，基準類別的分子是 1</td>
+</tr>
+<tr>
+<td>次序反應</td>
+<td>累積 logit／比例勝算模型，求某一類的機率</td>
+<td>求累積機率，再相減</td>
+</tr>
+<tr>
+<td>比例勝算</td>
+<td>給一類的勝算比，求另一類的勝算比</td>
+<td>比例勝算模型中勝算比與類別無關</td>
+</tr>
+</tbody>
+</table>
+<p><strong>讀完這一章要會</strong>：</p>
+<ol>
+<li>說出 logit、probit、互補 log-log 三種連結與它們的反函數，並算出機率。</li>
+<li>在機率、勝算、對數勝算之間換算；說出 \(e^\beta\) 是勝算比。</li>
+<li>用潛在變數與門檻推出連結函數。</li>
+<li>用名目 logit 模型算出每一類的機率，並說出勝算比與無關選項獨立性。</li>
+<li>用累積 logit（比例勝算）模型算出每一類的機率，知道勝算不能相加減。</li>
+</ol>
+</div></section><section class="unit" id="s1"><h2>12.1 二元反應：logit、probit 與互補 log-log</h2><h3>一、三種類別反應</h3>
+<ol>
+<li><strong>二元</strong>（binary）：只有兩類，例如保戶這一年會不會理賠。</li>
+<li><strong>名目</strong>（nominal）：多於兩類、沒有順序，例如買哪一種車（轎車、休旅車、廂型車）。</li>
+<li><strong>次序</strong>（ordinal）：多於兩類、有自然順序，例如事故嚴重程度（只有財損、有人受傷、有人死亡）。</li>
+</ol>
+<h3>二、二元反應需要什麼樣的連結</h3>
+<p>把兩類編成 0 和 1，\(y\) 是 Bernoulli，平均數就是 \(\pi=\Pr(y=1)\)，必須在 0 和 1 之間。線性預測式 \(\eta\) 可以是任何實數，所以連結 \(g\) 要把 \((0,1)\) 對應到 \((-\infty,\infty)\)，反函數 \(g^{-1}\) 把任何實數送回 \((0,1)\)。任何連續分配的分配函數都有這個性質，最常用的有三個：</p>
+<table>
+<thead>
+<tr>
+<th>連結</th>
+<th>\(g(\pi)=\eta\)</th>
+<th>反函數 \(\pi=g^{-1}(\eta)\)</th>
+<th>背後的分配</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>logit</strong>（典型連結）</td>
+<td>\(\ln\dfrac{\pi}{1-\pi}\)</td>
+<td>\(\dfrac{e^\eta}{1+e^\eta}=\dfrac{1}{1+e^{-\eta}}\)</td>
+<td>logistic 分配</td>
+</tr>
+<tr>
+<td><strong>probit</strong></td>
+<td>\(\Phi^{-1}(\pi)\)</td>
+<td>\(\Phi(\eta)\)</td>
+<td>標準常態</td>
+</tr>
+<tr>
+<td><strong>互補 log-log</strong></td>
+<td>\(\ln\big(-\ln(1-\pi)\big)\)</td>
+<td>\(1-\exp(-e^\eta)\)</td>
+<td>極值分配</td>
+</tr>
+</tbody>
+</table>
+<p>用 logit 連結的 GLM 叫 <strong>logistic 迴歸</strong>。</p>
+<figure><img src="assets/fig/ch12-links.svg" alt="三種連結的反函數。logit 與 probit 都對稱於 ，形狀很像，只是 probit 比較陡（同一組資料配出來，probit 的係數大約是 logit 的 1/1.6～1/1.8）。互補 log-log 不對稱： 時已經是 0.632，往 1 衝得比較快。圖上標出  時三者分別是 0.802、0.919、0.983（講義例 12A、12B 的數字）。" loading="lazy"><figcaption>三種連結的反函數。logit 與 probit 都對稱於 \((0,0.5)\)，形狀很像，只是 probit 比較陡（同一組資料配出來，probit 的係數大約是 logit 的 1/1.6～1/1.8）。互補 log-log 不對稱：\(\eta=0\) 時已經是 0.632，往 1 衝得比較快。圖上標出 \(\eta=1.4\) 時三者分別是 0.802、0.919、0.983（講義例 12A、12B 的數字）。</figcaption></figure>
+
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li>SOA 樣題第 42 題的選項 (C)、(D) 把 \(\pi(z)=e^z/(1+e^z)\) 叫做「logit 函數」、把 \(\pi(z)=\Phi(z)\) 叫做「probit 函數」，嚴格來說那是它們的<strong>反函數</strong>；但那一題要找的錯誤敘述是 (E)「logit 與 probit 函數差異很大」，兩者其實很像。</li>
+<li>probit 的反函數就是查常態表：\(\eta=0.6725\) 時 \(\pi=\Phi(0.6725)\)。考試給的常態表通常只到小數兩位，照慣例四捨五入成 \(\Phi(0.67)\)。</li>
+</ul>
+</div>
+<h3>三、勝算、對數勝算與勝算比</h3>
+<p><strong>勝算</strong>（odds）是「發生」對「不發生」的機率比：
+\[o=\frac{\pi}{1-\pi},\qquad \pi=\frac{o}{1+o}.\]
+勝算 2（「2 比 1」）表示機率 \(2/3\)。</p>
+<p>logit 連結就是<strong>對數勝算</strong>：\(\eta=\ln o\)，所以 logit 模型的勝算就是 \(e^\eta\)。</p>
+<p><strong>係數的解讀。</strong> 比較指標變數 \(x_j=1\) 和 \(x_j=0\)，其他變數不變。兩個線性預測式差 \(\beta_j\)，也就是兩個對數勝算差 \(\beta_j\)：
+\[\ln o_1-\ln o_0=\beta_j\ \Longrightarrow\ \frac{o_1}{o_0}=e^{\beta_j}.\]
+\(e^{\beta_j}\) 叫<strong>勝算比</strong>（odds ratio）：\(x_j\) 從 0 變成 1，勝算乘上 \(e^{\beta_j}\)。數值變數則是每增加 1 單位，勝算乘上 \(e^{\beta_j}\)。</p>
+<figure><img src="assets/fig/ch12-odds.svg" alt="左：機率與勝算（藍）、對數勝算（金）的對應， 對應勝算 2。右： 加 1（勝算乘 ）時機率增加多少，取決於原本的機率；原本機率約 0.38 時增加最多，0.245；原本接近 0 或 1 時幾乎不動。所以 logit 係數只能說「勝算乘上幾倍」，不能說「機率增加多少」。" loading="lazy"><figcaption>左：機率與勝算（藍）、對數勝算（金）的對應，\(\pi=2/3\) 對應勝算 2。右：\(\eta\) 加 1（勝算乘 \(e\)）時機率增加多少，取決於原本的機率；原本機率約 0.38 時增加最多，0.245；原本接近 0 或 1 時幾乎不動。所以 logit 係數只能說「勝算乘上幾倍」，不能說「機率增加多少」。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 12-1：logit 模型的勝算與機率（講義例 12A、12B）</div>
+<p>通過 SRM 的 logistic 模型：截距 −1.3；熟悉 R（是 1.0、否 0）；讀 ASM 講義的時數 0.01；STAM 分數（5 以下 −2.5、6 為 0、7 為 1.2、8 以上 1.6）。求一位不熟悉 R、讀了 150 小時、STAM 拿 7 分的考生通過的勝算。</p>
+<p>\(\eta=-1.3+0.01(150)+1.2=1.4\)，勝算 \(e^{1.4}=4.0552\)，機率 \(4.0552/5.0552=0.8022\)。</p>
+<p>如果同一個 \(\eta\) 改用 probit：\(\pi=\Phi(1.4)=0.9192\)。（實際上換連結後係數也會重新估計，機率不會差這麼多。）</p>
+</div>
+<div class="box warn">
+<div class="box-t">易錯提醒：「勝算」與「勝算比」</div>
+<p>講義與部分考題（例如 2016 春季 S 第 29 題）把 \(\pi/(1-\pi)\) 叫做 "odds ratio"。嚴格來說 \(\pi/(1-\pi)\) 是<strong>勝算</strong>，<strong>勝算比</strong>是兩個勝算相除。考題寫 "odds ratio of the driver …" 而只描述一個人時，指的是那個人的勝算 \(\pi/(1-\pi)\)。</p>
+</div>
+<h3>四、門檻解釋：連結從哪裡來</h3>
+<p>假設有一個看不到的連續變數（潛在變數）
+\[y^*=\eta+\varepsilon,\]
+\(\varepsilon\) 有某個對稱或不對稱的分配，分配函數 \(F\)。我們只看到 \(y^*\) 有沒有超過門檻 0：\(y^*&gt;0\) 時 \(y=1\)，否則 \(y=0\)。於是
+\[\pi=\Pr(y^*&gt;0)=\Pr(\varepsilon&gt;-\eta)=1-F(-\eta).\]</p>
+<ul>
+<li>\(\varepsilon\) 是 <strong>logistic 分配</strong>，\(F(x)=\frac{1}{1+e^{-x}}\)：\(\pi=1-\frac{1}{1+e^{\eta}}=\frac{e^\eta}{1+e^\eta}\)，就是 logit。</li>
+<li>\(\varepsilon\) 是<strong>標準常態</strong>：\(\pi=1-\Phi(-\eta)=\Phi(\eta)\)，就是 probit。</li>
+</ul>
+<p>對稱分配時 \(1-F(-\eta)=F(\eta)\)，所以連結就是 \(F^{-1}\)。</p>
+<figure><img src="assets/fig/ch12-latent.svg" alt="門檻解釋。 時，潛在變數  的分配以 1 為中心；落在門檻 0 右邊的面積 0.731 就是 ，正好等於 。 越大，整個分配往右移， 越大。" loading="lazy"><figcaption>門檻解釋。\(\eta=1\) 時，潛在變數 \(y^*\) 的分配以 1 為中心；落在門檻 0 右邊的面積 0.731 就是 \(\Pr(y=1)\)，正好等於 \(e^1/(1+e^1)\)。\(\eta\) 越大，整個分配往右移，\(\Pr(y=1)\) 越大。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 12-2：用門檻解釋求連結（習題 12.6）</div>
+<p>潛在變數的誤差有 Laplace 密度 \(f(x)=\tfrac12e^{-|x|}\)。求連結 \(g(\pi)\)。</p>
+<p><strong>分配函數</strong>：\(x&lt;0\) 時 \(F(x)=\tfrac12e^{x}\)；\(x\ge0\) 時 \(F(x)=1-\tfrac12e^{-x}\)。</p>
+<p><strong>機率</strong>：Laplace 對稱，所以 \(\pi=F(\eta)\)。</p>
+<ul>
+<li>\(\eta&lt;0\)（\(\pi&lt;0.5\)）：\(\pi=\tfrac12e^\eta\)，\(\eta=\ln(2\pi)\)。</li>
+<li>\(\eta\ge0\)（\(\pi\ge0.5\)）：\(\pi=1-\tfrac12e^{-\eta}\)，\(\eta=-\ln\big(2(1-\pi)\big)\)。</li>
+</ul>
+<p>所以 \(g(\pi)=\ln(2\pi)\)（\(\pi&lt;0.5\)）、\(g(\pi)=-\ln(2-2\pi)\)（\(\pi\ge0.5\)）。</p>
+</div>
+<h3>五、從機率反推係數</h3>
+<p>logit 模型的對數勝算是 \(x\) 的線性函數，所以給兩個點的機率，取 logit 就變成兩條直線方程式。</p>
+<div class="box ex">
+<div class="box-t">例題 12-3：反推截距（習題 12.12，MAS-I-S19:27）</div>
+<p>logistic 模型在 \(x=4\)、\(6\) 的估計機率是 0.88877、0.96562。求 \(b_0\)。</p>
+<p>\(\ln\frac{0.88877}{0.11123}=2.078238=b_0+4b_1\)，\(\ln\frac{0.96562}{0.03438}=3.335295=b_0+6b_1\)。</p>
+<p>相減：\(b_1=0.628529\)；\(b_0=2.078238-4(0.628529)=-0.43588\)，答案 (B)。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 12-4：門檻機率換成 \(\eta\) 的門檻（習題 12.13，MAS-I-F19:25）</div>
+<p>銀行拒絕違約機率超過 10% 的貸款。與其把每個人的機率算出來，不如把 10% 換成對數勝算：\(\ln\frac{0.1}{0.9}=-2.197\)。線性預測式大於 −2.197 的就拒絕。四位客戶的 \(\eta\) 是 −2.030、−0.047、−2.267、−1.571，三位超過，答案 (D)。</p>
+<p>因為 logit 是遞增函數，「機率 &gt; 10%」和「\(\eta\) &gt; logit(0.1)」等價，這個技巧省下很多計算。</p>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：二元反應</div>
+<ul>
+<li><strong>樣題 7、20 型</strong>：二元結果用二項＋logit；線性模型預測出 0～1 以外的值，改用 logit 轉換。</li>
+<li><strong>樣題 14 型</strong>：logit 轉換只能用在 0 和 1 之間的值，不能拿來處理 0～100 的反應變數的變異數不齊；log 與平方根轉換可以（<a href="ch05.html">第 5 章</a>）。</li>
+<li><strong>樣題 42 型</strong>：線性機率模型的三大缺點是配適值不合理、變異數不齊、殘差分析沒意義；logit 與 probit 很像。</li>
+<li><strong>係數表計算</strong>（S-S16:30、S-F15:33、S-S16:33、MAS-I-F18:26、MAS-I-S18:28）：基準類別不加，算 \(\eta\)，再用正確的反函數。probit 就查常態表。</li>
+<li><strong>勝算題</strong>（MAS-I-S18:27、S-S16:29）：logit 下勝算直接是 \(e^\eta\)；probit 或互補 log-log 下要先算機率再換成勝算。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q12-1"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.1 題</b><small>・講義 p.201・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #42] Determine which of the following statements is NOT true about the linear probability, logistic, and probit regression models for binary dependent variables.</p>
+<div class="opts">
+<p>(A) The three major drawbacks of the linear probability model are poor fitted values, heteroscedasticity, and meaningless residual analysis.</p>
+<p>(B) The logistic and probit regression models aim to circumvent the drawbacks of linear probability models.</p>
+<p>(C) The logit function is given by \(\pi(z)=e^z/(1+e^z)\).</p>
+<p>(D) The probit function is given by \(\pi(z)=\Phi(z)\), where \(\Phi\) is the standard normal distribution function.</p>
+<p>(E) The logit and probit functions are substantially different.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 42 題）關於二元反應的線性機率、logistic、probit 迴歸模型，下列哪一個<strong>不</strong>正確？</p>
+<div class="opts">
+<p>(A) 線性機率模型的三大缺點是配適值不合理、變異數不齊、殘差分析沒有意義。</p>
+<p>(B) logistic 與 probit 迴歸模型的目的是避開線性機率模型的缺點。</p>
+<p>(C) logit 函數為 \(\pi(z)=e^z/(1+e^z)\)。</p>
+<p>(D) probit 函數為 \(\pi(z)=\Phi(z)\)，\(\Phi\) 是標準常態分配函數。</p>
+<p>(E) logit 與 probit 函數差異很大。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>(A)、(B) 正確（<a href="ch11.html#s1">第 11 章 11.1 節</a>）。</p>
+<p>(C)、(D) 是 SOA 的寫法，嚴格說寫出來的是 logit 與 probit 連結的<strong>反函數</strong>，但這一題把它們當作正確敘述。</p>
+<p>(E) 錯：logit 與 probit 的反函數形狀非常接近（本章「三種連結」圖），都對稱於 \((0,0.5)\)。</p></div></div></article><article class="exercise" id="q12-2"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.2 題</b><small>・講義 p.202・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #14] From an investigation of the residuals of fitting a linear regression by ordinary least squares it is clear that the spread of the residuals increases as the predicted values increase. Observed values of the dependent variable range from 0 to 100.</p>
+<p>Determine which of the following statements is/are true with regard to transforming the dependent variable to make the variance of the residuals more constant.</p>
+<div class="items">
+<p>I. Taking the logarithm of one plus the value of the dependent variable may make the variance of the residuals more constant.</p>
+<p>II. A square root transformation may make the variance of the residuals more constant.</p>
+<p>III. A logit transformation may make the variance of the residuals more constant.</p>
+</div>
+<div class="opts">
+<p>(A) None of I, II, or III is true</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The answer is not given by (A), (B), (C), or (D)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 14 題）普通最小平方配適線性迴歸後，殘差的離散程度隨預測值增加而變大。反應變數的觀察值介於 0 和 100 之間。為了讓殘差的變異數比較固定而轉換反應變數，下列哪些正確？</p>
+<div class="items">
+<p>I. 取 1 加上反應變數的對數，可能讓殘差變異數比較固定。</p>
+<p>II. 平方根轉換可能讓殘差變異數比較固定。</p>
+<p>III. logit 轉換可能讓殘差變異數比較固定。</p>
+</div>
+<div class="opts">
+<p>(A) I、II、III 都不正確　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對：log 與平方根都會壓縮大的值，是處理「變異數隨平均變大」的標準轉換。加 1 是為了處理 0。</p>
+<p>III 錯：logit \(\ln\frac{y}{1-y}\) 只能用在 0 和 1 之間的值；觀察值到 100，無法直接套用。</p></div></div></article><article class="exercise" id="q12-5"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.5 題</b><small>・講義 p.203・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[S-S16:30] You are given the following information for a fitted GLM:</p>
+<p>Response variable: Occurrence of Accidents; Response distribution: Binomial; Link: Logit</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>df</th>
+<th>\(\hat\beta\)</th>
+<th>se</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>−2.358</td>
+<td>0.048</td>
+</tr>
+<tr>
+<td>Area: Suburban</td>
+<td>0</td>
+<td>0.000</td>
+<td></td>
+</tr>
+<tr>
+<td>Area: Urban</td>
+<td>1</td>
+<td>0.905</td>
+<td>0.062</td>
+</tr>
+<tr>
+<td>Area: Rural</td>
+<td>1</td>
+<td>1.129</td>
+<td>0.151</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the modeled probability of an Urban driver having an accident.</p>
+<div class="opts">
+<p>(A) Less than 0.01</p>
+<p>(B) At least 0.01, but less than 0.05</p>
+<p>(C) At least 0.05, but less than 0.10</p>
+<p>(D) At least 0.10, but less than 0.20</p>
+<p>(E) At least 0.20</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2016 春季 S 第 30 題）配適好的 GLM：反應變數為事故發生、二項分配、logit 連結。</p>
+<p>求都市駕駛人發生事故的模型機率。</p>
+<div class="items">
+<p>(B) 至少 0.01，小於 0.05</p>
+<p>(C) 至少 0.05，小於 0.10</p>
+<p>(D) 至少 0.10，小於 0.20</p>
+<p>(E) 至少 0.20</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=-2.358+0.905=-1.453\)，勝算 \(e^{-1.453}=0.23387\)，機率 \(\frac{0.23387}{1.23387}=0.1895\)。</p>
+<p>標準誤是干擾資訊。</p></div></div></article><article class="exercise" id="q12-6"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.6 題</b><small>・講義 p.203・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>For a binary response, there is an underlying linear model. The variable in the underlying linear model has the following density function:
+\[f(x)=\frac{e^{-|x|}}{2}\qquad-\infty&lt;x&lt;\infty\]
+Determine the link function \(g(\pi)\) based on the threshold interpretation of the model.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>二元反應背後有一個線性模型，其誤差的密度為 \(f(x)=\dfrac{e^{-|x|}}{2}\)，\(-\infty&lt;x&lt;\infty\)。依門檻解釋，求連結函數 \(g(\pi)\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\pi&lt;0.5\) 時 \(g(\pi)=\ln(2\pi)\)；\(\pi\ge0.5\) 時 \(g(\pi)=-\ln(2-2\pi)\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>分配函數</strong>：\(x&lt;0\) 時 \(F(x)=\int_{-\infty}^x\tfrac12e^u\,du=\tfrac12e^x\)；\(x\ge0\) 時 \(F(x)=\tfrac12+\int_0^x\tfrac12e^{-u}du=1-\tfrac12e^{-x}\)。</p>
+<p><strong>機率</strong>：\(\pi=\Pr(\varepsilon&gt;-\eta)=1-F(-\eta)\)。</p>
+<ul>
+<li>\(\eta\ge0\)：\(-\eta\le0\)，\(\pi=1-\tfrac12e^{-\eta}\)。</li>
+<li>\(\eta&lt;0\)：\(-\eta&gt;0\)，\(\pi=1-\big(1-\tfrac12e^{\eta}\big)=\tfrac12e^{\eta}\)。</li>
+</ul>
+<p>\(\eta=0\) 時 \(\pi=0.5\)，是兩段的分界。</p>
+<p><strong>反解</strong>：\(\pi\ge0.5\) 時 \(2(1-\pi)=e^{-\eta}\)，\(\eta=-\ln\big(2(1-\pi)\big)\)；\(\pi&lt;0.5\) 時 \(\eta=\ln(2\pi)\)。</p></div></div></article><article class="exercise" id="q12-7"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.7 題</b><small>・講義 p.204・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[S-F15:33] You are given the following output from a GLM to estimate the probability of a claim. Distribution selected is Binomial. Link selected is Logit.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>−1.485</td>
+</tr>
+<tr>
+<td>Vehicle Body: Coupe / Roadster / Sedan / Station wagon / Truck / Utility</td>
+<td>−0.881 / −1.047 / −1.175 / −1.083 / −1.118 / −1.330</td>
+</tr>
+<tr>
+<td>Driver's Gender: Male</td>
+<td>−0.025</td>
+</tr>
+<tr>
+<td>Area: B / C / D</td>
+<td>0.094 / 0.037 / −0.101</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the estimated probability of a claim for: Driver Gender: Female; Vehicle Body: Sedan; Area: D.</p>
+<div class="opts">
+<p>(A) Less than 0.045</p>
+<p>(B) At least 0.045, but less than 0.050</p>
+<p>(C) At least 0.050, but less than 0.055</p>
+<p>(D) At least 0.055, but less than 0.060</p>
+<p>(E) At least 0.060</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2015 秋季 S 第 33 題）估計理賠機率的 GLM，二項分配、logit 連結：</p>
+<p>（沒有列出的類別是基準：其他車身、女性、地區 A。）求女性、轎車、地區 D 的理賠機率。</p>
+<div class="items">
+<p>(B) 至少 0.045，小於 0.050</p>
+<p>(C) 至少 0.050，小於 0.055</p>
+<p>(D) 至少 0.055，小於 0.060</p>
+<p>(E) 至少 0.060</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>女性是基準，不加。\(\eta=-1.485-1.175-0.101=-2.761\)。</p>
+<p>\(\pi=\frac{e^{-2.761}}{1+e^{-2.761}}=0.0595\)。</p></div></div></article><article class="exercise" id="q12-9"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.9 題</b><small>・講義 p.205・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F18:26] You are given the following output from a model constructed to predict the probability that a Homeowner's policy will retain into the next policy term:</p>
+<p>Response variable: retention; Response distribution: binomial; Link: probit; Pseudo \(R^2\): 0.6521</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>df</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>0.4270</td>
+</tr>
+<tr>
+<td>Tenure &lt; 5 years</td>
+<td>0</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>Tenure ≥ 5 years</td>
+<td>1</td>
+<td>0.1320</td>
+</tr>
+<tr>
+<td>Prior Rate Change &lt; 0%</td>
+<td>1</td>
+<td>0.0160</td>
+</tr>
+<tr>
+<td>Prior Rate Change [0%, 10%]</td>
+<td>0</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>Prior Rate Change &gt; 10%</td>
+<td>1</td>
+<td>−0.0920</td>
+</tr>
+<tr>
+<td>Amount of Insurance (000's)</td>
+<td>1</td>
+<td>0.0015</td>
+</tr>
+</tbody>
+</table>
+<p>Let \(\pi\) be the modeled probability that a policy with 4 years of tenure that experienced a +12% prior rate change and has 225,000 in amount of insurance will be retained into the next policy term.</p>
+<p>Calculate the value of \(\pi\).</p>
+<div class="opts">
+<p>(A) Less than 0.60</p>
+<p>(B) At least 0.60, but less than 0.70</p>
+<p>(C) At least 0.70, but less than 0.80</p>
+<p>(D) At least 0.80, but less than 0.90</p>
+<p>(E) At least 0.90</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 秋季 MAS-I 第 26 題）預測住宅保單續保機率：二項分配、<strong>probit</strong> 連結、pseudo \(R^2=0.6521\)。</p>
+<p>\(\pi\) 是投保 4 年、前次費率 +12%、保險金額 225,000 的保單的續保機率。求 \(\pi\)。</p>
+<div class="items">
+<p>(B) 至少 0.60，小於 0.70</p>
+<p>(C) 至少 0.70，小於 0.80</p>
+<p>(D) 至少 0.80，小於 0.90</p>
+<p>(E) 至少 0.90</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=0.4270-0.0920+0.0015(225)=0.6725\)。probit：\(\pi=\Phi(0.6725)=0.7494\)（用常態表四捨五入成 \(\Phi(0.67)=0.7486\)）。</p>
+<p>（<a href="ch11.html">第 11 章</a>習題 <a href="ch11.html#q11-17">11.17</a> 是同一張表，但連結是平方根。）</p></div></div></article><article class="exercise" id="q12-12"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.12 題</b><small>・講義 p.207・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S19:27] A statistician uses a logistic model to predict the probability of success, \(\pi\), of a binomial random variable. You are given the following information:</p>
+<ul>
+<li>There is one predictor variable, \(X\), and an intercept in the model.</li>
+<li>The estimates of \(\pi\) at \(x=4\) and 6 are 0.88877 and 0.96562, respectively.</li>
+</ul>
+<p>Calculate the estimated intercept coefficient, \(b_0\), in the logistic model that produced the above probability estimates.</p>
+<div class="opts">
+<p>(A) Less than −1</p>
+<p>(B) At least −1, but less than 0</p>
+<p>(C) At least 0, but less than 1</p>
+<p>(D) At least 1, but less than 2</p>
+<p>(E) At least 2</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 春季 MAS-I 第 27 題）logistic 模型預測二項隨機變數成功的機率 \(\pi\)，有一個解釋變數 \(X\) 與截距。\(x=4\)、\(6\) 的 \(\pi\) 估計值分別為 0.88877、0.96562。求截距的估計值 \(b_0\)。</p>
+<div class="items">
+<p>(B) 至少 −1，小於 0</p>
+<p>(C) 至少 0，小於 1</p>
+<p>(D) 至少 1，小於 2</p>
+<p>(E) 至少 2</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>取 logit：
+\[\ln\frac{0.88877}{0.11123}=2.078238=b_0+4b_1,\qquad\ln\frac{0.96562}{0.03438}=3.335295=b_0+6b_1 .\]
+相減：\(2b_1=1.257057\)，\(b_1=0.628529\)；\(b_0=2.078238-4(0.628529)=-0.43588\)。</p></div></div></article><article class="exercise" id="q12-13"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.13 題</b><small>・講義 p.207・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F19:25] A bank uses a logistic model to estimate the probability of clients defaulting on a loan, and it comes up with the following parameter estimates:</p>
+<table>
+<thead>
+<tr>
+<th>\(i\)</th>
+<th>Variable</th>
+<th>\(\beta_i\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Intercept</td>
+<td>−1.6790</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Income (in 000's)</td>
+<td>−0.0294</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Student [Yes]</td>
+<td>−0.3870</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Number of credit cards</td>
+<td>0.7710</td>
+</tr>
+</tbody>
+</table>
+<p>The following four clients applied for loans from the bank:</p>
+<table>
+<thead>
+<tr>
+<th>Client</th>
+<th>Income</th>
+<th>Student</th>
+<th># of credit cards</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>25,000</td>
+<td>Y</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>10,000</td>
+<td>Y</td>
+<td>3</td>
+</tr>
+<tr>
+<td>3</td>
+<td>20,000</td>
+<td>N</td>
+<td>0</td>
+</tr>
+<tr>
+<td>4</td>
+<td>75,000</td>
+<td>N</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<p>The bank will reject any loan if the probability of default is greater than 10%.</p>
+<p>Calculate the number of clients whose loan requests are rejected.</p>
+<div class="opts">
+<p>(A) 0</p>
+<p>(B) 1</p>
+<p>(C) 2</p>
+<p>(D) 3</p>
+<p>(E) 4</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 秋季 MAS-I 第 25 題）銀行用 logistic 模型估計客戶違約機率：截距 −1.6790、收入（千）−0.0294、學生（是）−0.3870、信用卡張數 0.7710。四位申請人：</p>
+<p>違約機率大於 10% 的貸款會被拒絕。求被拒絕的人數。</p>
+<div class="opts">
+<p>(A) 0　(B) 1　(C) 2　(D) 3　(E) 4</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>把門檻換成對數勝算：\(\ln\frac{0.1}{0.9}=-2.197\)，線性預測式大於它就拒絕。</p>
+<ul>
+<li>客戶 1：\(-1.679-0.735-0.387+0.771=-2.030\)，拒絕。</li>
+<li>客戶 2：\(-1.679-0.294-0.387+2.313=-0.047\)，拒絕。</li>
+<li>客戶 3：\(-1.679-0.588=-2.267\)，核准（機率 0.0939）。</li>
+<li>客戶 4：\(-1.679-2.205+2.313=-1.571\)，拒絕。</li>
+</ul>
+<p>三位被拒絕。</p></div></div></article><article class="exercise" id="q12-16"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.16 題</b><small>・講義 p.208・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[S-S16:29] You are given the following information for a fitted GLM:</p>
+<p>Response variable: Occurrence of Accidents; Response distribution: Binomial; Link: Logit</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>df</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>\(x\)</td>
+</tr>
+<tr>
+<td>Driver's Age 1 / 2 / 3</td>
+<td>2</td>
+<td>0.288 / 0.064 / 0</td>
+</tr>
+<tr>
+<td>Area A / B / C</td>
+<td>2</td>
+<td>−0.036 / 0.053 / 0</td>
+</tr>
+<tr>
+<td>Vehicle Body Bus / Other / Sedan</td>
+<td>2</td>
+<td>1.136 / −0.371 / 0</td>
+</tr>
+</tbody>
+</table>
+<p>The probability of a driver in age group 2, from area C and with vehicle body type Other, having an accident is 0.22.</p>
+<p>Calculate the odds ratio of the driver in age group 3, from area C and with vehicle body type Sedan having an accident.</p>
+<div class="opts">
+<p>(A) Less than 0.200</p>
+<p>(B) At least 0.200, but less than 0.250</p>
+<p>(C) At least 0.250, but less than 0.300</p>
+<p>(D) At least 0.300, but less than 0.350</p>
+<p>(E) At least 0.350</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2016 春季 S 第 29 題）事故發生的 GLM：二項分配、logit 連結。截距 \(x\)（未知）；駕駛年齡組 1／2／3：0.288／0.064／0；地區 A／B／C：−0.036／0.053／0；車身 巴士／其他／轎車：1.136／−0.371／0。年齡組 2、地區 C、車身「其他」的駕駛人發生事故的機率是 0.22。求年齡組 3、地區 C、轎車的駕駛人發生事故的「odds ratio」。</p>
+<div class="items">
+<p>(B) 至少 0.200，小於 0.250</p>
+<p>(C) 至少 0.250，小於 0.300</p>
+<p>(D) 至少 0.300，小於 0.350</p>
+<p>(E) 至少 0.350</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>題目的 "odds ratio" 指的是這位駕駛人的勝算 \(\pi/(1-\pi)\)（見 <a href="ch12.html#s1">12.1 節</a>的易錯提醒）。</p>
+<p><strong>反推截距</strong>：\(\ln\frac{0.22}{0.78}=-1.2657=x+0.064+0-0.371\)，\(x=-0.9587\)。</p>
+<p><strong>年齡 3、地區 C、轎車</strong>：全是基準，\(\eta=x=-0.9587\)，勝算 \(e^{-0.9587}=0.3834\)。</p>
+<p><strong>更快的做法</strong>：兩人的對數勝算差 \(0-(0.064-0.371)=0.307\)，勝算 \(0.28205\times e^{0.307}=0.3834\)。</p></div></div></article><article class="exercise" id="q12-18"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.18 題</b><small>・講義 p.209・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:28] You are given the following information:</p>
+<div class="items">
+<p>(i) A statistician uses two models to predict the probability of success, \(\pi\), of a binomial random variable.</p>
+<p>(ii) One of the models uses a logistic link function and the other uses a probit link function.</p>
+<p>(iii) There is one predictor variable, \(X\), and an intercept in each model.</p>
+<p>(iv) Both models happen to produce the same coefficient estimates, \(\beta_0=0.02\) and \(\beta_1=0.3\).</p>
+<p>(v) You are interested in the predicted probabilities of success at \(x=4\).</p>
+</div>
+<p>Calculate the absolute difference in the predicted values from the two models at \(x=4\).</p>
+<div class="opts">
+<p>(A) Less than 0.1</p>
+<p>(B) At least 0.1, but less than 0.2</p>
+<p>(C) At least 0.2, but less than 0.3</p>
+<p>(D) At least 0.3, but less than 0.4</p>
+<p>(E) At least 0.4</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 春季 MAS-I 第 28 題）統計人員用兩個模型預測二項隨機變數的成功機率：一個 logistic 連結、一個 probit 連結，各有一個解釋變數與截距，剛好得到相同的係數 \(\beta_0=0.02\)、\(\beta_1=0.3\)。求 \(x=4\) 時兩個模型預測值差的絕對值。</p>
+<div class="items">
+<p>(B) 至少 0.1，小於 0.2</p>
+<p>(C) 至少 0.2，小於 0.3</p>
+<p>(D) 至少 0.3，小於 0.4</p>
+<p>(E) 至少 0.4</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=0.02+0.3(4)=1.22\)。logit：\(\frac{e^{1.22}}{1+e^{1.22}}=0.7721\)。probit：\(\Phi(1.22)=0.8888\)。差 0.1167。</p></div></div></article><article class="exercise" id="q12-20"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.20 題</b><small>・講義 p.209・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>A binary response is modeled with a generalized linear model and a logit link. The fitted model is \(g(\pi)=0.24+0.57x_1\).</p>
+<p>Calculate the amount by which the probability of the event increases if \(x_1\) is increased from 2 to 3.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>二元反應以 logit 連結建模，\(g(\pi)=0.24+0.57x_1\)。\(x_1\) 從 2 增加到 3 時，事件機率增加多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.07646</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(x_1=2\)：\(\eta=1.38\)，\(\pi=0.79899\)。\(x_1=3\)：\(\eta=1.95\)，\(\pi=0.87545\)。增加 0.07646。</p>
+<p>注意：勝算乘上 \(e^{0.57}=1.768\) 是固定的，但機率的增加量取決於起點（本章「勝算」圖右）。</p></div></div></article><article class="exercise" id="q12-23"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.23 題</b><small>・講義 p.210・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>A binary response is modeled with a generalized linear model and a complementary log-log link: \(g(\pi)=\beta_0+\beta_1x\).</p>
+<p>The fitted value of \(\beta_0\) is −1.5. When \(x=1\), the fitted value of \(\pi\) is 0.375.</p>
+<p>Determine \(\beta_1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>二元反應以互補 log-log 連結建模，\(g(\pi)=\beta_0+\beta_1x\)。\(\beta_0\) 的配適值是 −1.5，\(x=1\) 時 \(\pi\) 的配適值是 0.375。求 \(\beta_1\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.7450</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(0.375=1-\exp\big(-e^{-1.5+\beta_1}\big)\)。</p>
+<p>\(\ln0.625=-e^{-1.5+\beta_1}\)，\(e^{-1.5+\beta_1}=0.4700\)，\(-1.5+\beta_1=\ln0.4700=-0.7550\)，\(\beta_1=0.7450\)。</p>
+<p>也可以直接用連結：\(\eta=\ln(-\ln(1-0.375))=-0.7550\)。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（12 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC12-1-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-1</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>In a logistic regression, the coefficient of an indicator variable is 0.693, and all other variables are held fixed.</p>
+<p>Determine the effect of the indicator being 1 rather than 0.</p>
+<div class="opts">
+<p>(A) The odds of the event double</p>
+<p>(B) The probability of the event doubles</p>
+<p>(C) The probability increases by 0.693</p>
+<p>(D) The odds increase by 0.693</p>
+<p>(E) The log odds are multiplied by 2</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>logistic 迴歸中某指標變數的係數是 0.693，其他變數不變。指標變數為 1（相對於 0）的效果是什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>對數勝算增加 0.693，勝算乘上 \(e^{0.693}=2\)，所以勝算加倍。</p>
+<p>機率不會剛好加倍（例如原本 0.6，加倍就超過 1）；機率增加多少取決於起點。(D) 是把對數勝算的變化當成勝算的變化；(E) 錯在「乘」，對數勝算是「加」0.693。</p></div></div></article><article class="exercise concept-q" id="qC12-1-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-2</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>The odds of an event are 0.25.</p>
+<p>Calculate the probability of the event.</p>
+<div class="opts">
+<p>(A) 0.20</p>
+<p>(B) 0.25</p>
+<p>(C) 0.75</p>
+<p>(D) 0.80</p>
+<p>(E) 0.33</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>事件的勝算是 0.25，求事件的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\pi=\frac{o}{1+o}=\frac{0.25}{1.25}=0.20\)。</p>
+<p>(B) 把勝算當成機率；(D) 是不發生的機率；(E) 是 \(\frac{1}{1+2}\)，把勝算誤當 0.5。</p></div></div></article><article class="exercise concept-q" id="qC12-1-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-3</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about links for a binary response is/are true.</p>
+<div class="items">
+<p>I. The logit link is the canonical link for the binomial distribution.</p>
+<p>II. The complementary log-log mean function is symmetric about \(\pi=0.5\).</p>
+<p>III. The logit and probit mean functions both equal 0.5 when the linear predictor equals 0.</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於二元反應的連結，下列哪些正確？</p>
+<div class="items">
+<p>I. logit 是二項分配的典型連結。</p>
+<p>II. 互補 log-log 的平均數函數對稱於 \(\pi=0.5\)。</p>
+<p>III. 線性預測式為 0 時，logit 與 probit 的平均數函數都等於 0.5。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對（<a href="ch11.html">第 11 章</a>）。II 錯：互補 log-log 不對稱，\(\eta=0\) 時 \(\pi=1-e^{-1}=0.632\)。III 對：\(\frac{e^0}{1+e^0}=0.5\)，\(\Phi(0)=0.5\)。</p></div></div></article><article class="exercise concept-q" id="qC12-1-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-4</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A binary response \(y\) is generated by a latent variable \(y^*=\eta+\varepsilon\), with \(y=1\) when \(y^*&gt;0\). The error \(\varepsilon\) follows a standard normal distribution.</p>
+<p>Determine the resulting link function.</p>
+<div class="opts">
+<p>(A) Probit</p>
+<p>(B) Logit</p>
+<p>(C) Complementary log-log</p>
+<p>(D) Identity</p>
+<p>(E) Log</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>二元反應由潛在變數 \(y^*=\eta+\varepsilon\) 產生，\(y^*&gt;0\) 時 \(y=1\)。\(\varepsilon\) 是標準常態。這對應哪一種連結？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\pi=\Pr(\varepsilon&gt;-\eta)=1-\Phi(-\eta)=\Phi(\eta)\)，所以 \(g(\pi)=\Phi^{-1}(\pi)\)，就是 probit。\(\varepsilon\) 若是 logistic 分配，得到的是 logit。</p></div></div></article><article class="exercise concept-q" id="qC12-1-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-5</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A logistic regression has fitted model \(\eta=-1+0.5x\).</p>
+<p>Calculate the fitted probability when \(x=2\).</p>
+<div class="opts">
+<p>(A) 0.269</p>
+<p>(B) 0.378</p>
+<p>(C) 0.500</p>
+<p>(D) 0.622</p>
+<p>(E) 0.731</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>logistic 迴歸 \(\eta=-1+0.5x\)，求 \(x=2\) 時的配適機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=-1+1=0\)，\(\pi=\frac{e^0}{1+e^0}=0.5\)。</p>
+<p>(A) 是 \(x=0\) 的機率；(D) 是 \(\eta=0.5\)；(E) 是 \(\eta=1\)。</p></div></div></article><article class="exercise concept-q" id="qC12-1-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-6</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>In a logistic regression with one indicator variable \(x\), the fitted probability of the event is 0.10 when \(x=0\) and 0.20 when \(x=1\).</p>
+<p>Calculate the coefficient of \(x\).</p>
+<div class="opts">
+<p>(A) 0.405</p>
+<p>(B) 0.693</p>
+<p>(C) 0.100</p>
+<p>(D) 0.811</p>
+<p>(E) 2.250</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>logistic 迴歸只有一個指標變數 \(x\)。\(x=0\) 時機率 0.10，\(x=1\) 時 0.20。求 \(x\) 的係數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>勝算：\(x=0\) 時 \(0.1/0.9=0.1111\)，\(x=1\) 時 \(0.2/0.8=0.25\)。勝算比 \(0.25/0.1111=2.25\)，係數 \(=\ln2.25=0.811\)。</p>
+<p>(B) 是 \(\ln2\)，把機率比當成勝算比；(E) 是勝算比本身，忘了取對數；(C) 是機率差。</p></div></div></article><article class="exercise concept-q" id="qC12-1-7"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-7</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A GLM for a binary response uses the complementary log-log link.</p>
+<p>Calculate the fitted probability when the linear predictor equals 0.</p>
+<div class="opts">
+<p>(A) 0.632</p>
+<p>(B) 0.500</p>
+<p>(C) 0.368</p>
+<p>(D) 0.731</p>
+<p>(E) 1.000</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>二元反應的 GLM 用互補 log-log 連結。線性預測式為 0 時，配適機率是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\pi=1-\exp(-e^0)=1-e^{-1}=0.632\)。這是互補 log-log 不對稱的具體表現：logit 與 probit 在 \(\eta=0\) 都是 0.5。</p>
+<p>(C) 是 \(e^{-1}\)，忘了用 1 減。</p></div></div></article><article class="exercise concept-q" id="qC12-1-8"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-8</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>In a logistic regression, a continuous predictor \(x\) has coefficient \(\beta&gt;0\).</p>
+<p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. Each one-unit increase in \(x\) adds \(\beta\) to the log odds.</p>
+<p>II. Each one-unit increase in \(x\) adds the same amount to the probability, regardless of the starting value of \(x\).</p>
+<p>III. Each one-unit increase in \(x\) multiplies the odds by \(e^\beta\).</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>logistic 迴歸中連續變數 \(x\) 的係數 \(\beta&gt;0\)。</p>
+<div class="items">
+<p>I. \(x\) 每增加 1，對數勝算增加 \(\beta\)。</p>
+<p>II. \(x\) 每增加 1，機率增加的量都一樣。</p>
+<p>III. \(x\) 每增加 1，勝算乘上 \(e^\beta\)。哪些正確？</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、III 對。II 錯：機率是 \(\eta\) 的 S 形函數，同樣加 1，在中段增加最多，靠近 0 或 1 時幾乎不動（本章「勝算」圖右）。</p></div></div></article><article class="exercise concept-q" id="qC12-1-9"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-9</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A binary response is modeled with a probit link. For a particular observation, the linear predictor is \(-0.5\).</p>
+<p>Calculate the odds of the event.</p>
+<div class="opts">
+<p>(A) 0.6065</p>
+<p>(B) 0.3085</p>
+<p>(C) 0.3775</p>
+<p>(D) 0.6915</p>
+<p>(E) 0.4462</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>probit 連結，某觀察的線性預測式是 −0.5。求事件的勝算。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>probit 先給機率：\(\pi=\Phi(-0.5)=0.3085\)；勝算 \(\frac{0.3085}{0.6915}=0.4462\)。</p>
+<p>(A) 是 \(e^{-0.5}\)（誤用 logit 下的「勝算 \(=e^\eta\)」）；(B) 是機率；(C) 是 logit 下的機率。</p></div></div></article><article class="exercise concept-q" id="qC12-1-10"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-10</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following link functions is NOT suitable for a binomial response modeling a probability, because it does not keep fitted values between 0 and 1.</p>
+<div class="opts">
+<p>(A) Logit</p>
+<p>(B) Probit</p>
+<p>(C) Complementary log-log</p>
+<p>(D) Identity</p>
+<p>(E) All of (A) through (D) keep fitted values between 0 and 1</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪一個連結不適合用來建模二項反應的機率，因為它無法讓配適值保持在 0 和 1 之間？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>恆等連結的 \(\pi=\eta\) 可以是任何實數，就是線性機率模型的問題。另外三個的反函數都是某個分配的分配函數，值域在 0 和 1 之間。</p></div></div></article><article class="exercise concept-q" id="qC12-1-11"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-11</b><small>仿 SOA 樣題・跨章：第 11 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following is a drawback of the linear probability model.</p>
+<div class="opts">
+<p>(A) The variance of the response depends on the mean, so the errors are heteroscedastic</p>
+<p>(B) The coefficients cannot be estimated by least squares</p>
+<p>(C) Fitted values are always between 0 and 1, so extreme probabilities are missed</p>
+<p>(D) The model cannot include categorical predictors</p>
+<p>(E) The model requires the response to follow a Poisson distribution</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪一個是線性機率模型的缺點？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Bernoulli 的變異數 \(\pi(1-\pi)\) 隨平均數改變，所以變異數不齊。(B) 錯：最小平方可以算。(C) 正好相反：配適值會超出 0～1。(D)、(E) 都不是。</p></div></div></article><article class="exercise concept-q" id="qC12-1-12"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.1-12</b><small>仿 SOA 樣題・跨章：第 11 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A logistic regression with an intercept and several categorical predictors is fitted by maximum likelihood.</p>
+<p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. The coefficients are estimated by maximum likelihood.</p>
+<p>II. The score equations have a closed-form solution.</p>
+<p>III. The sum of the fitted probabilities equals the number of observed events in the data.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>含截距與數個類別變數的 logistic 迴歸以 MLE 配適。</p>
+<div class="items">
+<p>I. 係數用最大概似估計。</p>
+<p>II. 分數方程式有公式解。</p>
+<p>III. 配適機率的總和等於資料中事件發生的次數。哪些正確？</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對。II 錯：一般要用反覆加權最小平方數值求解。III 對：logit 是二項的典型連結，有截距時 \(\sum\hat\pi_i=\sum y_i\)（<a href="ch11.html">第 11 章</a>的平衡性質）。</p></div></div></article></div></section><section class="unit" id="s2"><h2>12.2 名目反應：廣義 logit 模型</h2><h3>一、模型</h3>
+<p>反應變數有 \(c&gt;2\) 類、沒有順序。選一類當<strong>基準類別</strong>（reference category），例如第 \(c\) 類。其他每一類 \(j\) 各有一組係數，模型描述「類別 \(j\) 對基準類別的對數勝算」：
+\[\ln\frac{\pi_j}{\pi_c}=\eta_j=\beta_{0j}+\beta_{1j}x_1+\cdots+\beta_{kj}x_k,\qquad j=1,\ldots,c-1 .\]
+參數一共 \((k+1)(c-1)\) 個。</p>
+<div class="box derive">
+<div class="box-t">推導：各類別的機率</div>
+<p>由模型，\(\pi_j=\pi_c\,e^{\eta_j}\)。所有機率加起來是 1：
+\[\pi_c\left(1+\sum_{i=1}^{c-1}e^{\eta_i}\right)=1\ \Longrightarrow\ \pi_c=\frac{1}{1+\sum_{i=1}^{c-1}e^{\eta_i}},\qquad \pi_j=\frac{e^{\eta_j}}{1+\sum_{i=1}^{c-1}e^{\eta_i}} .\]
+記法：基準類別的 \(\eta\) 當成 0（\(e^0=1\)），每一類的機率就是「自己的 \(e^\eta\) ÷ 所有類別的 \(e^\eta\) 總和」。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 12-5：車子的顏色（講義例 12C）</div>
+<p>白色為基準，銀色、紅色各一組係數。女性、收入 40,000（「50,000 以下」）：銀色 \(\eta=-1.2-0.5=-1.7\)，紅色 \(\eta=0.8-0.3=0.5\)。</p>
+<p>\[\pi_{\text{白}}=\frac{1}{1+e^{-1.7}+e^{0.5}}=\frac{1}{1+0.1827+1.6487}=0.3532 .\]</p>
+</div>
+<figure><img src="assets/fig/ch12-nominal.svg" alt="習題 12.27 的模型：類別 1、2 對基準類別 3 各有一條線性預測式。三類的機率疊起來永遠是 1。 增加時，斜率比較大的類別 2 逐漸吃掉其他兩類； 時基準類別的機率是 0.211。" loading="lazy"><figcaption>習題 12.27 的模型：類別 1、2 對基準類別 3 各有一條線性預測式。三類的機率疊起來永遠是 1。\(x\) 增加時，斜率比較大的類別 2 逐漸吃掉其他兩類；\(x=2\) 時基準類別的機率是 0.211。</figcaption></figure>
+
+<h3>二、係數的解讀：勝算比</h3>
+<p>指標變數 \(x_1\) 存在（\(p\)）與不存在（\(a\)），其他變數相同時，類別 \(j\) 相對於基準類別的勝算比：
+\[\frac{\pi_{jp}/\pi_{cp}}{\pi_{ja}/\pi_{ca}}=\frac{e^{\eta_{jp}}}{e^{\eta_{ja}}}=e^{\beta_{1j}} .\]
+和二元時一樣：<strong>\(e^{\beta}\) 是勝算比</strong>，而且不隨其他變數改變。</p>
+<h3>三、兩個重要性質</h3>
+<p><strong>巢狀結構</strong>：只看兩類 \(a\)、\(b\)，條件機率是一個二元 logistic 模型，係數是兩類係數之差：
+\[\Pr(y=a\mid y\in\{a,b\})=\frac{e^{\eta_a}}{e^{\eta_a}+e^{\eta_b}}=\frac{e^{\eta_a-\eta_b}}{1+e^{\eta_a-\eta_b}} .\]</p>
+<p><strong>無關選項的獨立性</strong>（independence of irrelevant alternatives，IIA）：任兩類的機率比 \(\pi_a/\pi_b=e^{\eta_a-\eta_b}\) 只跟這兩類有關，和其他類別無關。增加或拿掉一個選項，不會改變其他兩類的相對機率。有時這不合理（例如新增一個和既有選項幾乎一樣的選項）。</p>
+<p><strong>廣義 logit 與多項 logit 的差別</strong>：廣義 logit 是「係數隨類別不同，解釋變數相同」（例如個人的性別、收入）；多項 logit（multinomial logit）是「係數相同，解釋變數隨類別不同」（例如每種車的價格）。</p>
+<div class="box ex">
+<div class="box-t">例題 12-6：條件機率（講義小測驗 12-1、12-2）</div>
+<p>只有截距的廣義 logit，第 3 類（教授）為基準；醫師 \(\beta_0=1.3\)、精算師 \(\beta_0=0.8\)。</p>
+<ul>
+<li>精算師對醫師的相對勝算：\(e^{0.8-1.3}=e^{-0.5}=0.6065\)。</li>
+<li>已知沒有當醫師，當教授的機率：只看精算師與教授兩類，\(\frac{e^{0}}{e^{0}+e^{0.8}}=\frac{1}{1+e^{0.8}}=0.3100\)。</li>
+</ul>
+</div>
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li>基準類別的分子是 1，分母的 1 也是它。不要忘了分母的 1。</li>
+<li>題目給「B 對 A 的對數勝算 −0.535、C 對 A 的對數勝算 −1.489」（A 為基準），B 的機率是 \(\frac{e^{-0.535}}{1+e^{-0.535}+e^{-1.489}}=0.323\)，不是只用兩類算出的 \(\frac{e^{-0.535}}{1+e^{-0.535}}=0.369\)。（習題 <a href="ch12.html#q12-11">12.11</a> 講義用了後者，兩者都落在選項 (B) 的範圍。）</li>
+</ul>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：名目反應</div>
+<ul>
+<li><strong>機率計算</strong>（MAS-I-F18:28）：每一類的 \(\eta\)（基準為 0）→ 取指數 → 除以總和。</li>
+<li><strong>勝算比</strong>：指標變數的 \(e^\beta\)；類別 \(a\) 對 \(b\) 的勝算是 \(e^{\eta_a-\eta_b}\)。</li>
+<li><strong>概念題</strong>：IIA、巢狀結構、參數個數 \((k+1)(c-1)\)。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q12-25"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.25 題</b><small>・講義 p.211・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>A nominal logistic model is used to predict the type of car one buys. The base category of car is "sedan". The other categories are "van" and "SUV". The explanatory variables are "gender" and "age group". The fitted coefficients are:</p>
+<table>
+<thead>
+<tr>
+<th>Type of Car</th>
+<th>Van</th>
+<th>SUV</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>0.10</td>
+<td>−0.02</td>
+</tr>
+<tr>
+<td>Male</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Female</td>
+<td>−0.18</td>
+<td>−0.06</td>
+</tr>
+<tr>
+<td>Under 25</td>
+<td>−0.11</td>
+<td>0.18</td>
+</tr>
+<tr>
+<td>25–54</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>55 and up</td>
+<td>0.06</td>
+<td>0.04</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the odds ratio of females for vans.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>名目 logistic 模型預測買哪一種車，基準類別為「轎車」，其他兩類是廂型車與休旅車（SUV）。</p>
+<p>求女性對廂型車的勝算比。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.8353</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>指標變數的勝算比是 \(e^\beta\)：\(e^{-0.18}=0.8353\)。意思是：其他條件相同時，女性「買廂型車對買轎車」的勝算是男性的 0.8353 倍。</p></div></div></article><article class="exercise" id="q12-26"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.26 題</b><small>・講義 p.211・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>Use the model of Exercise 12.25.</p>
+<p>Calculate the probability that a male age 20 buys an SUV.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同習題 <a href="ch12.html#q12-25">12.25</a> 的模型。求 20 歲男性買 SUV 的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.3709</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>廂型車：\(\eta=0.10-0.11=-0.01\)；SUV：\(\eta=-0.02+0.18=0.16\)；轎車（基準）：0。
+\[\pi_{\text{SUV}}=\frac{e^{0.16}}{1+e^{-0.01}+e^{0.16}}=\frac{1.1735}{1+0.9900+1.1735}=0.3709 .\]</p></div></div></article><article class="exercise" id="q12-30"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.30 題</b><small>・講義 p.213・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>An actuarial department is estimating the probability that students will end up in one of the following areas: 1. Pricing; 2. Financial Reporting; 3. Investments.</p>
+<p>A nominal logistic model is constructed. Explanatory variables are major in college and score on Exam SRM. Pricing is the reference level. The estimated parameters are:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Estimated \(b\) for level 2</th>
+<th>Estimated \(b\) for level 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>−1.5</td>
+<td>−1.1</td>
+</tr>
+<tr>
+<td>Major: Math</td>
+<td>1.2</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>Major: Economics</td>
+<td>0.2</td>
+<td>1.8</td>
+</tr>
+<tr>
+<td>Major: Other</td>
+<td>0.7</td>
+<td>0.4</td>
+</tr>
+<tr>
+<td>SRM score: Under 6</td>
+<td>0.4</td>
+<td>−0.4</td>
+</tr>
+<tr>
+<td>SRM score: 6, 7</td>
+<td>0.9</td>
+<td>0.2</td>
+</tr>
+<tr>
+<td>SRM score: Over 7</td>
+<td>0.5</td>
+<td>0.9</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the probability that a math major who scored 8 on Exam SRM will end up in Investments.</p>
+<div class="opts">
+<p>(A) 0.40</p>
+<p>(B) 0.45</p>
+<p>(C) 0.50</p>
+<p>(D) 0.55</p>
+<p>(E) 0.60</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>精算部門估計學生最後進入 1. 訂價、2. 財務報告、3. 投資的機率。名目 logistic 模型，訂價為基準，解釋變數為大學主修與 SRM 分數：</p>
+<p>求數學系、SRM 考 8 分的學生最後進入投資的機率。</p>
+<div class="opts">
+<p>(A) 0.40　(B) 0.45　(C) 0.50　(D) 0.55　(E) 0.60</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>第 2 類：\(-1.5+1.2+0.5=0.2\)；第 3 類：\(-1.1+0.8+0.9=0.6\)。
+\[\pi_3=\frac{e^{0.6}}{1+e^{0.2}+e^{0.6}}=\frac{1.8221}{1+1.2214+1.8221}=0.4506 .\]</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（7 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC12-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.2-1</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A nominal logit model has three categories A, B, and C, with A as the base category. For an individual, the linear predictors are \(\eta_B=0.4\) and \(\eta_C=-0.2\).</p>
+<p>Calculate the probability of category A.</p>
+<div class="opts">
+<p>(A) 0.302</p>
+<p>(B) 0.451</p>
+<p>(C) 0.247</p>
+<p>(D) 0.401</p>
+<p>(E) 0.550</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>名目 logit 三類 A、B、C，A 為基準。某人的 \(\eta_B=0.4\)、\(\eta_C=-0.2\)。求類別 A 的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\pi_A=\frac{1}{1+e^{0.4}+e^{-0.2}}=\frac{1}{1+1.4918+0.8187}=0.302\)。</p>
+<p>(B) 是 \(\pi_B\)；(C) 是 \(\pi_C\)；(D) 是 \(\frac{1}{1+1.4918}\)（只用了 A、B 兩類）。</p></div></div></article><article class="exercise concept-q" id="qC12-2-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.2-2</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A nominal (generalized) logit model is fitted to a response with 4 categories, using 3 explanatory variables and an intercept.</p>
+<p>Calculate the number of parameters in the model.</p>
+<div class="opts">
+<p>(A) 4</p>
+<p>(B) 7</p>
+<p>(C) 12</p>
+<p>(D) 16</p>
+<p>(E) 9</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>4 類的名目 logit 模型，3 個解釋變數加截距。參數有幾個？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>每個非基準類別一組係數，每組 \(k+1=4\) 個；非基準類別 \(c-1=3\) 個；共 \(4\times3=12\)。</p>
+<p>(D) 把基準類別也算進去。</p></div></div></article><article class="exercise concept-q" id="qC12-2-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.2-3</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about the nominal logit model is/are true.</p>
+<div class="items">
+<p>I. The ratio \(\pi_a/\pi_b\) of two categories does not depend on the linear predictors of the other categories.</p>
+<p>II. Conditional on the response being one of two categories, the model reduces to a binary logistic model.</p>
+<p>III. Exponentiated coefficients are odds ratios relative to the base category.</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於名目 logit 模型，下列哪些正確？</p>
+<div class="items">
+<p>I. 兩類的機率比 \(\pi_a/\pi_b\) 與其他類別的線性預測式無關。</p>
+<p>II. 在反應屬於兩類之一的條件下，模型化成二元 logistic 模型。</p>
+<p>III. 係數取指數是相對於基準類別的勝算比。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：I、II、III 都正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(\pi_a/\pi_b=e^{\eta_a-\eta_b}\)，這就是無關選項獨立性（IIA）。II 對：巢狀結構，係數是兩類係數之差。III 對：\(e^{\beta_{1j}}\) 是類別 \(j\) 對基準類別的勝算比。</p></div></div></article><article class="exercise concept-q" id="qC12-2-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.2-4</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A nominal logit model with base category A gives, for an individual, \(\eta_B=0.4\) and \(\eta_C=-0.2\).</p>
+<p>Calculate the probability that the individual is in category B, given that the individual is in category B or C.</p>
+<div class="opts">
+<p>(A) 0.354</p>
+<p>(B) 0.646</p>
+<p>(C) 0.451</p>
+<p>(D) 0.599</p>
+<p>(E) 0.548</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>名目 logit（基準 A），某人 \(\eta_B=0.4\)、\(\eta_C=-0.2\)。已知屬於 B 或 C，屬於 B 的機率是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\frac{e^{0.4}}{e^{0.4}+e^{-0.2}}=\frac{1}{1+e^{-0.6}}=0.646\)，就是以 \(\eta_B-\eta_C=0.6\) 為線性預測式的二元 logistic。</p>
+<p>(A) 是 C 的條件機率；(C) 是沒有條件的 \(\pi_B\)；(D) 是 \(\frac{e^{0.4}}{1+e^{0.4}}\)（對 A 的條件機率）。</p></div></div></article><article class="exercise concept-q" id="qC12-2-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.2-5</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>In a nominal logit model, the coefficient of the indicator variable "female" for category "SUV" (base category "sedan") is 0.3.</p>
+<p>Calculate the odds ratio of females relative to males for buying an SUV rather than a sedan.</p>
+<div class="opts">
+<p>(A) 0.300</p>
+<p>(B) 0.741</p>
+<p>(C) 1.300</p>
+<p>(D) 0.574</p>
+<p>(E) 1.350</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>名目 logit 中，「女性」這個指標變數在「SUV」類別（基準為轎車）的係數是 0.3。求女性相對於男性「買 SUV 而不買轎車」的勝算比。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>勝算比 \(=e^{0.3}=1.350\)。(B) 是 \(e^{-0.3}\)，方向反了；(C) 是 \(1+\beta\) 的近似。</p></div></div></article><article class="exercise concept-q" id="qC12-2-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.2-6</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>In a nominal logit model, an individual has linear predictors \(\eta_1=0.5\) and \(\eta_2=-0.3\) for categories 1 and 2 (category 3 is the base).</p>
+<p>Calculate the relative odds \(\pi_1/\pi_2\).</p>
+<div class="opts">
+<p>(A) 2.226</p>
+<p>(B) 1.221</p>
+<p>(C) 0.449</p>
+<p>(D) 1.649</p>
+<p>(E) 0.800</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>名目 logit 中某人類別 1、2 的線性預測式為 0.5、−0.3（類別 3 為基準）。求相對勝算 \(\pi_1/\pi_2\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\pi_1/\pi_2=e^{0.5-(-0.3)}=e^{0.8}=2.226\)。基準類別與分母都消掉了。</p>
+<p>(E) 是指數裡的 0.8 本身；(C) 方向反了。</p></div></div></article><article class="exercise concept-q" id="qC12-2-7"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.2-7</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following correctly distinguishes the generalized logit model from the multinomial logit model.</p>
+<div class="opts">
+<p>(A) The generalized logit model is for ordinal responses; the multinomial logit model is for nominal responses</p>
+<p>(B) The generalized logit model uses a probit link; the multinomial logit model uses a logit link</p>
+<p>(C) The generalized logit model has one intercept; the multinomial logit model has one intercept per category</p>
+<p>(D) In the generalized logit model, coefficients vary by category; in the multinomial logit model, explanatory variables vary by category</p>
+<p>(E) The two models are identical</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪一個正確區分了廣義 logit 模型與多項 logit 模型？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>廣義 logit：解釋變數是個人的特徵（每一類相同），係數隨類別不同。多項 logit：解釋變數隨選項不同（例如每種車的價格），係數相同。兩者都是名目反應、都用 logit。</p></div></div></article></div></section><section class="unit" id="s3"><h2>12.3 次序反應：累積 logit 與比例勝算</h2><h3>一、累積的想法</h3>
+<p>次序反應的類別有順序，可以想成一個潛在連續變數被切成幾段（例如核保分類：優體、標準體、次標準體）。模型不直接描述每一類，而是描述<strong>累積機率</strong> \(\Pr(Y\le m)=\pi_1+\cdots+\pi_m\)。</p>
+<p><strong>累積 logit 模型</strong>：
+\[\ln\frac{\Pr(Y\le m)}{1-\Pr(Y\le m)}=\ln\frac{\pi_1+\cdots+\pi_m}{\pi_{m+1}+\cdots+\pi_c}=\beta_{0m}+\sum_{i=1}^k\beta_{im}x_i,\qquad m=1,\ldots,c-1 .\]
+\(m=c\) 不需要方程式（累積機率是 1）。參數 \((k+1)(c-1)\) 個。</p>
+<h3>二、比例勝算模型</h3>
+<p>如果除了截距之外，所有係數都不隨類別改變（\(\beta_{im}=\beta_i\)），就是<strong>比例勝算模型</strong>（proportional odds model）：
+\[\ln\frac{\Pr(Y\le m)}{1-\Pr(Y\le m)}=\beta_{0m}+\sum_{i=1}^k\beta_ix_i .\]
+比較兩組解釋變數 \(\mathbf x_1\)、\(\mathbf x_2\)，累積勝算的比：
+\[\frac{\exp\big(\beta_{0m}+\sum\beta_ix_{i1}\big)}{\exp\big(\beta_{0m}+\sum\beta_ix_{i2}\big)}=\exp\Big(\sum\beta_i(x_{i1}-x_{i2})\Big),\]
+<strong>\(\beta_{0m}\) 消掉了，和類別 \(m\) 無關</strong>。這就是「比例」的意思：各累積勝算的水準不同，但兩組人之間的勝算比在每一個切點都相同。</p>
+<figure><img src="assets/fig/ch12-propodds.svg" alt="比例勝算模型（、、，習題 12.36～12.37 的參數）。左：兩條對數累積勝算是平行直線，差距固定是 。右：轉成機率後，各類別的機率是累積曲線之間的帶子。（虛線）時 、，就是習題給的數字。" loading="lazy"><figcaption>比例勝算模型（\(\beta_{01}=0.1\)、\(\beta_{02}=0.7\)、\(\beta_1=0.42\)，習題 12.36～12.37 的參數）。左：兩條對數累積勝算是平行直線，差距固定是 \(\beta_{02}-\beta_{01}=0.6\)。右：轉成機率後，各類別的機率是累積曲線之間的帶子。\(x=1\)（虛線）時 \(\pi_1=0.627\)、\(\pi_2=0.127\)，就是習題給的數字。</figcaption></figure>
+
+<h3>三、求某一類的機率：先累積、再相減</h3>
+<p>\[\pi_m=\Pr(Y\le m)-\Pr(Y\le m-1).\]
+步驟：算出需要的每個累積對數勝算 → 轉成累積機率 \(\frac{e^{\eta}}{1+e^{\eta}}\) → 相減。最後一類是 \(1-\Pr(Y\le c-1)\)。</p>
+<div class="box warn">
+<div class="box-t">易錯提醒：勝算不能相加減</div>
+<p>互斥事件的<strong>機率</strong>可以相加，<strong>勝算</strong>不行。知道「事件 1 的勝算 0.5」與「事件 1 或 2 的勝算 2」，不能說事件 2 的勝算是 1.5。要先換成機率：\(\frac{0.5}{1.5}=\frac13\)、\(\frac{2}{3}\)，所以事件 2 的機率 \(\frac13\)，勝算 \(\frac{1/3}{2/3}=0.5\)。（講義小測驗 12-3）</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 12-7：比例勝算的推算（講義例 12D）</div>
+<p>事故類型（1 財損、2 傷害、3 死亡）用累積比例勝算模型，解釋變數是車種。汽車：\(\Pr(Y\le1)=0.30\)、\(\Pr(Y\le2)=0.40\)；卡車：\(\Pr(Y\le1)=0.45\)。求卡車的 \(\Pr(Y\le2)\)。</p>
+<p><strong>汽車的累積勝算</strong>：\(0.3/0.7=3/7\)、\(0.4/0.6=2/3\)。卡車的第一個累積勝算：\(0.45/0.55=9/11\)。</p>
+<p><strong>比例勝算</strong>：卡車對汽車的勝算比在兩個切點相同，\(\frac{9/11}{3/7}=\frac{21}{11}\)。所以卡車的第二個累積勝算 \(=\frac23\times\frac{21}{11}=\frac{14}{11}\)。</p>
+<p><strong>換回機率</strong>：\(\frac{14/11}{1+14/11}=\frac{14}{25}=0.56\)。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 12-8：比例勝算的機率（習題 12.38）</div>
+<p>雨刷重要性（1 不重要、2 重要、3 非常重要），截距 0.14、−0.07，雨量係數 −0.01。雨量 40 吋的駕駛人回答「非常重要」的機率：</p>
+<p>\(\Pr(Y\le2)\) 的線性預測式 \(-0.07-0.01(40)=-0.47\)，累積機率 \(\frac{e^{-0.47}}{1+e^{-0.47}}=0.3846\)。所以 \(\pi_3=1-0.3846=0.6154\)。</p>
+</div>
+<p><strong>也可以用其他連結</strong>：累積 probit（\(\Pr(Y\le m)=\Phi(\eta_m)\)）、累積互補 log-log（\(\Pr(Y\le m)=1-e^{-e^{\eta_m}}\)）。計算方式相同：先算累積機率再相減。</p>
+<div class="box exam">
+<div class="box-t">考試怎麼考：次序反應</div>
+<ul>
+<li><strong>累積機率相減</strong>：問「恰好是第 \(m\) 類」就要兩個累積機率；問最後一類就是 1 減最後一個累積機率；問「至少 6 分」就是 1 減 \(\Pr(Y\le5)\)。</li>
+<li><strong>比例勝算的性質</strong>：兩組人之間的累積勝算比與類別無關，可以從一個切點推到另一個切點（例 12D、習題 <a href="ch12.html#q12-35">12.35</a>、<a href="ch12.html#q12-39">12.39</a>）。</li>
+<li><strong>對數累積勝算</strong>（MAS-II-F19:25）：直接用資料的比例算 \(\ln\frac{\Pr(Y\le m)}{1-\Pr(Y\le m)}\)。</li>
+<li><strong>勝算不能相減</strong>：一律先換成機率。</li>
+</ul>
+</div>
+<div class="box key">
+<div class="box-t">本章總整理</div>
+<ul>
+<li>二元反應：\(\pi=g^{-1}(\eta)\)。logit \(\frac{e^\eta}{1+e^\eta}\)（典型連結）、probit \(\Phi(\eta)\)、互補 log-log \(1-e^{-e^\eta}\)（不對稱）。</li>
+<li>勝算 \(o=\frac{\pi}{1-\pi}\)、\(\pi=\frac{o}{1+o}\)；logit 下勝算 \(=e^\eta\)，係數的 \(e^\beta\) 是勝算比。</li>
+<li>門檻解釋：\(y^*=\eta+\varepsilon\)，\(\pi=\Pr(\varepsilon&gt;-\eta)\)；logistic 誤差得 logit，常態誤差得 probit。</li>
+<li>名目（廣義 logit）：\(\pi_j=\frac{e^{\eta_j}}{1+\sum e^{\eta_i}}\)，基準類別分子為 1；IIA；兩類之間是二元 logit。</li>
+<li>次序（累積 logit）：模型描述累積勝算；比例勝算模型的斜率不隨類別變，勝算比與切點無關；某一類的機率＝累積機率相減；勝算不能相加減。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q12-32"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.32 題</b><small>・講義 p.214・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>An ordinal variable classifies drivers as follows: 1 Low risk; 2 Medium risk; 3 High risk.</p>
+<p>A cumulative logit model results in the following coefficients for the explanatory variables:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Low Risk</th>
+<th>Medium Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1.30</td>
+<td>2.05</td>
+</tr>
+<tr>
+<td>Male</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Female</td>
+<td>0.75</td>
+<td>0.80</td>
+</tr>
+<tr>
+<td>Age Under 25</td>
+<td>−1.80</td>
+<td>−0.65</td>
+</tr>
+<tr>
+<td>Age 25–44</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Age 45–64</td>
+<td>1.00</td>
+<td>1.47</td>
+</tr>
+<tr>
+<td>Age 65 and over</td>
+<td>0.23</td>
+<td>−0.12</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the probability that a male driver age 65 or over is a medium risk.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>次序變數把駕駛人分成 1. 低風險、2. 中風險、3. 高風險。累積 logit 模型（係數隨類別不同）：</p>
+<p>求 65 歲以上男性駕駛人是中風險的機率。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.05124</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>累積的線性預測式：\(\Pr(Y\le1)\) 是 \(1.30+0.23=1.53\)；\(\Pr(Y\le2)\) 是 \(2.05-0.12=1.93\)。</p>
+<p>累積勝算 \(e^{1.53}=4.61818\)、\(e^{1.93}=6.88951\)；累積機率 \(0.82201\)、\(0.87325\)。</p>
+<p>中風險的機率 \(=0.87325-0.82201=0.05124\)。</p></div></div></article><article class="exercise" id="q12-34"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.34 題</b><small>・講義 p.214・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>Use the model of Exercise 12.33.</p>
+<p>Calculate the probability of an injury for someone with \(x_1=0\), \(x_2=5\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同習題 <a href="ch12.html#q12-33">12.33</a> 的模型。求 \(x_1=0\)、\(x_2=5\) 的人受傷的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.04091</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\Pr(Y\le1)\)：\(\eta=0.4+0.082(5)=0.81\)，勝算 \(e^{0.81}=2.2479\)，機率 \(0.692110\)。</p>
+<p>\(\Pr(Y\le2)\)：\(\eta=0.6+0.41=1.01\)，勝算 \(2.7456\)，機率 \(0.733020\)。</p>
+<p>受傷（第 2 類）\(=0.733020-0.692110=0.04091\)。</p></div></div></article><article class="exercise" id="q12-36"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.36 題</b><small>・講義 p.215・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>A cumulative proportional odds model is used for a 4-category ordinal response variable. There is one explanatory variable. Therefore, the form of the model is \(g(\pi_j)=\beta_{0j}+\beta_1x_1\).</p>
+<p>When \(x_1=1\), the probabilities of categories 1 and 2 are 0.627148 and 0.126841 respectively.</p>
+<p>Determine \(\beta_{02}-\beta_{01}\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>四類次序反應的累積比例勝算模型，一個解釋變數：\(g(\pi_j)=\beta_{0j}+\beta_1x_1\)（\(g\) 為累積 logit）。\(x_1=1\) 時，類別 1、2 的機率分別為 0.627148、0.126841。求 \(\beta_{02}-\beta_{01}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.6</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>累積機率：\(\Pr(Y\le1)=0.627148\)，\(\Pr(Y\le2)=0.753989\)。</p>
+<p>對數累積勝算：\(\ln\frac{0.627148}{0.372852}=0.52=\beta_{01}+\beta_1\)；\(\ln\frac{0.753989}{0.246011}=1.12=\beta_{02}+\beta_1\)。</p>
+<p>相減：\(\beta_{02}-\beta_{01}=0.6\)。</p></div></div></article><article class="exercise" id="q12-38"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.38 題</b><small>・講義 p.215・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>A survey is done among drivers to determine the importance of rear window wipers on cars. The response variable has the following values: 1 Not important; 2 Important; 3 Very important.</p>
+<p>A cumulative proportional odds model is used to predict the response. The model has an intercept and one explanatory variable: number of inches of rain per year in the driver's region. The fitted coefficients are</p>
+<table>
+<thead>
+<tr>
+<th>Intercept (Not important)</th>
+<th>0.14</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept (Important)</td>
+<td>−0.07</td>
+</tr>
+<tr>
+<td>Inches of rain</td>
+<td>−0.01</td>
+</tr>
+</tbody>
+</table>
+<p>A driver lives in a region with 40 inches of rain per year.</p>
+<p>Calculate the probability that this driver responds "Very important".</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>問卷調查後窗雨刷的重要性：1 不重要、2 重要、3 非常重要。累積比例勝算模型的係數：截距（不重要）0.14、截距（重要）−0.07、年雨量（吋）−0.01。某駕駛人所在地區年雨量 40 吋。求他回答「非常重要」的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.6154</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>需要 \(\Pr(Y\le2)\)：\(\eta=-0.07-0.01(40)=-0.47\)，累積勝算 \(e^{-0.47}=0.6250\)，累積機率 \(0.6250/1.6250=0.3846\)。</p>
+<p>\(\pi_3=1-0.3846=0.6154\)。</p></div></div></article><article class="exercise" id="q12-39"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 12.39 題</b><small>・講義 p.215・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>An ordinal variable classifies drivers as follows: 1 Low risk; 2 Medium risk; 3 High risk.</p>
+<p>A cumulative proportional odds model estimates category using several explanatory variables. One of the explanatory variables is city.</p>
+<p>For two insureds, values of all explanatory variables except for city are identical. The values of city, along with the probabilities of the three categories, are as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New York</td>
+<td>0.724</td>
+<td>0.220</td>
+<td>0.056</td>
+</tr>
+<tr>
+<td>Chicago</td>
+<td>0.698</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Determine the probability of medium risk for the Chicago insured.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>次序變數把駕駛人分成 1. 低風險、2. 中風險、3. 高風險，用累積比例勝算模型估計，其中一個解釋變數是城市。兩位被保險人除了城市之外的解釋變數都相同：</p>
+<p>求芝加哥被保險人是中風險的機率。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.239</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>第一個切點的勝算比</strong>（芝加哥／紐約）：\(\frac{0.698/0.302}{0.724/0.276}=\frac{2.31126}{2.62319}=0.88109\)。</p>
+<p><strong>比例勝算</strong>：第二個切點的勝算比也是 0.88109。紐約 \(\Pr(Y\le2)=0.944\)，勝算 \(16.85714\)；芝加哥的勝算 \(16.85714\times0.88109=14.85262\)，累積機率 \(\frac{14.85262}{15.85262}=0.93692\)。</p>
+<p><strong>相減</strong>：\(0.93692-0.698=0.239\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不能把紐約的中風險機率 0.220 直接搬過來，也不能拿勝算相減。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（7 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC12-3-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.3-1</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about the cumulative logit proportional odds model is/are true.</p>
+<div class="items">
+<p>I. The slope coefficients are the same for every cumulative category; only the intercepts differ.</p>
+<p>II. The intercepts must increase with the category index.</p>
+<p>III. The probability of a single category can be found by subtracting consecutive cumulative odds.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於累積 logit 比例勝算模型，下列哪些正確？</p>
+<div class="items">
+<p>I. 每個累積類別的斜率相同，只有截距不同。</p>
+<p>II. 截距必須隨類別編號遞增。</p>
+<p>III. 單一類別的機率可以用相鄰的累積勝算相減求得。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：這就是比例勝算的定義。II 對：\(\Pr(Y\le m)\) 隨 \(m\) 遞增，斜率相同時對數累積勝算只能靠截距變大。III 錯：勝算不能相減，要先換成累積機率再相減。</p></div></div></article><article class="exercise concept-q" id="qC12-3-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.3-2</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A cumulative logit model for a 3-category ordinal response has intercepts \(\beta_{01}=-1\) and \(\beta_{02}=1\), and slope \(\beta_1=0.5\).</p>
+<p>Calculate the probability of category 2 when \(x=2\).</p>
+<div class="opts">
+<p>(A) 0.381</p>
+<p>(B) 0.500</p>
+<p>(C) 0.881</p>
+<p>(D) 0.119</p>
+<p>(E) 0.269</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>三類次序反應的累積 logit 模型，截距 −1、1，斜率 0.5。求 \(x=2\) 時類別 2 的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\Pr(Y\le1)\)：\(\eta=-1+1=0\)，機率 0.5。\(\Pr(Y\le2)\)：\(\eta=1+1=2\)，機率 \(\frac{e^2}{1+e^2}=0.881\)。</p>
+<p>\(\pi_2=0.881-0.5=0.381\)。</p>
+<p>(B) 是 \(\pi_1\)；(C) 是 \(\Pr(Y\le2)\)；(D) 是 \(\pi_3\)。</p></div></div></article><article class="exercise concept-q" id="qC12-3-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.3-3</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>For an ordinal response, the cumulative odds of \(Y\le1\) are 1 and the cumulative odds of \(Y\le2\) are 3.</p>
+<p>Calculate the probability that \(Y=2\).</p>
+<div class="opts">
+<p>(A) 2.000</p>
+<p>(B) 0.250</p>
+<p>(C) 0.667</p>
+<p>(D) 0.500</p>
+<p>(E) 0.750</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>次序反應 \(Y\le1\) 的累積勝算是 1，\(Y\le2\) 的累積勝算是 3。求 \(\Pr(Y=2)\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>換成機率：\(\Pr(Y\le1)=\frac{1}{2}\)，\(\Pr(Y\le2)=\frac34\)。\(\Pr(Y=2)=0.75-0.5=0.25\)。</p>
+<p>(A) 是勝算相減 \(3-1\)；(C) 是把差 2 換成機率 \(2/3\)；(E) 是 \(\Pr(Y\le2)\)。</p></div></div></article><article class="exercise concept-q" id="qC12-3-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.3-4</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>In a cumulative logit proportional odds model, the coefficient of an indicator variable \(x\) is 0.5. For an individual with \(x=0\), \(\Pr(Y\le1)=0.4\).</p>
+<p>Calculate \(\Pr(Y\le1)\) for an otherwise identical individual with \(x=1\).</p>
+<div class="opts">
+<p>(A) 0.400</p>
+<p>(B) 0.600</p>
+<p>(C) 0.524</p>
+<p>(D) 0.659</p>
+<p>(E) 0.900</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>累積 logit 比例勝算模型中指標變數 \(x\) 的係數是 0.5。\(x=0\) 的人 \(\Pr(Y\le1)=0.4\)。其他條件相同、\(x=1\) 的人 \(\Pr(Y\le1)\) 是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>累積勝算 \(0.4/0.6=0.6667\)，乘上 \(e^{0.5}=1.6487\) 得 1.0991，換回機率 \(\frac{1.0991}{2.0991}=0.524\)。</p>
+<p>(E) 是機率直接加 0.5；(D) 是 \(0.4\times1.6487\)，把機率當勝算乘。</p></div></div></article><article class="exercise concept-q" id="qC12-3-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.3-5</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A cumulative logit proportional odds model is fitted to an ordinal response with 4 categories, using 3 explanatory variables.</p>
+<p>Calculate the number of parameters.</p>
+<div class="opts">
+<p>(A) 4</p>
+<p>(B) 12</p>
+<p>(C) 9</p>
+<p>(D) 6</p>
+<p>(E) 16</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>4 類的次序反應，3 個解釋變數，累積 logit 比例勝算模型有幾個參數？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>截距 \(c-1=3\) 個，斜率共用 \(k=3\) 個，合計 6。不是比例勝算（斜率隨類別變）時才是 \((k+1)(c-1)=12\)，即 (B)。</p></div></div></article><article class="exercise concept-q" id="qC12-3-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.3-6</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A cumulative probit model for accident severity (1 property damage, 2 injury, 3 fatality) gives, for a driver, a linear predictor of 1.0 for the cumulative probability of categories 1 and 2.</p>
+<p>Calculate the probability of a fatality.</p>
+<div class="opts">
+<p>(A) 0.500</p>
+<p>(B) 0.841</p>
+<p>(C) 0.269</p>
+<p>(D) 0.368</p>
+<p>(E) 0.159</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>事故嚴重度的累積 probit 模型，某駕駛人 \(\Pr(Y\le2)\) 的線性預測式為 1.0。求死亡的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\Pr(Y\le2)=\Phi(1.0)=0.841\)，死亡 \(=1-0.841=0.159\)。</p>
+<p>(B) 是 \(\Pr(Y\le2)\)；(C) 是用 logit 算的 \(1-\frac{e}{1+e}\)。</p></div></div></article><article class="exercise concept-q" id="qC12-3-7"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C12.3-7</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following is the best reason to use an ordinal (cumulative) model rather than a nominal model for a response such as underwriting class (preferred, standard, substandard).</p>
+<div class="opts">
+<p>(A) It uses the natural ordering of the categories and needs fewer parameters</p>
+<p>(B) It allows the probabilities of the categories to sum to more than 1</p>
+<p>(C) It is the only model that can include categorical predictors</p>
+<p>(D) It does not require choosing a link function</p>
+<p>(E) It guarantees that every category has the same probability</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>對核保分類（優體、標準體、次標準體）這種反應變數，選累積（次序）模型而不選名目模型，最好的理由是什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>次序模型利用類別的自然順序（可以想成潛在連續變數被切成幾段）；比例勝算模型的斜率共用，參數比名目模型少很多。其他選項都不對：機率總和永遠是 1、兩種模型都能用類別變數、都要選連結。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（23 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q12-3"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.3 題</b><small>・講義 p.202・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #7] Determine which of the following pairs of distribution and link function is the most appropriate to model if a person is hospitalized or not.</p>
+<div class="opts">
+<p>(A) Normal distribution, identity link function</p>
+<p>(B) Normal distribution, logit link function</p>
+<p>(C) Binomial distribution, linear link function</p>
+<p>(D) Binomial distribution, logit link function</p>
+<p>(E) It cannot be determined from the information given.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 7 題）要建模一個人有沒有住院，下列哪一組分配與連結最適合？</p>
+<div class="opts">
+<p>(A) 常態分配、恆等連結</p>
+<p>(B) 常態分配、logit 連結</p>
+<p>(C) 二項分配、線性連結</p>
+<p>(D) 二項分配、logit 連結</p>
+<p>(E) 無法從題目資訊判斷</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>住院與否是二元結果，用二項分配；平均數是機率，必須在 0 和 1 之間，logit 連結保證這一點，線性連結不行。</p></div></div></article><article class="exercise" id="q12-4"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.4 題</b><small>・講義 p.202・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #20] An analyst is modeling the probability of a certain phenomenon occurring. The analyst has observed that the simple linear model currently in use results in predicted values less than zero and greater than one.</p>
+<p>Determine which of the following is the most appropriate way to address this issue.</p>
+<div class="opts">
+<p>(A) Limit the data to observations that are expected to result in predicted values between 0 and 1.</p>
+<p>(B) Consider predicted values below 0 as 0 and values above 1 as 1.</p>
+<p>(C) Use a logit function to transform the linear model into only predicting values between 0 and 1.</p>
+<p>(D) Use the canonical link function for the Poisson distribution to transform the linear model into only predicting values between 0 and 1.</p>
+<p>(E) None of the above.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 20 題）分析師在建模某現象發生的機率，目前的簡單線性模型會預測出小於 0 和大於 1 的值。下列哪一種處理最適當？</p>
+<div class="opts">
+<p>(A) 只保留預期預測值在 0 和 1 之間的觀察。</p>
+<p>(B) 把小於 0 的預測值當作 0，大於 1 的當作 1。</p>
+<p>(C) 用 logit 函數轉換線性模型，讓預測值只落在 0 和 1 之間。</p>
+<p>(D) 用 Poisson 的典型連結轉換線性模型，讓預測值只落在 0 和 1 之間。</p>
+<p>(E) 以上皆非。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>logit 的反函數把任何實數送到 \((0,1)\)。(A) 刪資料、(B) 截斷預測值都會造成偏誤；(D) Poisson 的典型連結是 log，只保證預測值為正，不保證小於 1。</p></div></div></article><article class="exercise" id="q12-8"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.8 題</b><small>・講義 p.204・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>Use the GLM output of Exercise 12.7, but the link selected is Probit.</p>
+<p>Calculate the estimated probability of a claim for: Driver Gender: Male; Vehicle Body: Roadster; Area: A.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同習題 <a href="ch12.html#q12-7">12.7</a> 的係數，但連結改為 probit。求男性、敞篷車、地區 A 的理賠機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.0053</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=-1.485-1.047-0.025=-2.557\)（地區 A 是基準）。\(\pi=\Phi(-2.557)=0.0053\)。</p></div></div></article><article class="exercise" id="q12-10"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.10 題</b><small>・講義 p.206・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[S-S16:33] You are given the following information for a GLM of customer retention:</p>
+<p>Response variable: Retention; Response distribution: Binomial; Link: Logit</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>df</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>1.530</td>
+</tr>
+<tr>
+<td>Number of Drivers: 1</td>
+<td>0</td>
+<td>0.000</td>
+</tr>
+<tr>
+<td>Number of Drivers: &gt;1</td>
+<td>1</td>
+<td>0.735</td>
+</tr>
+<tr>
+<td>Last Rate Change: &lt; 0%</td>
+<td>0</td>
+<td>0.000</td>
+</tr>
+<tr>
+<td>Last Rate Change: 0%–10%</td>
+<td>1</td>
+<td>−0.031</td>
+</tr>
+<tr>
+<td>Last Rate Change: &gt; 10%</td>
+<td>1</td>
+<td>−0.372</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the probability of retention for a policy with 3 drivers and a prior rate change of 5%.</p>
+<div class="opts">
+<p>(A) Less than 0.850</p>
+<p>(B) At least 0.850, but less than 0.870</p>
+<p>(C) At least 0.870, but less than 0.890</p>
+<p>(D) At least 0.890, but less than 0.910</p>
+<p>(E) At least 0.910</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2016 春季 S 第 33 題）顧客續保的 GLM：二項分配、logit 連結。</p>
+<p>求 3 位駕駛人、前次費率調整 5% 的保單的續保機率。</p>
+<div class="items">
+<p>(B) 至少 0.850，小於 0.870</p>
+<p>(C) 至少 0.870，小於 0.890</p>
+<p>(D) 至少 0.890，小於 0.910</p>
+<p>(E) 至少 0.910</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=1.530+0.735-0.031=2.234\)，勝算 \(e^{2.234}=9.3371\)，機率 \(9.3371/10.3371=0.9033\)。</p></div></div></article><article class="exercise" id="q12-11"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.11 題</b><small>・講義 p.206・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F18:28] In a study 100 subjects were asked to choose one of three election candidates (A, B, or C). The subjects were organized into four age categories: (18–30, 31–45, 45–61, 61+).</p>
+<p>A logistic regression was fitted to the subject responses to predict their preferred candidate, with age group (18–30) and Candidate A as the reference categories.</p>
+<p>For age group (18–30), the log-odds for preference of Candidate B and Candidate C were −0.535 and −1.489 respectively.</p>
+<p>Calculate the modeled probability of someone from age group (18–30) preferring Candidate B.</p>
+<div class="opts">
+<p>(A) Less than 20%</p>
+<p>(B) At least 20%, but less than 40%</p>
+<p>(C) At least 40%, but less than 60%</p>
+<p>(D) At least 60%, but less than 80%</p>
+<p>(E) At least 80%</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 秋季 MAS-I 第 28 題）100 位受訪者從三位候選人（A、B、C）中選一位，分成四個年齡組。以 logistic 迴歸預測偏好的候選人，年齡組 18–30 與候選人 A 為基準類別。年齡組 18–30 偏好 B、C 的對數勝算分別是 −0.535、−1.489。求年齡組 18–30 的人偏好候選人 B 的模型機率。</p>
+<div class="items">
+<p>(B) 至少 20%，小於 40%</p>
+<p>(C) 至少 40%，小於 60%</p>
+<p>(D) 至少 60%，小於 80%</p>
+<p>(E) 至少 80%</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>這是三類的名目 logit，基準類別 A 的 \(e^\eta=1\)：
+\[\pi_B=\frac{e^{-0.535}}{1+e^{-0.535}+e^{-1.489}}=\frac{0.5857}{1+0.5857+0.2256}=0.3233 .\]
+<strong>講義更正</strong>：講義只用 B 與 A 兩類算成 \(\frac{0.5857}{1.5857}=0.3694\)，那其實是「已知選 A 或 B，選 B 的條件機率」。兩者都落在 (B)，答案不受影響。</p></div></div></article><article class="exercise" id="q12-14"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.14 題</b><small>・講義 p.207・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>A binary response is modeled with a generalized linear model and a logit link. The fitted model is \(g(\pi)=3.56+0.42x_1\).</p>
+<p>Determine the odds of the event occurring if \(x_1=5\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>二元反應以 logit 連結的 GLM 建模，配適模型為 \(g(\pi)=3.56+0.42x_1\)。求 \(x_1=5\) 時事件發生的勝算。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>287.15</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>logit 下勝算就是 \(e^\eta\)：\(e^{3.56+0.42(5)}=e^{5.66}=287.15\)。</p></div></div></article><article class="exercise" id="q12-15"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.15 題</b><small>・講義 p.208・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:27] You are given the following information about an insurance policy:</p>
+<div class="items">
+<p>(i) The probability of a policy renewal, \(p(X)\), follows a logistic model with an intercept and one explanatory variable.</p>
+<p>(ii) \(\beta_0=5\)</p>
+<p>(iii) \(\beta_1=-0.65\)</p>
+</div>
+<p>Calculate the odds of renewal at \(x=5\).</p>
+<div class="opts">
+<p>(A) Less than 2</p>
+<p>(B) At least 2, but less than 4</p>
+<p>(C) At least 4, but less than 6</p>
+<p>(D) At least 6, but less than 8</p>
+<p>(E) At least 8</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 春季 MAS-I 第 27 題）保單續保的機率 \(p(X)\) 是有截距與一個解釋變數的 logistic 模型，\(\beta_0=5\)、\(\beta_1=-0.65\)。求 \(x=5\) 時續保的勝算。</p>
+<div class="items">
+<p>(B) 至少 2，小於 4</p>
+<p>(C) 至少 4，小於 6</p>
+<p>(D) 至少 6，小於 8</p>
+<p>(E) 至少 8</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>勝算 \(=e^{5-0.65(5)}=e^{1.75}=5.755\)。</p></div></div></article><article class="exercise" id="q12-17"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.17 題</b><small>・講義 p.209・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are given the following information about an insurance policy:</p>
+<div class="items">
+<p>(i) The probability of a policy renewal is modeled using a generalized linear model with a probit link.</p>
+<p>(ii) The model has an intercept and one explanatory variable.</p>
+<p>(iii) \(\beta_0=-3\)</p>
+<p>(iv) \(\beta_1=0.8\)</p>
+</div>
+<p>Calculate the odds of renewal at \(x=2\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>續保機率用 probit 連結的 GLM 建模，有截距與一個解釋變數，\(\beta_0=-3\)、\(\beta_1=0.8\)。求 \(x=2\) 時續保的勝算。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.0879</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>probit 給的是機率，不是勝算。\(\eta=-3+0.8(2)=-1.4\)，\(\pi=\Phi(-1.4)=0.0808\)，勝算 \(\frac{0.0808}{0.9192}=0.0879\)。</p></div></div></article><article class="exercise" id="q12-19"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.19 題</b><small>・講義 p.209・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are modeling the probability that a policy will be renewed. You use a generalized linear model and a logit link. The output of the model is:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Coefficient</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>0.22</td>
+</tr>
+<tr>
+<td>Number of years policy is in force</td>
+<td>0.15</td>
+</tr>
+<tr>
+<td>Number of claims submitted</td>
+<td>−0.25</td>
+</tr>
+<tr>
+<td>Age of policyholder: Under 30</td>
+<td>−0.30</td>
+</tr>
+<tr>
+<td>Age of policyholder: 30–49</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Age of policyholder: 50 and up</td>
+<td>0.18</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the predicted probability that a 55-year old policyholder for whom the policy was in force for 5 years and who has not submitted any claims will renew the policy.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>續保機率用 logit 連結的 GLM：截距 0.22、保單有效年數 0.15、已提出理賠次數 −0.25、保戶年齡 30 以下 −0.30、30–49 為 0、50 以上 0.18。求 55 歲、保單已有效 5 年、沒有提出過理賠的保戶續保的預測機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.7595</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=0.22+0.15(5)+0+0.18=1.15\)，\(\pi=\frac{e^{1.15}}{1+e^{1.15}}=0.7595\)。</p></div></div></article><article class="exercise" id="q12-21"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.21 題</b><small>・講義 p.210・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>A binary response is modeled with a generalized linear model and a probit link. The fitted model is \(g(\pi)=0.2+0.4x_1+0.6x_2\).</p>
+<p>Determine the probability of an event when \(x_1=1\) and \(x_2=2\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>二元反應以 probit 連結建模，\(g(\pi)=0.2+0.4x_1+0.6x_2\)。求 \(x_1=1\)、\(x_2=2\) 時事件的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.9641</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=0.2+0.4+1.2=1.8\)，\(\pi=\Phi(1.8)=0.9641\)。</p></div></div></article><article class="exercise" id="q12-22"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.22 題</b><small>・講義 p.210・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>A binary response is modeled with a generalized linear model and a complementary log-log link. The fitted model is \(g(\pi)=0.02+0.04x_1+0.06x_2\).</p>
+<p>Determine the odds of an event when \(x_1=1\) and \(x_2=2\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>二元反應以互補 log-log 連結建模，\(g(\pi)=0.02+0.04x_1+0.06x_2\)。求 \(x_1=1\)、\(x_2=2\) 時事件的勝算。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>2.3109</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=0.02+0.04+0.12=0.18\)。\(\pi=1-\exp(-e^{0.18})=1-e^{-1.1972}=0.6980\)。勝算 \(\frac{0.6980}{0.3020}=2.311\)。</p></div></div></article><article class="exercise" id="q12-24"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.24 題</b><small>・講義 p.210・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>A nominal logit model is used to predict the political party of a person. The base category is "Democratic". The fitted model is</p>
+<table>
+<thead>
+<tr>
+<th>Party</th>
+<th>Republican</th>
+<th>Liberal</th>
+<th>Conservative</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>−0.33</td>
+<td>−0.44</td>
+<td>−0.25</td>
+</tr>
+<tr>
+<td>Income Under 50,000</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Income 50,000–99,999</td>
+<td>0.51</td>
+<td>0.35</td>
+<td>0.45</td>
+</tr>
+<tr>
+<td>Income 100,000 or more</td>
+<td>0.37</td>
+<td>0.52</td>
+<td>0.22</td>
+</tr>
+<tr>
+<td>High school or less</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>College</td>
+<td>0.65</td>
+<td>0.60</td>
+<td>0.55</td>
+</tr>
+<tr>
+<td>Graduate</td>
+<td>0.61</td>
+<td>0.63</td>
+<td>0.48</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the odds, relative to the base category, that a person who completed college but not graduate school and has an income of 100,000 or more is Republican.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>名目 logit 模型預測一個人的政黨，基準類別為「民主黨」。</p>
+<p>求大學畢業（沒有念研究所）、收入 100,000 以上的人，相對於基準類別是共和黨的勝算。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>1.9937</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>共和黨對民主黨的對數勝算：\(-0.33+0.37+0.65=0.69\)，勝算 \(e^{0.69}=1.9937\)。</p></div></div></article><article class="exercise" id="q12-27"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.27 題</b><small>・講義 p.211・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>For a nominal response variable with 3 categories, a logistic model with 1 explanatory variable and an intercept is fitted: \(g(\pi_j)=\beta_{0j}+\beta_{1j}x_1\).</p>
+<p>The estimated parameters for the two non-base categories are</p>
+<table>
+<thead>
+<tr>
+<th>Category (\(j\))</th>
+<th>\(b_{0j}\)</th>
+<th>\(b_{1j}\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0.613</td>
+<td>0.027</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0.307</td>
+<td>0.135</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the probability of the base category (category 3) if \(x_1=2\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>三類的名目反應，logistic 模型有一個解釋變數與截距：\(g(\pi_j)=\beta_{0j}+\beta_{1j}x_1\)。兩個非基準類別的估計值：類別 1 \(b_{01}=0.613\)、\(b_{11}=0.027\)；類別 2 \(b_{02}=0.307\)、\(b_{12}=0.135\)。求 \(x_1=2\) 時基準類別（類別 3）的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.2115</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\pi_1/\pi_3=e^{0.613+0.054}=1.94838\)，\(\pi_2/\pi_3=e^{0.307+0.270}=1.78069\)。</p>
+<p>\(\pi_3=\frac{1}{1+1.94838+1.78069}=0.2115\)。</p></div></div></article><article class="exercise" id="q12-28"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.28 題</b><small>・講義 p.212・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>Vacations are categorized as follows: 1. Active; 2. Beach; 3. Visiting family.</p>
+<p>Vacation category is modeled as a function of two explanatory variables: number of family members and length of vacation. A nominal logit model is constructed. Category 3 is the reference category. The following are the fitted coefficients:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Active</th>
+<th>Beach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>−0.15</td>
+<td>−0.20</td>
+</tr>
+<tr>
+<td>Family members 1 or 2</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Family members 3 or 4</td>
+<td>−0.05</td>
+<td>−0.14</td>
+</tr>
+<tr>
+<td>Family members 5 or more</td>
+<td>−0.22</td>
+<td>−0.18</td>
+</tr>
+<tr>
+<td>1 week or less</td>
+<td>−0.23</td>
+<td>0.04</td>
+</tr>
+<tr>
+<td>8 days–2 weeks</td>
+<td>0.13</td>
+<td>0.08</td>
+</tr>
+<tr>
+<td>More than 2 weeks</td>
+<td>0.32</td>
+<td>−0.05</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the predicted probability that a 2-week vacation for a family of 4 is active.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>假期分成 1. 活動型、2. 海灘、3. 探親。名目 logit 模型，類別 3 為基準，解釋變數為家庭人數與假期長度：</p>
+<p>求 4 人家庭、為期 2 週的假期是活動型的預測機率。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.3449</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>活動型：\(-0.15-0.05+0.13=-0.07\)；海灘：\(-0.20-0.14+0.08=-0.26\)。
+\[\pi_1=\frac{e^{-0.07}}{1+e^{-0.07}+e^{-0.26}}=\frac{0.9324}{1+0.9324+0.7711}=0.3449 .\]</p></div></div></article><article class="exercise" id="q12-29"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.29 題</b><small>・講義 p.212・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>A nominal generalized logit model is used to model income level as a function of education. Income level of 50,000–99,999 is the reference category. The fitted model is:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Under 50,000</th>
+<th>100,000 and over</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>−0.10</td>
+<td>0.04</td>
+</tr>
+<tr>
+<td>High school or less</td>
+<td>0.83</td>
+<td>−0.62</td>
+</tr>
+<tr>
+<td>College</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Graduate</td>
+<td>−0.37</td>
+<td>0.41</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the probability that a person who completed graduate school earns 100,000 or more.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>名目廣義 logit 模型以學歷預測收入等級，基準類別為 50,000–99,999。</p>
+<p>求研究所畢業者收入 100,000 以上的機率。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.4911</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>50,000 以下：\(-0.10-0.37=-0.47\)；100,000 以上：\(0.04+0.41=0.45\)。
+\[\pi=\frac{e^{0.45}}{1+e^{-0.47}+e^{0.45}}=\frac{1.5683}{1+0.6250+1.5683}=0.4911 .\]
+（收入等級其實有順序，也可以用次序模型。）</p></div></div></article><article class="exercise" id="q12-31"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.31 題</b><small>・講義 p.213・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-F19:25] A book of 122 commercial policies are observed for one year. The observed claim counts distribution is shown below:</p>
+<table>
+<thead>
+<tr>
+<th>Claim count</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Policies</td>
+<td>45</td>
+<td>32</td>
+<td>27</td>
+<td>10</td>
+<td>7</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the log-cumulative-odds of 3 claims.</p>
+<div class="opts">
+<p>(A) Less than −2.0</p>
+<p>(B) At least −2.0, but less than 0.0</p>
+<p>(C) At least 0.0, but less than 2.0</p>
+<p>(D) At least 2.0, but less than 4.0</p>
+<p>(E) At least 4.0</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 秋季 MAS-II 第 25 題）122 張商業保單觀察一年，理賠次數分布：0 次 45 張、1 次 32、2 次 27、3 次 10、4 次 7、5 次 1。求 3 次理賠的對數累積勝算。</p>
+<div class="items">
+<p>(B) 至少 −2.0，小於 0.0</p>
+<p>(C) 至少 0.0，小於 2.0</p>
+<p>(D) 至少 2.0，小於 4.0</p>
+<p>(E) 至少 4.0</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\Pr(Y\le3)=\frac{45+32+27+10}{122}=\frac{114}{122}=0.934426\)。</p>
+<p>對數累積勝算 \(=\ln\frac{114}{8}=2.657\)。</p></div></div></article><article class="exercise" id="q12-33"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.33 題</b><small>・講義 p.214・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>A cumulative proportional odds model models an ordinal variable with 3 possible values: 1 Non-casualty; 2 Injury; 3 Fatal. The fitted model is
+\[\ln\frac{\sum_{i\le j}\pi_i}{1-\sum_{i\le j}\pi_i}=b_{0j}+0.056x_1+0.082x_2\]
+The fitted values of the intercept are \(b_{01}=0.4\), \(b_{02}=0.6\). \(x_1\) is a binary variable.</p>
+<p>Calculate the relative odds of an injury or non-casualty for someone with \(x_1=1\) relative to someone with \(x_1=0\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>累積比例勝算模型，三類（1 無傷亡、2 受傷、3 死亡）：
+\(b_{01}=0.4\)、\(b_{02}=0.6\)，\(x_1\) 是二元變數。求 \(x_1=1\) 相對於 \(x_1=0\) 的人，「受傷或無傷亡」的相對勝算。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>1.0576</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>比例勝算模型中，累積勝算的比是 \(e^{\beta}\)，和切點無關：\(e^{0.056}=1.0576\)。</p></div></div></article><article class="exercise" id="q12-35"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.35 題</b><small>・講義 p.214・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>In a cumulative proportional odds model for an ordinal variable, the fitted model is
+\[\ln\frac{\sum_{i\le j}\pi_i}{1-\sum_{i\le j}\pi_i}=b_{0j}+b_1x_1\]
+and \(b_{0j}=0.05j\) for \(j=1,2,3,4\).</p>
+<p>For \(x_1=1\), the odds that the response is 1 relative to \(x_1=0\) are 1.5.</p>
+<p>Calculate the odds that the response is 1 or 2 for \(x_1=1\) relative to \(x_1=0\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>次序變數的累積比例勝算模型 \(\ln\frac{\sum_{i\le j}\pi_i}{1-\sum_{i\le j}\pi_i}=b_{0j}+b_1x_1\)，\(b_{0j}=0.05j\)（\(j=1,2,3,4\)）。\(x_1=1\) 時「反應為 1」的勝算是 \(x_1=0\) 時的 1.5 倍。求「反應為 1 或 2」時 \(x_1=1\) 相對於 \(x_1=0\) 的勝算比。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>1.5</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>比例勝算模型中，兩組人的累積勝算比 \(e^{b_1}\) 在每一個切點都相同，所以仍是 1.5。截距的值用不到。</p></div></div></article><article class="exercise" id="q12-37"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.37 題</b><small>・講義 p.215・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>Use the information of Exercise 12.36. When \(x_1=2\), the probability of category 1 is 0.719100.</p>
+<p>Determine \(\beta_{01}\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同習題 <a href="ch12.html#q12-36">12.36</a>。\(x_1=2\) 時類別 1 的機率是 0.719100。求 \(\beta_{01}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.1</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\ln\frac{0.7191}{0.2809}=0.94=\beta_{01}+2\beta_1\)。和 \(\beta_{01}+\beta_1=0.52\) 相減：\(\beta_1=0.42\)，\(\beta_{01}=0.10\)。</p></div></div></article><article class="exercise" id="q12-40"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.40 題</b><small>・講義 p.216・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>A cumulative probit model of the form \(\Phi^{-1}(\pi_j)=b_{0j}+\sum_{i=1}^kb_{ij}x_i\) is used as a model for severity of accident. The categories are 1. Property damage only; 2. Non-fatal bodily injury; 3. Fatality.</p>
+<p>The explanatory variables are size of car and speed of car at time of accident. The fitted parameters are</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>\(b\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept (category 1)</td>
+<td>0.45</td>
+</tr>
+<tr>
+<td>Intercept (category 2)</td>
+<td>0.62</td>
+</tr>
+<tr>
+<td>Car size: Compact</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Car size: Midsize</td>
+<td>0.35</td>
+</tr>
+<tr>
+<td>Car size: Full size</td>
+<td>0.71</td>
+</tr>
+<tr>
+<td>Speed: Under 30 mph</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Speed: 30–59 mph</td>
+<td>−0.12</td>
+</tr>
+<tr>
+<td>Speed: 60 mph and over</td>
+<td>−0.64</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the probability of a fatality for a driver in a full size car driving at 40 mph who has an accident.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>事故嚴重度（1 只有財損、2 非致命傷害、3 死亡）用累積 probit 模型 \(\Phi^{-1}(\Pr(Y\le j))=b_{0j}+\sum b_ix_i\)。係數：截距（類別 1）0.45、截距（類別 2）0.62；車型 小型 0、中型 0.35、大型 0.71；車速 30 mph 以下 0、30–59 mph −0.12、60 mph 以上 −0.64。求開大型車、時速 40 英里的駕駛人發生事故時有人死亡的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.1131</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\Pr(Y\le2)\)：\(\eta=0.62+0.71-0.12=1.21\)，\(\Phi(1.21)=0.8869\)。死亡機率 \(=1-0.8869=0.1131\)。</p></div></div></article><article class="exercise" id="q12-41"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.41 題</b><small>・講義 p.216・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>A cumulative probit model for a categorical variable with 4 categories results in the following fit: \(\Phi^{-1}(\pi_j)=b_{0j}+0.1x_1+0.5x_2\) with \(b_{01}=0.060\), \(b_{02}=0.150\), and \(b_{03}=0.370\).</p>
+<p>Calculate the probability of category 3 for someone with \(x_1=2\), \(x_2=1.5\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>四類的累積 probit 模型：\(\Phi^{-1}(\Pr(Y\le j))=b_{0j}+0.1x_1+0.5x_2\)，\(b_{01}=0.060\)、\(b_{02}=0.150\)、\(b_{03}=0.370\)。求 \(x_1=2\)、\(x_2=1.5\) 的人屬於類別 3 的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.0423</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(0.1(2)+0.5(1.5)=0.95\)。\(\Pr(Y\le2)=\Phi(1.10)=0.8643\)，\(\Pr(Y\le3)=\Phi(1.32)=0.9066\)。類別 3 的機率 \(=0.0423\)。</p></div></div></article><article class="exercise" id="q12-42"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.42 題</b><small>・講義 p.216・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>The grade a student gets on an actuarial exam (0–10) is predicted using a cumulative complementary log-log model. Explanatory variables are hours of study (\(x_1\), a continuous variable) and use of the ASM manual (\(x_2\), a binary variable). The base category for \(x_2\) is that the ASM manual was not used. The form of the model is \(g(\pi_j)=\beta_{0j}+\beta_1x_1+\beta_2x_2\).</p>
+<p>The fitted values are \(\beta_{0j}=-2+0.5j\), \(\beta_1=-0.01\), \(\beta_2=-0.40\), where \(j\) is the grade. As usual, a grade of at least 6 is needed to pass.</p>
+<p>Calculate the predicted probability that someone who studies for 200 hours and uses the ASM manual passes the exam.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>精算考試成績（0～10）用累積互補 log-log 模型預測：\(g(\Pr(Y\le j))=\beta_{0j}+\beta_1x_1+\beta_2x_2\)，\(x_1\) 是讀書時數，\(x_2\) 是有沒有用 ASM 講義（沒用為基準）。\(\beta_{0j}=-2+0.5j\)、\(\beta_1=-0.01\)、\(\beta_2=-0.40\)。6 分以上及格。求讀 200 小時、用了 ASM 講義的人及格的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.8611</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>不及格是 \(Y\le5\)：\(\eta=-2+2.5-2-0.4=-1.9\)。</p>
+<p>\(\Pr(Y\le5)=1-\exp(-e^{-1.9})=1-e^{-0.14957}=0.13892\)。及格機率 \(=0.8611\)。</p></div></div></article><article class="exercise" id="q12-43"><div class="ex-head"><span class="ex-tag">練習</span><b>第 12.43 題</b><small>・講義 p.217・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>A generalized linear model uses a complementary log-log link. The form of the model is \(g(\pi)=\beta_0+\beta_1x_1\). The estimated values are \(b_0=0.6\), \(b_1=0.4\).</p>
+<p>Calculate the estimated mean when \(x_1=0.8\).</p>
+<div class="opts">
+<p>(A) 0.92</p>
+<p>(B) 0.93</p>
+<p>(C) 0.94</p>
+<p>(D) 0.95</p>
+<p>(E) 0.96</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>GLM 使用互補 log-log 連結 \(g(\pi)=\beta_0+\beta_1x_1\)，\(b_0=0.6\)、\(b_1=0.4\)。求 \(x_1=0.8\) 時的估計平均數。</p>
+<div class="opts">
+<p>(A) 0.92　(B) 0.93　(C) 0.94　(D) 0.95　(E) 0.96</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=0.6+0.32=0.92\)，\(\pi=1-\exp(-e^{0.92})=1-e^{-2.5093}=0.9187\)。</p></div></div></article></section><button class="toggle-all float" type="button">顯示全部解答</button><div class="navfoot"><a href="ch11.html">← 第 11 章</a><a href="ch13.html">第 13 章 →</a></div></main></body></html>

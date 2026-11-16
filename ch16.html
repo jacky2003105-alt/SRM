@@ -1,15 +1,1515 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第 16 章　決策樹與集成學習｜SRM 精算筆記</title><link rel="stylesheet" href="assets/site.css"><link rel="stylesheet" href="assets/katex/katex.min.css"><script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/site.js"></script></head><body><nav aria-label="課程導覽"><a class="brand" href="index.html">SRM 精算筆記</a><label for="chapter">章節</label><select id="chapter"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html" selected>第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題與參考解答</option></select><a href="practice.html">題庫</a></nav><main><header><div class="kicker">SRM · 第 16 章</div><h1>決策樹與集成學習</h1><p>切分條件如果太細，訓練樹會記住個案。剪枝與多棵樹各解決哪個問題？</p><div class="chips"><a href="pdf/ch16.pdf">下載本章 PDF</a><a href="practice.html#chapter16">習題索引</a></div></header><section class="panel"><h2>本章閱讀順序</h2><ol><li><a href="#s1">用問題劃出區域：從樹讀到預測</a></li><li><a href="#s2">如何長樹：遞迴二分與分割收益</a></li><li><a href="#s3">成本複雜度剪枝與交叉驗證</a></li><li><a href="#s4">分類樹：純度、熵、偏差與錯誤率</a></li><li><a href="#s5">袋裝法、袋外誤差與變數重要度</a></li><li><a href="#s6">隨機森林與提升法：同樣多棵樹，改進方式不同</a></li></ol><div class="minititle">優先練習 · 10 題</div><div class="chips"><a href="#q16-2">16.2</a><a href="#q16-5">16.5</a><a href="#q16-6">16.6</a><a href="#q16-8">16.8</a><a href="#q16-9">16.9</a><a href="#q16-10">16.10</a><a href="#q16-11">16.11</a><a href="#q16-13">16.13</a><a href="#q16-18">16.18</a><a href="#q16-23">16.23</a></div></section><article class="unit" id="s1"><div class="kicker">概念 01</div><h2>用問題劃出區域：從樹讀到預測</h2><figure><svg class="chart" role="img" aria-label="每條樹路徑是一連串條件，不同葉對應互斥的區域" viewBox="0 0 580 225" xmlns="http://www.w3.org/2000/svg"><rect width="580" height="225" rx="9" fill="#f3f6ee"/><g font-family="sans-serif" font-size="15" fill="#324b43"><g stroke="#50745c" stroke-width="2" fill="none"><path d="M290 43L155 103M290 43L425 103M155 118L74 179M155 118L239 179"/></g><g text-anchor="middle"><text x="290" y="32">里程 ≤ 10？</text><text x="194" y="69">是</text><text x="384" y="69">否</text><text x="151" y="114">車齡 ≤ 5？</text><text x="449" y="115">葉 C：高里程</text><text x="55" y="198">葉 A：低里程、新車</text><text x="234" y="198">葉 B：低里程、舊車</text></g></g></svg><figcaption>自設示意：落入葉 A 要同時通過兩個條件。里程門檻出現於根節點，並不代表它對所有區域都有相同的線性效果。</figcaption></figure><p><strong>問題</strong>：同一個價格變動對不同客群可能有不同效果，要怎麼讓模型自己找到這些組合？決策樹（decision tree）從所有資料所在的根節點開始，每一步問一個是非問題。被繼續分割的地方是內部節點，連線是分支，停止分割的地方是終端節點（葉）。一筆資料只會沿一條路走到一個葉。</p>
-<p>對數值變數，一次切割只看某個 \(X_j\) 是否小於門檻 \(s\)；對類別變數，判斷是否屬於指定的類別集合。前者在數值空間裡畫出平行於座標軸的邊界，後續切割只作用於目前區域，因此葉為這些條件的交集。以房屋為例，先問住宅型態，再只對某一類問面積門檻，便表示「面積的作用依型態而異」。可用不同順序問出相同區域，樹的結構與統計因果關係是兩回事。</p>
-<p>迴歸樹給區域 \(R\) 一個固定預測 \(c\)。若目標是最小化區域內殘差平方和（RSS），微分得 \(\frac{d}{dc}\sum_{i\in R}(y_i-c)^2=2n_R(c-\bar y_R)\)，二階導數為 \(2n_R&gt;0\)，故最佳常數就是區域的平均。分類樹若以每筆錯判代價相同為前提，預測類別 \(k\) 會錯 \(n_R-n_{Rk}\) 筆，故選區域內最多數的類別。<strong>即：樹用條件決定「跟誰比」，再用同一葉的資料決定「猜什麼」。</strong></p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以特徵距離選出訓練資料中的鄰居，再由局部比例預測類別。" data-target="第 15 章 · 近鄰分類" href="ch15.html#s2">近鄰分類</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q16-1">16.1</a><a href="#q16-2">16.2</a><a href="#q16-3">16.3</a><a href="#q16-4">16.4</a><a href="#q16-7">16.7</a><a href="#q16-8">16.8</a><a href="#q16-24">16.24</a></div></article><article class="exercise" id="q16-2"><button class="toggle" aria-controls="a-q16-2" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 16.2</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q16-2">題目連結</a></small><p>汽座銷量樹：首問架位是否差或中等；若否，改問價格是否至少 110，是則葉值 9.2、否則 12（千件）。架位好、價格 120、年齡 57、廣告 12，預測多少？</p><div class="solution" id="a-q16-2"><strong class="label">參考解答</strong><p>9.2 千件（D）。</p><strong class="label">解析</strong><p>架位好→首問否；120≥110→是；直接讀此葉。年齡與廣告不在所走路徑。</p></div></article><article class="exercise" id="q16-8"><button class="toggle" aria-controls="a-q16-8" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 16.8</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q16-8">題目連結</a></small><p>九筆 \((R,X,Y,Z)\) 為 (4.75,M,A,2)、(4.67,F,A,4)、(4.67,M,D,1)、(4.56,F,D,3)、(4.53,M,B,2)、(3.91,F,C,2)、(3.90,F,B,5)、(3.90,M,D,5)、(3.89,M,B,1)。\(Z\le3\) 者依 Y 是否 A 或 B 分到 T1/T2；其他依 X 是否 F 分到 T3/T4。求四葉預測。</p><div class="solution" id="a-q16-8"><strong class="label">參考解答</strong><p>依次為 4.39、4.38、4.29、3.90（A，四捨五入）。</p><strong class="label">解析</strong><p>T1 平均 (4.75+4.53+3.89)/3；T2 平均 (4.67+4.56+3.91)/3；T3 平均 (4.67+3.90)/2；T4 僅一筆 3.90。</p></div></article><article class="unit" id="s2"><div class="kicker">概念 02</div><h2>如何長樹：遞迴二分與分割收益</h2><p>對目前區域 \(R\)，試每個變數和能將資料分成兩個非空集合的切點，令 \(L=R\cap\{X_j&lt;s\}\)、\(H=R\cap\{X_j\ge s\}\)。葉的最佳預測剛剛已求出，所以可直接比較各候選的 \(RSS_L+RSS_H\)。排序後相鄰不同觀察值之間的任何切點給出同一種分組，不必試無窮多個實數。</p>
-<p>為什麼訓練 RSS 不會因切割而上升？把 \(y_i-\bar y_R\) 改寫為 \((y_i-\bar y_L)+(\bar y_L-\bar y_R)\)，左區第一項加總為零，右區亦然。因此</p>
-<p>\[RSS_R-(RSS_L+RSS_H)=\frac{n_Ln_H}{n_L+n_H}(\bar y_L-\bar y_H)^2\ge0.\]</p>
-<p>新葉平均越不同、且兩邊都有足夠觀察，切割收益越大。演算法每次選當下最佳切割，因此是貪婪法：沒有保證選到所有可能樹中的最佳者。達到節點最小樣本數、最大深度等條件就停止。若切到每個葉只有一筆，訓練資料看起來完美，卻容易把隨機誤差當訊號；同一批資料小幅改變，整個分割順序可能跟著改變。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以特徵距離選出訓練資料中的鄰居，再由局部比例預測類別。" data-target="第 15 章 · 近鄰分類" href="ch15.html#s2">近鄰分類</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q16-5">16.5</a><a href="#q16-6">16.6</a></div></article><article class="exercise" id="q16-5"><button class="toggle" aria-controls="a-q16-5" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 16.5</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q16-5">題目連結</a></small><p>四筆 \((X,Y)\) 為 (3,8)、(6,6)、(0,8)、(1,5)。以平方損失做一次遞迴二分，兩組各有哪些點？</p><div class="solution" id="a-q16-5"><strong class="label">參考解答</strong><p>只把 (0,8) 分到第一組；其餘三點同組。</p><strong class="label">解析</strong><p>排序後可用 0.5、2、4.5 三個代表切點。第一案 RSS 為 \((5-19/3)^2+(8-19/3)^2+(6-19/3)^2=14/3\)；後兩案分別為 6.5、6。因此第一案最小。</p></div></article><article class="exercise" id="q16-6"><button class="toggle" aria-controls="a-q16-6" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 16.6</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q16-6">題目連結</a></small><p>六筆 \((X_1,X_2,Y)\) 為 (1,0,1.2)、(2,1,2.1)、(3,2,1.5)、(4,1,3.0)、(2,2,2.0)、(1,1,1.6)。I–V 分別測試 \(X_1&lt;1,X_1&lt;4,X_2&lt;0,X_2&lt;1,X_2&lt;2\)。哪個首切點最佳？</p><div class="solution" id="a-q16-6"><strong class="label">參考解答</strong><p>II，切在 \(X_1&lt;4\)（B）。</p><strong class="label">解析</strong><p>I、III 使一邊為空。II 把反應 3.0 單獨成葉，剩餘平均 1.68，RSS=0.548；IV、V 分別為 1.412、1.9325。比較的是兩葉總 RSS。</p></div></article><article class="unit" id="s3"><div class="kicker">概念 03</div><h2>成本複雜度剪枝與交叉驗證</h2><p>「葉越多，訓練誤差越低」不是選模型的理由。先長出一棵大樹，再比較其子樹 \(T\) 的目標 \(C_\alpha(T)=RSS(T)+\alpha|T|\)；\(|T|\) 是葉數而非內部節點數。把一棵含 \(k\) 個葉的子樹改成單葉，RSS 增加 \(\Delta RSS\)，卻省下 \(\alpha(k-1)\) 的懲罰。只要 \(\alpha\ge\Delta RSS/(k-1)\)，小樹就不比原樹差。每一步刪除這個比值最小的分枝，得到最弱連結剪枝的巢狀子樹路徑。\(\alpha=0\) 時沒有複雜度罰則，\(\alpha\) 越大越偏好簡單樹。</p>
-<p>在訓練集內做交叉驗證：每折用其他折重新長樹、剪枝，在被留出的折計算損失；選擇平均驗證誤差合適的 \(\alpha\)，再以全部訓練資料重擬。最後用未曾參與調參的測試集評估。若用測試結果挑葉數，同一份資料就兼做選擇與評估，會高估泛化能力。</p>
-<p>例：已分開的兩葉 RSS 是 13.2，合併時 13.875，少一葉的代價是 0.675；\(\alpha&gt;0.675\) 時值得合併，等號時兩樹並列。<strong>即：剪枝把「這次多切一刀能少犯多少錯」與「多留一個葉的成本」放在同一尺度上比。</strong></p><p><strong>CA 複習例｜剪掉的是整個子樹。</strong> 從大樹移除一個內部切分，兩個或更多葉子會變成一個區域，原來不同的預測必須合併。比較殘差平方和增加多少，以及少掉幾個終端節點；驗證資料用來選懲罰程度，而不是證明最大或最小的樹一定最好。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以特徵距離選出訓練資料中的鄰居，再由局部比例預測類別。" data-target="第 15 章 · 近鄰分類" href="ch15.html#s2">近鄰分類</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q16-9">16.9</a><a href="#q16-11">16.11</a><a href="#q16-12">16.12</a></div></article><article class="exercise" id="q16-9"><button class="toggle" aria-controls="a-q16-9" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 16.9</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q16-9">題目連結</a></small><p>完整樹有五葉，RSS 分別為 82、81、11、20、58。S 合併前兩葉後 RSS=251，X 合併後兩葉後 RSS=86；T 合併後三葉後 RSS=209。根的 RSS=486。\(\alpha=9\)，選 I 不剪、II 剪 S、III 剪 T、IV 剪 X、V 同剪 S 與 X。</p><div class="solution" id="a-q16-9"><strong class="label">參考解答</strong><p>剪 X（IV，D）。</p><strong class="label">解析</strong><p>I–V 的 RSS 加每葉 9 的成本依次為 297、376、399、296、375。剪 X 使 RSS 增 8，卻省 9，淨成本少 1。</p></div></article><article class="exercise" id="q16-11"><button class="toggle" aria-controls="a-q16-11" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 16.11</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q16-11">題目連結</a></small><p>相鄰兩葉的反應值為 (2,3,3,4,5) 與 (2,4,6)。若此為最適合剪的分枝，最小何值的 \(\alpha\) 可接受合併？</p><div class="solution" id="a-q16-11"><strong class="label">參考解答</strong><p>0.675（臨界點兩樹同成本）。</p><strong class="label">解析</strong><p>兩葉平均 3.4、4，總 RSS=13.2；合併平均 3.625、RSS=13.875。僅少一葉，故臨界懲罰為 13.875−13.2。</p></div></article><article class="unit" id="s4"><div class="kicker">概念 04</div><h2>分類樹：純度、熵、偏差與錯誤率</h2><p>令 \(p_{mk}=n_{mk}/n_m\) 為葉 \(m\) 中類別 \(k\) 的樣本比例。猜最多數類別的錯誤率為 \(E_m=1-\max_k p_{mk}\)。它只看最大比例，無法靈敏地辨認其他類別分布的改變。另一做法是依類別比例隨機猜，再與另一獨立抽出的標籤比較；兩者恰好相同的機率是 \(\sum_k p_{mk}^2\)。因此基尼不純度為 \(G_m=1-\sum_k p_{mk}^2=\sum_k p_{mk}(1-p_{mk})\)。對二元分類即 \(2p(1-p)\)。</p>
-<p>若用模型給真實類別的機率衡量預測，機率越小，損失 \(-\log p\) 越大。葉內平均此損失得到熵 \(H_m=-\sum_k p_{mk}\ln p_{mk}\)，規定 \(0\ln0=0\)。純葉只有單一類，兩個不純度都為零；多類均勻時較高。評估切割必須以各葉樣本比重加權，例如兩葉占 60%、40%，不能直接取兩個熵的算術平均。</p>
-<p>例：父節點 16 A、4 B，錯誤率 0.2、基尼 0.32；切成 10 A 與 6 A、4 B 兩組，兩葉仍猜 A，整體錯誤率未變，加權基尼卻降為 \(0.5(0)+0.5[2(0.6)(0.4)]=0.24\)。因此長樹可用基尼或熵找有潛力的分割；若最後關心命中率，可以用驗證分類錯誤率挑剪枝大小。</p>
-<p>分類樹偏差來自葉內對數概似：\(D=-2\sum_{m,k} n_{mk}\ln p_{mk}=2\sum_m n_mH_m\)；講義的平均殘差偏差將它除以 \(n-|T|\)。迴歸樹對應值為 \(RSS/(n-|T|)\)。應先看題目要「每葉加總」「全樹加權」或「每自由度平均」，三種答案不相同。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以特徵距離選出訓練資料中的鄰居，再由局部比例預測類別。" data-target="第 15 章 · 近鄰分類" href="ch15.html#s2">近鄰分類</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q16-10">16.10</a><a href="#q16-14">16.14</a><a href="#q16-15">16.15</a><a href="#q16-16">16.16</a><a href="#q16-17">16.17</a><a href="#q16-18">16.18</a></div></article><article class="exercise" id="q16-10"><button class="toggle" aria-controls="a-q16-10" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 16.10</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q16-10">題目連結</a></small><p>預測考試初次通過。在 \((X_1,X_2)=(0,0),(1,0),(0,1),(1,1)\) 四組，「通過／未通過」人數依次為 5/20、10/10、7/9、6/4。應依哪個變數先切？</p><div class="solution" id="a-q16-10"><strong class="label">參考解答</strong><p>依 \(X_1\)。</p><strong class="label">解析</strong><p>\(X_1\) 切割兩葉為 (12,29)、(16,14)；\(X_2\) 切割為 (15,30)、(13,13)。分別計算 \(\sum_m(n_m/71)2p_m(1-p_m)\) 得 0.4494 與 0.4648，前者較低。</p></div></article><article class="exercise" id="q16-18"><button class="toggle" aria-controls="a-q16-18" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 16.18</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q16-18">題目連結</a></small><p>100 張保單有 30 張失效。切法一的兩葉為 20 張中 12 張失效、80 中 18；切法二為 10 中 8、90 中 22。依基尼、熵、錯判數，是否分別偏好切法一？</p><div class="solution" id="a-q16-18"><strong class="label">參考解答</strong><p>三項皆否（E）；三種準則均偏好切法二。</p><strong class="label">解析</strong><p>依葉大小加權，切法一、二的基尼為 0.3750、0.3644；自然對數熵為 0.5611、0.5506。各葉猜多數類，錯判數分別為 8+18=26 與 2+22=24。</p></div></article><article class="unit" id="s5"><div class="kicker">概念 05</div><h2>袋裝法、袋外誤差與變數重要度</h2><p>單棵深樹偏差通常低，但估計易因抽樣波動而改變。袋裝法（bagging）用 bootstrap：從 \(n\) 筆資料有放回抽 \(n\) 次，重做 \(B\) 組，分別擬合深樹。在同一個 \(x\) 上，迴歸取 \(\hat f_{bag}(x)=B^{-1}\sum_b\hat f_b(x)\)；分類可採多數投票。每次抽樣後放回，某筆會重複出現，另一些筆可能完全沒抽到。</p>
-<p>若各樹預測變異為 \(v\)、兩兩相關係數為 \(\rho\)，展開平均的變異得到 \(v[B+B(B-1)\rho]/B^2=v[\rho+(1-\rho)/B]\)。樹數增加能壓低不共享的波動，但相關部分留下來。固定學習規則時，多加樹主要讓平均更穩，不是像加深單棵樹那樣持續增加擬合自由度。</p>
-<p>某筆一次沒被抽到的機率 \(1-1/n\)，整組 \(n\) 次都沒被抽到的機率 \((1-1/n)^n\to e^{-1}\approx0.368\)。對每一筆只用沒有抽到它的樹產生袋外（OOB）預測；再將各筆的平方誤差或錯判指標平均，估計樣本外表現。重要度可用某特徵在各樹分割時造成的 RSS 或基尼下降量加總並平均，也可置換袋外資料該特徵後觀察損失增幅。前者量到訓練切割貢獻，後者量到預測依賴；相關特徵會分攤或遮蔽重要度，兩者都不能單憑排序下因果結論。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以特徵距離選出訓練資料中的鄰居，再由局部比例預測類別。" data-target="第 15 章 · 近鄰分類" href="ch15.html#s2">近鄰分類</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q16-19">16.19</a><a href="#q16-21">16.21</a></div></article><article class="unit" id="s6"><div class="kicker">概念 06</div><h2>隨機森林與提升法：同樣多棵樹，改進方式不同</h2><p>隨機森林（random forest）除了 bootstrap，還在<strong>每個節點</strong>從 \(p\) 個變數不放回抽 \(m\) 個，再從其中找最佳切割。單一強預測變數沒有進入這次候選集的機率為 \((p-m)/p\)。這使所有樹不必都靠同一強變數開頭，可降低前述 \(\rho\)；太小的 \(m\) 也可能讓單樹變弱，故以驗證衡量取捨。若 \(m=p\)，其餘設定相同就回到袋裝法；分類常見起點為 \(\sqrt p\)，並非必須。</p>
-<p>提升法（boosting）讓新樹補上一輪未學到的部分。以平方損失為例，\(\tfrac12(y-f)^2\) 對目前預測 \(f\) 的負梯度為 \(y-f\)，所以用殘差當下一棵樹 \(h_b\) 的反應。從 \(f_0=0\)（或常數平均）出發，更新 \(f_b=f_{b-1}+\lambda h_b\)，殘差變成 \(r_i^{(b)}=r_i^{(b-1)}-\lambda h_b(x_i)\)。逐輪相加得到 \(f_B=f_0+\lambda\sum_{b=1}^Bh_b\)，不是平均 \(B\) 棵樹。</p>
-<p>調整三項：\(B\) 控制輪數，用驗證集或交叉驗證選停止點；\(0&lt;\lambda\le1\) 控制步長，越小常需越多輪；每樹有 \(d\) 次二元分割、\(d+1\) 葉。\(d=1\) 時每棵樹只依賴單一變數，加總仍為加法模型；更深的路徑才能形成交互作用。袋裝與森林可平行估計，提升必須逐輪更新。單樹較易呈現規則，集成通常提高穩定性或準確度，代價是解釋不再是一條簡單路徑。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以特徵距離選出訓練資料中的鄰居，再由局部比例預測類別。" data-target="第 15 章 · 近鄰分類" href="ch15.html#s2">近鄰分類</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q16-13">16.13</a><a href="#q16-20">16.20</a><a href="#q16-22">16.22</a><a href="#q16-23">16.23</a><a href="#q16-25">16.25</a><a href="#q16-26">16.26</a></div></article><article class="exercise" id="q16-13"><button class="toggle" aria-controls="a-q16-13" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 16.13</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q16-13">題目連結</a></small><p>森林每次自 \(p\) 個特徵抽 \(m\) 個。I 若 \(m=p\) 等同袋裝；II 不考慮最強特徵的機率為 \((p-m)/p\)；III 典型設定為 \(p/2\)。</p><div class="solution" id="a-q16-13"><strong class="label">參考解答</strong><p>I、II 正確（B）。</p><strong class="label">解析</strong><p>不放回等機率抽樣使入選機率 \(m/p\)。分類常見的經驗起點是平方根，不是固定一半，更不是定理。</p></div></article><article class="exercise" id="q16-23"><button class="toggle" aria-controls="a-q16-23" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 16.23</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q16-23">題目連結</a></small><p>提升迴歸的學習率 0.2，新資料 \(X_1,\ldots,X_7=(N,6,Y,4,0.5,0.25,6)\)。四樹依序沿路徑：① X2≥1、X3=Y、X1≠Y→3.14；② X4≥2.67、X3=Y、X4≥3、X7&lt;8→3.5；③ X7&lt;6.5、X1≠Y→2.81；④ X6&lt;1→0.34。初始值為零，求預測。</p><div class="solution" id="a-q16-23"><strong class="label">參考解答</strong><p>1.958，低於 2（A）。</p><strong class="label">解析</strong><p>每棵樹是殘差修正，將縮小後的貢獻相加：\(0.2(3.14+3.5+2.81+0.34)=1.958\)。不要再除以 4。</p></div></article><article class="unit" id="terms"><div class="kicker">TERMS</div><h2>本章中英術語</h2><table><thead><tr><th>中文</th><th>English</th><th>解題時的意思</th></tr></thead><tbody><tr><td>遞迴二分</td><td>recursive binary splitting</td><td>在當前區域選變數與切點，分出兩個子區域。</td></tr><tr><td>袋外觀察</td><td>out-of-bag observation</td><td>在某棵樹的自助抽樣訓練集中未被抽中的資料。</td></tr><tr><td>提升法</td><td>boosting</td><td>依序加入弱模型，修正目前模型尚未解釋的部分。</td></tr></tbody></table></article><section class="panel" id="remaining"><h2>章末其餘習題 · 16 題</h2><p>按講義題號排列。做題前可用各題自己的按鈕隱藏解答。</p></section><article class="exercise" id="q16-1"><button class="toggle" aria-controls="a-q16-1" aria-expanded="true">隱藏解答</button><h3>練習 · 16.1</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q16-1">題目連結</a></small><p>判斷：I 決策樹易解讀；II 可圖示；III 一般較容易向非技術人員解釋單樹而非線性迴歸。</p><div class="solution" id="a-q16-1"><strong class="label">參考解答</strong><p>三項皆是（E）。</p><strong class="label">解析</strong><p>一筆資料可沿條件走到葉節點，不需同時解釋多個係數。這是溝通優點，不代表預測一定較準。</p></div></article><article class="exercise" id="q16-3"><button class="toggle" aria-controls="a-q16-3" aria-expanded="true">隱藏解答</button><h3>練習 · 16.3</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q16-3">題目連結</a></small><p>比較三張車險的預估對數賠款。年齡類別 1 直接落在 8.146；類別 5 且車齡至少 2.5 時，車齡小於 3.5 落在 7.771，否則 8.028。I=(1,4)、II=(5,5)、III=(5,3)，由低到高排序。</p><div class="solution" id="a-q16-3"><strong class="label">參考解答</strong><p>III &lt; II &lt; I（E）。</p><strong class="label">解析</strong><p>依序得 8.146、8.028、7.771。題目要比較對數，指數化是單調轉換，不會改變順序。</p></div></article><article class="exercise" id="q16-4"><button class="toggle" aria-controls="a-q16-4" aria-expanded="true">隱藏解答</button><h3>練習 · 16.4</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q16-4">題目連結</a></small><p>鴨重迴歸樹先分年齡是否大於 7.5；年輕母鴨 0.80、年輕公鴨 0.90；年長公鴨翼展大於 5.3 時為 1.25 公斤。X=(7歲、公、5.5)、Y=(5歲、母、5.8)、Z=(8歲、公、5.7)。比較三者。</p><div class="solution" id="a-q16-4"><strong class="label">參考解答</strong><p>Y &lt; X &lt; Z（C）。</p><strong class="label">解析</strong><p>X=0.90，Y=0.80，Z=1.25。翼展只在年長公鴨分枝起作用。</p></div></article><article class="exercise" id="q16-7"><button class="toggle" aria-controls="a-q16-7" aria-expanded="true">隱藏解答</button><h3>練習 · 16.7</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q16-7">題目連結</a></small><p>樹的首問是 \(X_1&lt;t_1\)（假走 A）；真時再問 \(X_2&lt;t_2\)（假走 B）；剩下再問 \(X_1&lt;t_3\)（真走 C、假走 D）。對應的二維分區是什麼？</p><div class="solution" id="a-q16-7"><strong class="label">參考解答</strong><p>原題圖 B。</p><strong class="label">解析</strong><p>\(X_1\ge t_1\) 全屬 A；其餘 \(X_2\ge t_2\) 屬 B。在 \(X_2&lt;t_2\) 且 \(X_1&lt;t_1\) 中，\(X_1&lt;t_3\) 為 C，其餘為 D。先畫根切線，再只在被切的區域內畫下一條線。</p></div></article><article class="exercise" id="q16-12"><button class="toggle" aria-controls="a-q16-12" aria-expanded="true">隱藏解答</button><h3>練習 · 16.12</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q16-12">題目連結</a></small><p>判斷 I 遞迴二分可能過度擬合；II 分裂越多通常變異越小；III 成本複雜度參數為零時可留下很大的樹。</p><div class="solution" id="a-q16-12"><strong class="label">參考解答</strong><p>I、III 正確（C）。</p><strong class="label">解析</strong><p>切割通常降低訓練誤差、增加對樣本的敏感度；零懲罰時不會因多一葉而付出成本。</p></div></article><article class="exercise" id="q16-14"><button class="toggle" aria-controls="a-q16-14" aria-expanded="true">隱藏解答</button><h3>練習 · 16.14</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q16-14">題目連結</a></small><p>三區域的 A/B/C 類樣本數依次為 I：72/22/6，II：55/25/10，III：20/32/28。求區域 I 分類錯誤率。</p><div class="solution" id="a-q16-14"><strong class="label">參考解答</strong><p>0.28。</p><strong class="label">解析</strong><p>選多數類 A，錯判 22+6 筆，除以該區 100 筆。</p></div></article><article class="exercise" id="q16-15"><button class="toggle" aria-controls="a-q16-15" aria-expanded="true">隱藏解答</button><h3>練習 · 16.15</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q16-15">題目連結</a></small><p>三區域的 A/B/C 類樣本數依次為 I：72/22/6，II：55/25/10，III：20/32/28。求區域 II 基尼指數。</p><div class="solution" id="a-q16-15"><strong class="label">參考解答</strong><p>約 0.5370。</p><strong class="label">解析</strong><p>總數 90，\(G=1-[(55/90)^2+(25/90)^2+(10/90)^2]=0.537037\)。</p></div></article><article class="exercise" id="q16-16"><button class="toggle" aria-controls="a-q16-16" aria-expanded="true">隱藏解答</button><h3>練習 · 16.16</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q16-16">題目連結</a></small><p>三區域的 A/B/C 類樣本數依次為 I：72/22/6，II：55/25/10，III：20/32/28。求區域 I 的自然對數熵。</p><div class="solution" id="a-q16-16"><strong class="label">參考解答</strong><p>約 0.738436。</p><strong class="label">解析</strong><p>\(H=-0.72\ln0.72-0.22\ln0.22-0.06\ln0.06\)。對數底數若換成 2，數值會變，排序不變。</p></div></article><article class="exercise" id="q16-17"><button class="toggle" aria-controls="a-q16-17" aria-expanded="true">隱藏解答</button><h3>練習 · 16.17</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q16-17">題目連結</a></small><p>分類樹先以 \(X_1&lt;21\) 分出第一葉；剩餘樣本依 \(X_2=Y\) 分兩葉。七筆 \((X_1,X_2,標籤)\) 為 (12,Y,T)、(23,N,F)、(4,Y,F)、(32,Y,F)、(22,N,T)、(30,Y,T)、(18,N,T)。三種指標分別對各葉直接加總，大小關係為何？</p><div class="solution" id="a-q16-17"><strong class="label">參考解答</strong><p>熵 &gt; 基尼 &gt; 錯誤率（A）。</p><strong class="label">解析</strong><p>三葉 T 比例為 2/3、1/2、1/2。錯誤率總和=4/3，基尼=4/9+1/2+1/2=13/9，熵約 2.0228。本題是「各葉加總」而非通常的樣本數加權。</p></div></article><article class="exercise" id="q16-19"><button class="toggle" aria-controls="a-q16-19" aria-expanded="true">隱藏解答</button><h3>練習 · 16.19</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q16-19">題目連結</a></small><p>判斷 I 易解釋方法通常更有彈性；II 重視解釋時 lasso 相對袋裝具優勢；III 提高彈性必改善未見資料的準確度。</p><div class="solution" id="a-q16-19"><strong class="label">參考解答</strong><p>只有 II（B）。</p><strong class="label">解析</strong><p>線性 lasso 的係數及變數選取較易說明；多樹平均難以逐項解釋。訓練誤差改善不保證測試誤差改善。</p></div></article><article class="exercise" id="q16-20"><button class="toggle" aria-controls="a-q16-20" aria-expanded="true">隱藏解答</button><h3>練習 · 16.20</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q16-20">題目連結</a></small><p>判斷 I 森林若每次考慮全部特徵則為袋裝；II 同一棵樹每一節點都使用同一特徵子集；III 降低樹間相關性是森林相對袋裝的一項優點。</p><div class="solution" id="a-q16-20"><strong class="label">參考解答</strong><p>I、III（C）。</p><strong class="label">解析</strong><p>在每個節點重新抽特徵，並非每棵樹只抽一次。樹間相關下降可降低平均預測的變異，並非每一資料集都保證勝出。</p></div></article><article class="exercise" id="q16-21"><button class="toggle" aria-controls="a-q16-21" aria-expanded="true">隱藏解答</button><h3>練習 · 16.21</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q16-21">題目連結</a></small><p>散點呈近似拋物線。判斷何者能合理支持模型選擇：A 數值變數足以指定森林、B 非直線就該用森林、C 異變異必排除 GLM、D 有關聯就該用森林、E GLM 可納入多項式關係。</p><div class="solution" id="a-q16-21"><strong class="label">參考解答</strong><p>E。</p><strong class="label">解析</strong><p>在 GLM 的線性預測式中加入 \(x^2\)，仍對係數線性，對 x 則是曲線。僅憑數值型或相關性不足以決定最佳方法。</p></div></article><article class="exercise" id="q16-22"><button class="toggle" aria-controls="a-q16-22" aria-expanded="true">隱藏解答</button><h3>練習 · 16.22</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q16-22">題目連結</a></small><p>測試誤差隨樹數而變，曲線 I 早早穩定於較高值，II 也趨穩但較低，III 隨迭代仍逐漸改善。題目要推測最可能對應的集成方法。</p><div class="solution" id="a-q16-22"><strong class="label">參考解答</strong><p>I 袋裝、II 隨機森林、III 提升（C）。</p><strong class="label">解析</strong><p>袋裝與森林是對同類估計取平均，增加樹數主要減少模擬誤差；提升逐輪修正殘差。曲線形狀只是本題線索，不是唯一可辨識演算法的定理。</p></div></article><article class="exercise" id="q16-24"><button class="toggle" aria-controls="a-q16-24" aria-expanded="true">隱藏解答</button><h3>練習 · 16.24</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q16-24">題目連結</a></small><p>三個連續平面分類區域中，I 的兩類由軸平行矩形構成，II、III 的分界含非軸平行邊。有限棵節點的一棵分類樹能在哪個整個平面上恰好零誤差？</p><div class="solution" id="a-q16-24"><strong class="label">參考解答</strong><p>只有 I（A）。</p><strong class="label">解析</strong><p>有限次軸向切割只會形成有限個軸平行矩形；斜邊或曲線可用階梯逼近，但不能在整個連續區域精確重現。</p></div></article><article class="exercise" id="q16-25"><button class="toggle" aria-controls="a-q16-25" aria-expanded="true">隱藏解答</button><h3>練習 · 16.25</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q16-25">題目連結</a></small><p>就本課方法的典型彈性與解釋性取捨，選正確說法：A 普通線性迴歸高度彈性；B lasso 比同特徵的未懲罰線性模型更彈性；C 深樹袋裝彈性低；D 高彈性且易解釋是此處比較方法的典型組合；E 以上皆非。</p><div class="solution" id="a-q16-25"><strong class="label">參考解答</strong><p>E。</p><strong class="label">解析</strong><p>線性模型受函數形式限制，lasso 再限制係數；袋裝多棵深樹可表示複雜預測。這是課本比較各方法的通常特性，不是排除任何易解釋的複雜模型。</p></div></article><article class="exercise" id="q16-26"><button class="toggle" aria-controls="a-q16-26" aria-expanded="true">隱藏解答</button><h3>練習 · 16.26</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q16-26">題目連結</a></small><p>判斷 I 袋裝與森林主要不同在各次切割可考慮的變數數；II 單棵樹常較森林高變異；III 森林降低樹間相關是可能勝過袋裝的原因。</p><div class="solution" id="a-q16-26"><strong class="label">參考解答</strong><p>三項皆正確（D）。</p><strong class="label">解析</strong><p>多樹平均有助穩定；隨機限制候選變數能降低單一重要變數反覆支配各棵樹造成的相關。</p></div></article><section class="panel"><h2>用模擬考複習本章</h2><div class="chips"><a href="exams.html#exam1">第 1 回 · 題 6</a><a href="exams.html#exam1">第 1 回 · 題 9</a><a href="exams.html#exam1">第 1 回 · 題 12</a><a href="exams.html#exam1">第 1 回 · 題 13</a><a href="exams.html#exam1">第 1 回 · 題 22</a><a href="exams.html#exam1">第 1 回 · 題 32</a><a href="exams.html#exam1">第 1 回 · 題 34</a><a href="exams.html#exam2">第 2 回 · 題 7</a><a href="exams.html#exam2">第 2 回 · 題 9</a><a href="exams.html#exam2">第 2 回 · 題 12</a><a href="exams.html#exam2">第 2 回 · 題 13</a><a href="exams.html#exam2">第 2 回 · 題 19</a><a href="exams.html#exam2">第 2 回 · 題 23</a><a href="exams.html#exam2">第 2 回 · 題 34</a><a href="exams.html#exam3">第 3 回 · 題 1</a><a href="exams.html#exam3">第 3 回 · 題 9</a><a href="exams.html#exam3">第 3 回 · 題 13</a><a href="exams.html#exam3">第 3 回 · 題 15</a><a href="exams.html#exam3">第 3 回 · 題 17</a><a href="exams.html#exam3">第 3 回 · 題 19</a><a href="exams.html#exam3">第 3 回 · 題 20</a><a href="exams.html#exam4">第 4 回 · 題 7</a><a href="exams.html#exam4">第 4 回 · 題 9</a><a href="exams.html#exam4">第 4 回 · 題 14</a><a href="exams.html#exam4">第 4 回 · 題 15</a><a href="exams.html#exam4">第 4 回 · 題 17</a><a href="exams.html#exam4">第 4 回 · 題 20</a><a href="exams.html#exam4">第 4 回 · 題 31</a><a href="exams.html#exam5">第 5 回 · 題 2</a><a href="exams.html#exam5">第 5 回 · 題 3</a><a href="exams.html#exam5">第 5 回 · 題 5</a><a href="exams.html#exam5">第 5 回 · 題 10</a><a href="exams.html#exam5">第 5 回 · 題 17</a><a href="exams.html#exam5">第 5 回 · 題 19</a><a href="exams.html#exam5">第 5 回 · 題 29</a><a href="exams.html#exam6">第 6 回 · 題 1</a><a href="exams.html#exam6">第 6 回 · 題 4</a><a href="exams.html#exam6">第 6 回 · 題 8</a><a href="exams.html#exam6">第 6 回 · 題 11</a><a href="exams.html#exam6">第 6 回 · 題 16</a><a href="exams.html#exam6">第 6 回 · 題 18</a><a href="exams.html#exam6">第 6 回 · 題 33</a></div></section><div class="navfoot"><a href="ch15.html">← 上一章</a><a href="ch17.html">下一章 →</a></div><footer>SRM 精算考試中文研讀筆記 · 依所附第四版教材章序編寫，中文解析為參考解答。</footer></main></body></html>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 16 章　決策樹與集成學習｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
+<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html" selected>第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 16 章</div><h1>決策樹與集成學習</h1><p class="ch-sub">決策樹是 SRM 考綱中占 20～25% 的主題，SOA 樣題有十幾題直接考它。本章先學會「讀樹」：沿著分支找到葉子、把樹畫成長方形區域。接著看樹怎麼長出來（遞迴二元分割、RSS、Gini、熵）、怎麼修剪（成本複雜度），再比較樹與線性模型的優缺點。最後是三種把很多棵樹結合起來降低變異數的方法：bagging、隨機森林、boosting，每一種都從「為什麼有效」推導。</p><div class="chips"><a href="pdf/ch16.pdf">下載本章 PDF</a><a href="#exercises">章末習題（26 題）</a><span class="chip-note">觀念題 26 題（在各節後面）</span><button class="toggle-all" type="button">顯示全部解答</button></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">16.1 決策樹長什麼樣：讀樹與區域</a></li><li><a href="#s2">16.2 樹怎麼長出來：遞迴二元分割</a></li><li><a href="#s3">16.3 修剪：成本複雜度</a></li><li><a href="#s4">16.4 樹與線性模型</a></li><li><a href="#s5">16.5 Bagging 與隨機森林</a></li><li><a href="#s6">16.6 Boosting</a></li></ol><p>本章對應講義第 16 課，讀本是 ISLR 第 8 章（第二版跳過 8.2.4、8.2.5、8.3.5）。會用到第 1 章的偏差與變異數、第 6 章的交叉驗證、第 8 章 lasso 的懲罰概念、第 15 章的 KNN。</p>
+<p><strong>記號。</strong> 葉子（終端節點）\(R_1,\ldots,R_J\)；\(|T|\) 是葉子數；\(\hat y_{R_j}\) 是葉子 \(R_j\) 的預測；\(\hat p_{mk}\) 是節點 \(m\) 中類別 \(k\) 的比例；\(B\) 是樹的棵數；\(p\) 是解釋變數個數，\(m\) 是隨機森林每次分割可考慮的變數數。</p>
+<div class="box map">
+<div class="box-t">考點地圖：這一章在考試裡的位置</div>
+<p><strong>對應考綱</strong>：主題 4「決策樹」（占 20～25%）：建構迴歸樹與分類樹、修剪、解讀；bagging、隨機森林、boosting 的原理與比較。</p>
+<p><strong>SOA 官方樣題裡的樣子</strong>（2024 版，共十五題以上）：</p>
+<table>
+<thead>
+<tr>
+<th>類型</th>
+<th>樣題</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>讀樹求預測值、排序</td>
+<td>33、51、63</td>
+</tr>
+<tr>
+<td>樹 ↔ 區域圖</td>
+<td>48、66</td>
+</tr>
+<tr>
+<td>依樹計算各葉子的平均</td>
+<td>57</td>
+</tr>
+<tr>
+<td>分類樹的分割準則（Gini、熵、錯誤數）</td>
+<td>9</td>
+</tr>
+<tr>
+<td>修剪</td>
+<td>25</td>
+</tr>
+<tr>
+<td>樹能不能完美分類某個圖形</td>
+<td>26</td>
+</tr>
+<tr>
+<td>樹的優點、彈性與可解釋性</td>
+<td>12、29、50</td>
+</tr>
+<tr>
+<td>隨機森林</td>
+<td>10、41</td>
+</tr>
+<tr>
+<td>GLM 還是隨機森林</td>
+<td>39</td>
+</tr>
+<tr>
+<td>boosting 的殘差與預測更新</td>
+<td>68、69</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>會考的東西</th>
+<th>題目長什麼樣</th>
+<th>判斷或計算的依據</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>讀樹</td>
+<td>給一筆資料，沿樹走到葉子</td>
+<td>先確認「左邊是成立還是不成立」</td>
+</tr>
+<tr>
+<td>樹與區域</td>
+<td>哪一張區域圖對應這棵樹</td>
+<td>每次分割只切一個變數，切出與座標軸平行的長方形</td>
+</tr>
+<tr>
+<td>第一次分割</td>
+<td>給資料，比較幾個候選分割</td>
+<td>迴歸：兩邊 RSS 總和最小；分類：Gini 或熵的加權平均最小</td>
+</tr>
+<tr>
+<td>不純度</td>
+<td>算錯誤率、Gini、熵</td>
+<td>\(1-\max\hat p_k\)；\(\sum\hat p_k(1-\hat p_k)\)；\(-\sum\hat p_k\ln\hat p_k\)</td>
+</tr>
+<tr>
+<td>修剪</td>
+<td>給各節點的 RSS 與 \(\alpha\)，選修剪方式</td>
+<td>最小化 \(\text{RSS}+\alpha|T|\)</td>
+</tr>
+<tr>
+<td>bagging、隨機森林</td>
+<td>概念：變異數、相關性、\(m\) 的選擇、袋外誤差</td>
+<td>平均降低變異數；\(m=p\) 就是 bagging；\(m\approx\sqrt p\)</td>
+</tr>
+<tr>
+<td>boosting</td>
+<td>三個參數；殘差與預測的更新</td>
+<td>\(\hat f\leftarrow\hat f+\lambda\hat f^b\)，\(r\leftarrow r-\lambda\hat f^b\)；\(B\) 太大會過度配適</td>
+</tr>
+</tbody>
+</table>
+<p><strong>讀完這一章要會</strong>：</p>
+<ol>
+<li>讀樹、把樹畫成區域、從區域圖辨認樹。</li>
+<li>用 RSS、分類錯誤率、Gini、熵比較候選分割。</li>
+<li>用成本複雜度修剪選擇子樹，說出 \(\alpha\) 的作用。</li>
+<li>說出樹相對於線性模型的優缺點。</li>
+<li>說明 bagging、隨機森林、boosting 的做法、參數與為什麼能降低誤差。</li>
+</ol>
+</div></section><section class="unit" id="s1"><h2>16.1 決策樹長什麼樣：讀樹與區域</h2><h3>一、結構</h3>
+<p>決策樹用一連串「是／否」問題把資料分組：</p>
+<ul>
+<li>每個<strong>內部節點</strong>問一個問題，例如「\(X_1&lt;4\)？」或「房屋類型是平房？」，答案把資料分到左右兩個分支。每次分割都是<strong>二元</strong>的；三類的類別變數要分兩次才能完全分開。</li>
+<li>最下面的<strong>葉子</strong>（終端節點）給預測：<strong>迴歸樹</strong>用該區域反應變數的<strong>平均</strong>；<strong>分類樹</strong>用該區域最常見的類別（多數決）。</li>
+<li>數值變數的分割要選一個切點；不同節點可以問不同的問題，同一個變數在不同分支也可以有不同切點。</li>
+</ul>
+<p>樹是倒著畫的：根在上面，葉子在下面。</p>
+<h3>二、樹就是把空間切成長方形</h3>
+<p>每一個葉子對應預測變數空間中的一塊<strong>長方形</strong>（多維時是長方體），邊與座標軸平行。因為每次只用一個變數、一個切點把一塊切成兩塊。</p>
+<figure><img src="assets/fig/ch16-partition.svg" alt="200 筆模擬資料（顏色深淺代表 ）。左：樹把  平面切成五個長方形，每塊預測該塊  的平均（5.1、12.2、8.5、14.8、22.0）。右：同一棵樹的畫法。先用  切出左右兩大塊，左邊再用  切；右邊用  切，上半部再用  切。" loading="lazy"><figcaption>200 筆模擬資料（顏色深淺代表 \(y\)）。左：樹把 \((X_1,X_2)\) 平面切成五個長方形，每塊預測該塊 \(y\) 的平均（5.1、12.2、8.5、14.8、22.0）。右：同一棵樹的畫法。先用 \(X_1&lt;4\) 切出左右兩大塊，左邊再用 \(X_2&lt;6\) 切；右邊用 \(X_2&lt;3\) 切，上半部再用 \(X_1&lt;7\) 切。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 16-1：讀樹（SOA 樣題第 63 題，習題 16.2）</div>
+<p>汽車座椅銷量的迴歸樹（左＝是）：根節點問「ShelveLoc = Bad 或 Medium？」。一筆資料 ShelveLoc = Good、Price = 120、Age = 57。</p>
+<p>ShelveLoc 是 Good，答「否」，往右；右邊節點問「Price ≥ 110？」，120 是，往左，到葉子 <strong>9.2</strong>，答案 (D)。Age、Advertising 用不到。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 16-2：由樹寫出區域（SOA 樣題第 66 題）</div>
+<p>樹（左＝不等式成立）：先問 \(X_1\le5\)；成立時再問 \(X_2\le40\)，得到區域 1、2；不成立時問 \(X_1\le10\)，成立是區域 3；不成立再問 \(X_2\le60\)，得到區域 4、5。</p>
+<p>所以區域 3 是 \(\{5&lt;X_1\le10\}\)（\(X_2\) 不限），區域 4、5 是 \(X_1&gt;10\) 且 \(X_2\le60\) 或 \(&gt;60\)。寫區域時，一定要把<strong>從根到葉子路徑上所有的條件</strong>都寫進去，例如區域 3 必須同時滿足「\(X_1&gt;5\)」和「\(X_1\le10\)」。</p>
+</div>
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li><strong>先看左右分支哪一邊是「成立」</strong>。SOA 的題目大多是左邊成立，但樣題 51（鴨子體重）的圖是左邊 [no]、右邊 [yes]。</li>
+<li>類別變數的條件「\(Y=\) A, B」表示 \(Y\) 是 A <strong>或</strong> B 時往成立那一邊。</li>
+<li>區域圖辨認題：從根開始，第一個切點一定是<strong>整個</strong>圖中貫穿的那條線；後面的切點只切其中一塊（樣題 48）。</li>
+</ul>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：讀樹</div>
+<ul>
+<li><strong>讀樹求預測</strong>（樣題 33、51、63）：逐層判斷，最後比較大小或選數字。</li>
+<li><strong>樹 ↔ 區域</strong>（樣題 48、66）：每個葉子的區域＝路徑上所有條件的交集。</li>
+<li><strong>給資料與樹，求各葉子的平均</strong>（樣題 57）：把每筆資料送到它的葉子，同一葉子的反應變數取平均。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q16-2"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.2 題</b><small>・講義 p.285・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #63] You have constructed the following regression tree predicting unit sales (in thousands) of car seats. The variable ShelveLoc has possible values Good, Medium, and Bad.</p>
+<figure><img src="assets/fig/ch16-ex2.svg" alt="依題目原圖重畫。中間節點的平均與比例：左子樹根 6.8（75%）、右子樹根 10（21%）、Price ≥ 106 的左側 6（52%）、右側 8.2（27%）。" loading="lazy"><figcaption>依題目原圖重畫。中間節點的平均與比例：左子樹根 6.8（75%）、右子樹根 10（21%）、Price ≥ 106 的左側 6（52%）、右側 8.2（27%）。</figcaption></figure>
+
+<p>In this tree, the left branch at each node is "Yes" and the right branch is "No".</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Observed Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ShelveLoc</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Price</td>
+<td>120</td>
+</tr>
+<tr>
+<td>Age</td>
+<td>57</td>
+</tr>
+<tr>
+<td>Advertising</td>
+<td>12</td>
+</tr>
+</tbody>
+</table>
+<p>Determine the predicted unit sales (in thousands) for the above observation based on the regression tree.</p>
+<div class="opts">
+<p>(A) 4.7</p>
+<p>(B) 6.6</p>
+<p>(C) 7.4</p>
+<p>(D) 9.2</p>
+<p>(E) 9.4</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 63 題）預測汽車座椅銷量（千）的迴歸樹如下，ShelveLoc 有 Good、Medium、Bad 三種值。左分支是「是」、右分支是「否」。</p>
+<p>一筆觀察：ShelveLoc = Good、Price = 120、Age = 57、Advertising = 12。求這筆觀察的預測銷量（千）。</p>
+<div class="opts">
+<p>(A) 4.7　(B) 6.6　(C) 7.4　(D) 9.2　(E) 9.4</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>根節點：ShelveLoc 是 Good，不是 Bad 或 Medium，往右。右節點：Price = 120 ≥ 110，往左，到 9.2。</p></div></div></article><article class="exercise" id="q16-3"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.3 題</b><small>・講義 p.286・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #33] The regression tree shown below was produced from a dataset of auto claim payments. Age Category (1, 2, 3, 4, 5, 6) and Vehicle Age (1, 2, 3, 4) are both predictor variables, and log of claim amount (LCA) is the dependent variable.</p>
+<figure><img src="assets/fig/ch16-ex3.svg" alt="依題目原圖重畫。" loading="lazy"><figcaption>依題目原圖重畫。</figcaption></figure>
+
+<p>Consider three autos I, II, III:</p>
+<div class="items">
+<p>I. An Auto in Age Category 1 and Vehicle Age 4</p>
+<p>II. An Auto in Age Category 5 and Vehicle Age 5</p>
+<p>III. An Auto in Age Category 5 and Vehicle Age 3</p>
+</div>
+<p>Rank the estimated LCA of Autos I, II, and III.</p>
+<div class="opts">
+<p>(A) LCA(I) &lt; LCA(II) &lt; LCA(III)</p>
+<p>(B) LCA(I) &lt; LCA(III) &lt; LCA(II)</p>
+<p>(C) LCA(II) &lt; LCA(I) &lt; LCA(III)</p>
+<p>(D) LCA(II) &lt; LCA(III) &lt; LCA(I)</p>
+<p>(E) LCA(III) &lt; LCA(II) &lt; LCA(I)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 33 題）以汽車理賠資料建立的迴歸樹：預測變數為年齡類別 agecat（1～6）與車齡 veh_age（1～4），反應變數是理賠金額的對數（LCA）。</p>
+<p>三輛車：I. 年齡類別 1、車齡 4；II. 年齡類別 5、車齡 5；III. 年齡類別 5、車齡 3。將 LCA 的估計值排序。</p>
+<div class="opts">
+<p>(A) LCA(I) &lt; LCA(II) &lt; LCA(III)</p>
+<p>(B) LCA(I) &lt; LCA(III) &lt; LCA(II)</p>
+<p>(C) LCA(II) &lt; LCA(I) &lt; LCA(III)</p>
+<p>(D) LCA(II) &lt; LCA(III) &lt; LCA(I)</p>
+<p>(E) LCA(III) &lt; LCA(II) &lt; LCA(I)</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
+<li>I：agecat = 1 &lt; 1.5，直接往右，8.146。</li>
+<li>II：agecat ≥ 1.5 往左；veh_age = 5 ≥ 2.5 往右；agecat ≥ 4.5 往左；veh_age ≥ 3.5 往右，8.028。</li>
+<li>III：同 II，但最後 veh_age = 3 &lt; 3.5 往左，7.771。</li>
+</ul>
+<p>7.771 &lt; 8.028 &lt; 8.146。</p></div></div></article><article class="exercise" id="q16-4"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.4 題</b><small>・講義 p.287・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #51] You are given the following regression tree predicting the weight of ducks in kilograms (kg):</p>
+<figure><img src="assets/fig/ch16-ex4.svg" alt="依題目原圖重畫，注意每個節點左邊是 [no]、右邊是 [yes]。" loading="lazy"><figcaption>依題目原圖重畫，注意每個節點左邊是 [no]、右邊是 [yes]。</figcaption></figure>
+
+<p>You predict the weight of the following three ducks:</p>
+<p>X: Wing Span = 5.5 cm, Male, Age = 7 years
+Y: Wing Span = 5.8 cm, Female, Age = 5 years
+Z: Wing Span = 5.7 cm, Male, Age = 8 years</p>
+<p>Determine the order of the predicted weights of the three ducks.</p>
+<div class="opts">
+<p>(A) X &lt; Y &lt; Z</p>
+<p>(B) X &lt; Z &lt; Y</p>
+<p>(C) Y &lt; X &lt; Z</p>
+<p>(D) Y &lt; Z &lt; X</p>
+<p>(E) Z &lt; X &lt; Y</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 51 題）預測鴨子體重（公斤）的迴歸樹：</p>
+<p>三隻鴨子：X：翼展 5.5 公分、公、7 歲；Y：翼展 5.8 公分、母、5 歲；Z：翼展 5.7 公分、公、8 歲。將預測體重排序。</p>
+<div class="opts">
+<p>(A) X &lt; Y &lt; Z　(B) X &lt; Z &lt; Y　(C) Y &lt; X &lt; Z　(D) Y &lt; Z &lt; X　(E) Z &lt; X &lt; Y</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
+<li>X：7 歲，不大於 7.5，往 [no]（左）；公，往 [yes]（右），0.90。</li>
+<li>Y：5 歲往左；母往左，0.80。</li>
+<li>Z：8 歲往右；公往右；翼展 5.7 &gt; 5.3 往右，1.25。</li>
+</ul>
+<p>0.80 &lt; 0.90 &lt; 1.25。</p></div></div></article><article class="exercise" id="q16-7"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.7 題</b><small>・講義 p.289・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #48] The following tree was constructed using recursive binary splitting with the left branch indicating that the inequality is true.</p>
+<figure><img src="assets/fig/ch16-ex7.svg" alt="依題目原圖重畫。上方是樹，下方是五個候選的區域圖 (A)～(E)，每張圖的縱軸與橫軸變數、切點位置不同。" loading="lazy"><figcaption>依題目原圖重畫。上方是樹，下方是五個候選的區域圖 (A)～(E)，每張圖的縱軸與橫軸變數、切點位置不同。</figcaption></figure>
+
+<p>Determine which of the following plots represents the tree.</p>
+<div class="opts">
+<p>(A) Plot (A)</p>
+<p>(B) Plot (B)</p>
+<p>(C) Plot (C)</p>
+<p>(D) Plot (D)</p>
+<p>(E) Plot (E)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 48 題）以遞迴二元分割建立的樹如下（左分支表示不等式成立）。哪一張圖代表這棵樹？</p>
+<div class="opts">
+<p>(A) 圖 (A)　(B) 圖 (B)　(C) 圖 (C)　(D) 圖 (D)　(E) 圖 (E)</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
+<li>第一刀 \(x_1&lt;t_1\) 貫穿全圖：\(x_1\ge t_1\) 是 A。所以 A 是 \(x_1\) 大的那一塊，縱軸是 \(X_1\)、A 在 \(t_1\) 上方。這排除 (A)、(D)（\(t_1\) 在下面）與 (C)（縱軸是 \(X_2\)）。</li>
+<li>\(x_1&lt;t_1\) 之中，\(x_2\ge t_2\) 是 B（右邊）。</li>
+<li>剩下的再用 \(x_1&lt;t_3\)：\(x_1&lt;t_3\) 是 C（下方），\(t_3\le x_1&lt;t_1\) 是 D（中間）。(E) 把 C、D 放反了。</li>
+</ul>
+<p>只有 (B) 符合。</p></div></div></article><article class="exercise" id="q16-8"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.8 題</b><small>・講義 p.290・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #57] You are given</p>
+<div class="items">
+<p>(i) The following observed values of the response variable, \(R\), and predictor variables \(X\), \(Y\), \(Z\):</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>\(R\)</th>
+<th>4.75</th>
+<th>4.67</th>
+<th>4.67</th>
+<th>4.56</th>
+<th>4.53</th>
+<th>3.91</th>
+<th>3.90</th>
+<th>3.90</th>
+<th>3.89</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(X\)</td>
+<td>M</td>
+<td>F</td>
+<td>M</td>
+<td>F</td>
+<td>M</td>
+<td>F</td>
+<td>F</td>
+<td>M</td>
+<td>M</td>
+</tr>
+<tr>
+<td>\(Y\)</td>
+<td>A</td>
+<td>A</td>
+<td>D</td>
+<td>D</td>
+<td>B</td>
+<td>C</td>
+<td>B</td>
+<td>D</td>
+<td>B</td>
+</tr>
+<tr>
+<td>\(Z\)</td>
+<td>2</td>
+<td>4</td>
+<td>1</td>
+<td>3</td>
+<td>2</td>
+<td>2</td>
+<td>5</td>
+<td>5</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<div class="items">
+<p>(ii) The following plot of the corresponding regression tree:</p>
+</div>
+<figure><img src="assets/fig/ch16-ex8.svg" alt="依題目原圖重畫。" loading="lazy"><figcaption>依題目原圖重畫。</figcaption></figure>
+
+<p>Calculate the Mean Response (MR) for each of the end nodes.</p>
+<div class="opts">
+<p>(A) MR(T1) = 4.39, MR(T2) = 4.38, MR(T3) = 4.29, MR(T4) = 3.90</p>
+<p>(B) MR(T1) = 4.26, MR(T2) = 4.38, MR(T3) = 4.62, MR(T4) = 3.90</p>
+<p>(C) MR(T1) = 4.26, MR(T2) = 4.39, MR(T3) = 3.90, MR(T4) = 4.29</p>
+<p>(D) MR(T1) = 4.64, MR(T2) = 4.29, MR(T3) = 4.38, MR(T4) = 3.90</p>
+<p>(E) MR(T1) = 4.64, MR(T2) = 4.38, MR(T3) = 4.39, MR(T4) = 3.90</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 57 題）反應變數 \(R\) 與預測變數 \(X\)、\(Y\)、\(Z\) 的觀察：</p>
+<p>對應的迴歸樹（左＝成立）：</p>
+<p>求每個葉子的平均反應 MR。</p>
+<div class="opts">
+<p>(A) MR(T1)=4.39，MR(T2)=4.38，MR(T3)=4.29，MR(T4)=3.90</p>
+<p>(B) MR(T1)=4.26，MR(T2)=4.38，MR(T3)=4.62，MR(T4)=3.90</p>
+<p>(C) MR(T1)=4.26，MR(T2)=4.39，MR(T3)=3.90，MR(T4)=4.29</p>
+<p>(D) MR(T1)=4.64，MR(T2)=4.29，MR(T3)=4.38，MR(T4)=3.90</p>
+<p>(E) MR(T1)=4.64，MR(T2)=4.38，MR(T3)=4.39，MR(T4)=3.90</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>把每筆送到葉子：</p>
+<ul>
+<li>T1（\(Z\le3\)、\(Y\) 是 A 或 B）：4.75、4.53、3.89，平均 4.39。</li>
+<li>T2（\(Z\le3\)、\(Y\) 是 C 或 D）：4.67、4.56、3.91，平均 4.38。</li>
+<li>T3（\(Z&gt;3\)、\(X=\) F）：4.67、3.90，平均 4.285。</li>
+<li>T4（\(Z&gt;3\)、\(X=\) M）：3.90。</li>
+</ul></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（4 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC16-1-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.1-1</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A regression tree has root split \(X_1&lt;5\). If true (left), the next split is \(X_2&lt;3\), with leaf predictions 10 (true) and 14 (false). If \(X_1\ge5\) (right), the prediction is 20.</p>
+<p>Determine the prediction for \((X_1,X_2)=(4,6)\).</p>
+<div class="opts">
+<p>(A) 10</p>
+<p>(B) 14</p>
+<p>(C) 20</p>
+<p>(D) 12</p>
+<p>(E) 17</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>迴歸樹根節點 \(X_1&lt;5\)；成立（左）時再問 \(X_2&lt;3\)，葉子預測 10（成立）與 14（不成立）；\(X_1\ge5\) 時預測 20。求 \((4,6)\) 的預測。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(X_1=4&lt;5\) 往左；\(X_2=6\ge3\) 往右，14。(D)、(E) 是把葉子平均，樹不會這樣做。</p></div></div></article><article class="exercise concept-q" id="qC16-1-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.1-2</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A binary decision tree has 7 internal (split) nodes.</p>
+<p>Determine the number of terminal nodes.</p>
+<div class="opts">
+<p>(A) 7</p>
+<p>(B) 6</p>
+<p>(C) 8</p>
+<p>(D) 14</p>
+<p>(E) 15</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>二元決策樹有 7 個內部（分割）節點，終端節點有幾個？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>每一次二元分割讓葉子數加 1：從 1 片開始，分 7 次得到 8 片。(E) 是全部節點數。</p></div></div></article><article class="exercise concept-q" id="qC16-1-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.1-3</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A regression tree first splits on \(X_1\le5\). The left branch splits on \(X_2\le40\) into Regions 1 and 2. The right branch splits on \(X_1\le10\): the left child is Region 3, and the right child splits on \(X_2\le60\) into Regions 4 and 5. (Left branches indicate the inequality is true.)</p>
+<p>Determine Region 3.</p>
+<div class="opts">
+<p>(A) \(\{5&lt;X_1\le10\}\)</p>
+<p>(B) \(\{X_1\le10\}\)</p>
+<p>(C) \(\{X_1&gt;5\}\)</p>
+<p>(D) \(\{5&lt;X_1\le10,\ X_2\le60\}\)</p>
+<p>(E) \(\{X_1\le5,\ X_2&gt;40\}\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>迴歸樹先問 \(X_1\le5\)；左邊再問 \(X_2\le40\)，分出區域 1、2；右邊問 \(X_1\le10\)，成立是區域 3，不成立再問 \(X_2\le60\) 分出區域 4、5。求區域 3。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>區域 3 的路徑是「\(X_1\le5\) 不成立」且「\(X_1\le10\) 成立」，所以 \(5&lt;X_1\le10\)；\(X_2\) 沒被問到，不限。這是 SOA 樣題 66 的關鍵。(B) 漏了第一個條件；(D) 把區域 4 的條件誤加進來。</p></div></div></article><article class="exercise concept-q" id="qC16-1-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.1-4</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A terminal node of a classification tree contains 7 observations of class A and 5 of class B.</p>
+<p>Determine the predicted class and the node's classification error rate.</p>
+<div class="opts">
+<p>(A) B; 7/12</p>
+<p>(B) A; 7/12</p>
+<p>(C) A; 5/7</p>
+<p>(D) A; 5/12</p>
+<p>(E) B; 5/12</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>分類樹某個葉子有 A 類 7 筆、B 類 5 筆，預測哪一類？錯誤率多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>多數決預測 A；錯誤率 \(1-7/12=5/12\)。(C) 分母用錯。</p></div></div></article></div></section><section class="unit" id="s2"><h2>16.2 樹怎麼長出來：遞迴二元分割</h2><h3>一、迴歸樹：最小化 RSS</h3>
+<p>理想上要找讓
+\[\text{RSS}=\sum_{j=1}^J\sum_{i\in R_j}(y_i-\hat y_{R_j})^2\]
+最小的分區，但可能的分法太多，算不完。實際用<strong>遞迴二元分割</strong>（recursive binary splitting）：</p>
+<ol>
+<li>在目前的區域中，試所有變數 \(X_j\) 與所有切點 \(s\)，把區域切成 \(\{X_j&lt;s\}\) 與 \(\{X_j\ge s\}\)。</li>
+<li>選讓兩邊 RSS 總和
+\[\sum_{x_i\in R_1(j,s)}(y_i-\hat y_{R_1})^2+\sum_{x_i\in R_2(j,s)}(y_i-\hat y_{R_2})^2\]
+最小的那一刀。</li>
+<li>對切出來的區域重複，直到每個區域的觀察數少於某個門檻（例如 5）。</li>
+</ol>
+<p>它是<strong>由上而下</strong>（從整個空間開始）而且<strong>貪婪</strong>（greedy）的：每一步只選當下最好的一刀，不考慮「現在差一點、之後會更好」的切法，和<a href="ch07.html">第 7 章</a>的逐步選擇一樣。</p>
+<div class="box ex">
+<div class="box-t">例題 16-3：選第一刀（習題 16.5）</div>
+<p>四筆資料 \((X,Y)\)：(0,8)、(1,5)、(3,8)、(6,6)。只有一個變數，只需要比較三種切法：</p>
+<table>
+<thead>
+<tr>
+<th>切法</th>
+<th>左群</th>
+<th>右群</th>
+<th>RSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(X&lt;0.5\)</td>
+<td>8</td>
+<td>5、8、6（平均 19/3）</td>
+<td>\(0+(1.778+2.778+0.111)=4.667\)</td>
+</tr>
+<tr>
+<td>\(X&lt;2\)</td>
+<td>8、5（平均 6.5）</td>
+<td>8、6（平均 7）</td>
+<td>\(4.5+2=6.5\)</td>
+</tr>
+<tr>
+<td>\(X&lt;4.5\)</td>
+<td>8、5、8（平均 7）</td>
+<td>6</td>
+<td>\(6+0=6\)</td>
+</tr>
+</tbody>
+</table>
+<p>第一種最小：(0,8) 單獨一群，其餘三筆一群。</p>
+</div>
+<h3>二、分類樹：錯誤率、Gini、熵</h3>
+<p>分類樹的葉子預測多數類別。衡量一個節點 \(m\)「多純」的三種指標（\(\hat p_{mk}\) 是節點中類別 \(k\) 的比例）：</p>
+<table>
+<thead>
+<tr>
+<th>指標</th>
+<th>公式</th>
+<th>兩類時（比例 \(p\)）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>分類錯誤率</td>
+<td>\(E=1-\max_k\hat p_{mk}\)</td>
+<td>\(1-\max(p,1-p)\)</td>
+</tr>
+<tr>
+<td>Gini 指數</td>
+<td>\(G=\sum_k\hat p_{mk}(1-\hat p_{mk})\)</td>
+<td>\(2p(1-p)\)</td>
+</tr>
+<tr>
+<td>熵（entropy）</td>
+<td>\(D=-\sum_k\hat p_{mk}\ln\hat p_{mk}\)</td>
+<td>\(-p\ln p-(1-p)\ln(1-p)\)</td>
+</tr>
+</tbody>
+</table>
+<p>（熵中 \(0\ln0\) 視為 0。）三者都在節點完全純（某一類比例為 1）時等於 0，在各類平均分配時最大。</p>
+<p><strong>一次分割後的總值</strong>：各子節點的指標，以<strong>觀察數比例</strong>加權平均。</p>
+<p><strong>長樹用 Gini 或熵，不用錯誤率</strong>：錯誤率不夠敏感。例如 16 個 A、4 個 B（Gini 0.32），分成「10 個 A」與「6 個 A、4 個 B」，兩邊都預測 A，錯誤數完全沒變（都是 4），但 Gini 降為 \(0.5(0)+0.5(0.48)=0.24\)：節點變純了，之後更容易繼續分好。所以會出現「分割後兩個葉子預測同一類」的情況。</p>
+<p><strong>修剪時</strong>，如果目標是預測準確度，最好用分類錯誤率。</p>
+<figure><img src="assets/fig/ch16-impurity.svg" alt="兩類時三種不純度隨比例  的變化。都在 、 為 0、在  最大；錯誤率是折線（最大 0.5），Gini 是拋物線（最大 0.5），熵最大 。Gini 和熵是平滑的凹函數，對節點純度的小改善也有反應。" loading="lazy"><figcaption>兩類時三種不純度隨比例 \(p\) 的變化。都在 \(p=0\)、\(1\) 為 0、在 \(p=0.5\) 最大；錯誤率是折線（最大 0.5），Gini 是拋物線（最大 0.5），熵最大 \(\ln2=0.693\)。Gini 和熵是平滑的凹函數，對節點純度的小改善也有反應。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 16-4：Gini 與熵（講義例 16A）</div>
+<p>10 筆資料，類別比例 A 0.3、B 0.4、C 0.3。</p>
+<p><strong>分割前</strong>：\(G=0.3(0.7)+0.4(0.6)+0.3(0.7)=0.66\)；\(D=-[0.3\ln0.3+0.4\ln0.4+0.3\ln0.3]=1.0889\)。</p>
+<p><strong>分割後</strong>：左群 6 筆（A、B 各半），右群 4 筆（B 0.25、C 0.75）。
+\[G=0.6\big[2(0.5)(0.5)\big]+0.4\big[2(0.25)(0.75)\big]=0.6(0.5)+0.4(0.375)=0.45,\]
+\[D=0.6(\ln2)+0.4\big[-0.25\ln0.25-0.75\ln0.75\big]=0.6(0.6931)+0.4(0.5623)=0.6408 .\]</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 16-5：三種準則可能選不同的分割（SOA 樣題第 9 題，習題 16.18）</div>
+<p>100 張保單 30 張失效。分割 1：(20 張、12 失效) 與 (80 張、18 失效)；分割 2：(10 張、8 失效) 與 (90 張、22 失效)。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>分割 1</th>
+<th>分割 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gini</td>
+<td>\(0.2(2\cdot0.6\cdot0.4)+0.8(2\cdot0.775\cdot0.225)=0.375\)</td>
+<td>\(0.1(2\cdot0.8\cdot0.2)+0.9(2\cdot\frac{68}{90}\cdot\frac{22}{90})=0.3644\)</td>
+</tr>
+<tr>
+<td>熵</td>
+<td>0.5611</td>
+<td>0.5506</td>
+</tr>
+<tr>
+<td>錯誤數</td>
+<td>8＋18＝26</td>
+<td>2＋22＝24</td>
+</tr>
+</tbody>
+</table>
+<p>三個準則都偏好分割 2，所以「分割 1 較好」的三句話都錯，答案 (E)。</p>
+</div>
+<p><strong>R 的 residual mean deviance</strong>：迴歸樹是 \(\text{RSS}/(n-|T|)\)；分類樹是 \(-2\sum_m\sum_kn_{mk}\ln\hat p_{mk}\,/\,(n-|T|)\)，其中 \(n_{mk}\) 是節點 \(m\) 中類別 \(k\) 的個數、\(\hat p_{mk}\) 是節點內的比例。</p>
+<div class="box exam">
+<div class="box-t">考試怎麼考：分割準則</div>
+<ul>
+<li><strong>迴歸樹的第一刀</strong>（MAS-II 樣題 12）：對每個候選分割算兩邊 RSS 總和，選最小。沒有把資料分開的「分割」RSS 等於總平方和。</li>
+<li><strong>分類樹</strong>（樣題 9）：Gini、熵要用觀察數加權平均；錯誤數要先決定每個節點預測哪一類。</li>
+<li><strong>單一節點的指標</strong>（習題 <a href="ch16.html#q16-14">16.14</a>～<a href="ch16.html#q16-16">16.16</a>）：直接套公式。</li>
+<li><strong>概念</strong>：貪婪、由上而下；長樹用 Gini 或熵，因為比錯誤率敏感。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q16-6"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.6 題</b><small>・講義 p.288・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II Sample:12] A data set contains six observations for two predictor variables, \(X_1\) and \(X_2\), and a response variable, \(Y\).</p>
+<table>
+<thead>
+<tr>
+<th>\(X_1\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>2</th>
+<th>1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(X_2\)</td>
+<td>0</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+</tr>
+<tr>
+<td>\(Y\)</td>
+<td>1.2</td>
+<td>2.1</td>
+<td>1.5</td>
+<td>3.0</td>
+<td>2.0</td>
+<td>1.6</td>
+</tr>
+</tbody>
+</table>
+<p>A regression tree is constructed using recursive binary splitting. A split is denoted \(R_1(j,s)=\{X\mid X_j&lt;s\}\) and \(R_2(j,s)=\{X\mid X_j\ge s\}\). The following five splits are analyzed.</p>
+<div class="items">
+<p>I. \(R_1(1,1)=\{X\mid X_1&lt;1\}\) and \(R_2(1,1)=\{X\mid X_1\ge1\}\)</p>
+<p>II. \(R_1(1,4)=\{X\mid X_1&lt;4\}\) and \(R_2(1,4)=\{X\mid X_1\ge4\}\)</p>
+<p>III. \(R_1(2,0)=\{X\mid X_2&lt;0\}\) and \(R_2(2,0)=\{X\mid X_2\ge0\}\)</p>
+<p>IV. \(R_1(2,1)=\{X\mid X_2&lt;1\}\) and \(R_2(2,1)=\{X\mid X_2\ge1\}\)</p>
+<p>V. \(R_1(2,2)=\{X\mid X_2&lt;2\}\) and \(R_2(2,2)=\{X\mid X_2\ge2\}\)</p>
+</div>
+<p>Determine which split is chosen first.</p>
+<div class="opts">
+<p>(A) I</p>
+<p>(B) II</p>
+<p>(C) III</p>
+<p>(D) IV</p>
+<p>(E) V</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-II 樣題第 12 題）六筆觀察：</p>
+<p>以遞迴二元分割建立迴歸樹，分割記為 \(R_1(j,s)=\{X\mid X_j&lt;s\}\)、\(R_2(j,s)=\{X\mid X_j\ge s\}\)。考慮五種分割：</p>
+<div class="items">
+<p>I. \(R_1(1,1)\)、\(R_2(1,1)\)</p>
+<p>II. \(R_1(1,4)\)、\(R_2(1,4)\)</p>
+<p>III. \(R_1(2,0)\)、\(R_2(2,0)\)</p>
+<p>IV. \(R_1(2,1)\)、\(R_2(2,1)\)</p>
+<p>V. \(R_1(2,2)\)、\(R_2(2,2)\)</p>
+</div>
+<p>哪一個分割會最先被選？</p>
+<div class="opts">
+<p>(A) I　(B) II　(C) III　(D) IV　(E) V</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
+<li>I、III：\(X_1&lt;1\)、\(X_2&lt;0\) 沒有任何觀察，等於沒切，RSS ＝總平方和 2.0。</li>
+<li>II：\(X_1\ge4\) 只有 3.0；其餘 1.2、2.1、1.5、2.0、1.6 平均 1.68，RSS 0.548。</li>
+<li>IV：\(X_2&lt;1\) 只有 1.2；其餘平均 2.04，RSS 1.412。</li>
+<li>V：\(X_2&lt;2\) 的 1.2、2.1、3.0、1.6（平均 1.975，RSS 1.8075）；\(X_2\ge2\) 的 1.5、2.0（RSS 0.125）；合計 1.9325。</li>
+</ul>
+<p>II 最小。</p></div></div></article><article class="exercise" id="q16-10"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.10 題</b><small>・講義 p.291・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>A classification tree is constructed to predict whether students will pass Exam SRM on their first try. Two binary explanatory variables are used: \(X_1\) (Did the student take a statistics course in college?) and \(X_2\) (Did the student pass FAM?) Available data is as follows:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Passed on first try</th>
+<th>Didn't</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(X_1=0,X_2=0\)</td>
+<td>5</td>
+<td>20</td>
+</tr>
+<tr>
+<td>\(X_1=1,X_2=0\)</td>
+<td>10</td>
+<td>10</td>
+</tr>
+<tr>
+<td>\(X_1=0,X_2=1\)</td>
+<td>7</td>
+<td>9</td>
+</tr>
+<tr>
+<td>\(X_1=1,X_2=1\)</td>
+<td>6</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<p>Determine the first split made in the tree using the Gini index.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>建立分類樹預測學生第一次考 SRM 是否通過。兩個二元變數：\(X_1\)（大學修過統計？）、\(X_2\)（通過 FAM？）。資料：\(X_1=0,X_2=0\)：5 人通過、20 人沒過；\(X_1=1,X_2=0\)：10 過、10 沒過；\(X_1=0,X_2=1\)：7 過、9 沒過；\(X_1=1,X_2=1\)：6 過、4 沒過。用 Gini 指數決定第一刀。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>用 \(X_1\) 分割（Gini 0.4494 &lt; 0.4648）</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>用 \(X_1\)</strong>：\(X_1=0\) 共 41 人（12 過、29 沒過）；\(X_1=1\) 共 30 人（16 過、14 沒過）。
+\[\frac{41}{71}\cdot2\cdot\frac{12}{41}\cdot\frac{29}{41}+\frac{30}{71}\cdot2\cdot\frac{16}{30}\cdot\frac{14}{30}=0.2391+0.2103=0.4494 .\]
+<strong>用 \(X_2\)</strong>：\(X_2=0\) 共 45 人（15 過、30 沒過）；\(X_2=1\) 共 26 人（13、13）。
+\[\frac{45}{71}(0.4444)+\frac{26}{71}(0.5)=0.2817+0.1831=0.4648 .\]
+\(X_1\) 的 Gini 較小。</p></div></div></article><article class="exercise" id="q16-17"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.17 題</b><small>・講義 p.293・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-F18:40] You are given the following classification decision tree and data set:</p>
+<figure><img src="assets/fig/ch16-ex17.svg" alt="依題目原圖重畫。" loading="lazy"><figcaption>依題目原圖重畫。</figcaption></figure>
+
+<table>
+<thead>
+<tr>
+<th>\(i\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(X_1\)</td>
+<td>12</td>
+<td>23</td>
+<td>4</td>
+<td>32</td>
+<td>22</td>
+<td>30</td>
+<td>18</td>
+</tr>
+<tr>
+<td>\(X_2\)</td>
+<td>Y</td>
+<td>N</td>
+<td>Y</td>
+<td>Y</td>
+<td>N</td>
+<td>Y</td>
+<td>N</td>
+</tr>
+<tr>
+<td>\(Y\)</td>
+<td>T</td>
+<td>F</td>
+<td>F</td>
+<td>F</td>
+<td>T</td>
+<td>T</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<p>Determine the relationship between the classification error rate, the Gini index, and the entropy, summed across all nodes.</p>
+<div class="opts">
+<p>(A) entropy &gt; Gini index &gt; classification error rate</p>
+<p>(B) entropy &gt; Gini index = classification error rate</p>
+<p>(C) classification error rate &gt; Gini index &gt; entropy</p>
+<p>(D) Gini index &gt; entropy &gt; classification error rate</p>
+<p>(E) The answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 秋季 MAS-II 第 40 題）分類決策樹（左＝成立）與資料：</p>
+<p>求分類錯誤率、Gini 指數、熵（各自把所有節點加總）的大小關係。</p>
+<div class="opts">
+<p>(A) 熵 &gt; Gini &gt; 分類錯誤率</p>
+<p>(B) 熵 &gt; Gini = 分類錯誤率</p>
+<p>(C) 分類錯誤率 &gt; Gini &gt; 熵</p>
+<p>(D) Gini &gt; 熵 &gt; 分類錯誤率</p>
+<p>(E) 以上皆非</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>三個葉子：</p>
+<ul>
+<li>\(X_1&lt;21\)：\(i=1,3,7\)，T 兩個、F 一個。錯誤率 \(1/3\)、Gini \(2\cdot\frac13\cdot\frac23=\frac49\)、熵 \(0.6365\)。</li>
+<li>\(X_1\ge21\)、\(X_2=\) Y：\(i=4,6\)，T、F 各一。錯誤率 \(1/2\)、Gini \(1/2\)、熵 \(\ln2=0.6931\)。</li>
+<li>\(X_1\ge21\)、\(X_2=\) N：\(i=2,5\)，T、F 各一。同上。</li>
+</ul>
+<p>加總：錯誤率 1.333、Gini 1.444、熵 2.023。題目要的是加總（不是加權平均），講義也這樣解。</p></div></div></article><article class="exercise" id="q16-18"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.18 題</b><small>・講義 p.293・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #9] A classification tree is being constructed to predict if an insurance policy will lapse. A random sample of 100 policies contains 30 that lapsed. You are considering two splits:</p>
+<p>Split 1: One node has 20 observations with 12 lapses and one node has 80 observations with 18 lapses.
+Split 2: One node has 10 observations with 8 lapses and one node has 90 observations with 22 lapses.</p>
+<p>The total Gini index after a split is the weighted average of the Gini index at each node, with the weights proportional to the number of observations in each node. The total entropy after a split is the weighted average of the entropy at each node, with the weights proportional to the number of observations in each node.</p>
+<p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. Split 1 is preferred based on the total Gini index.</p>
+<p>II. Split 1 is preferred based on the total entropy.</p>
+<p>III. Split 1 is preferred based on having fewer classification errors.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 9 題）建立分類樹預測保單是否失效。100 張保單中 30 張失效。兩種分割：分割 1：一個節點 20 張（12 張失效）、另一個 80 張（18 張失效）；分割 2：一個節點 10 張（8 張失效）、另一個 90 張（22 張失效）。總 Gini（熵）是各節點 Gini（熵）以觀察數比例加權平均。下列哪些正確？</p>
+<div class="items">
+<p>I. 依總 Gini，分割 1 較好。</p>
+<p>II. 依總熵，分割 1 較好。</p>
+<p>III. 依分類錯誤數較少，分割 1 較好。</p>
+</div>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><table>
+<thead>
+<tr>
+<th></th>
+<th>分割 1</th>
+<th>分割 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gini</td>
+<td>\(0.2(0.48)+0.8(0.34875)=0.3750\)</td>
+<td>\(0.1(0.32)+0.9(0.36938)=0.3644\)</td>
+</tr>
+<tr>
+<td>熵</td>
+<td>0.5611</td>
+<td>0.5506</td>
+</tr>
+<tr>
+<td>錯誤數</td>
+<td>8＋18＝26</td>
+<td>2＋22＝24</td>
+</tr>
+</tbody>
+</table>
+<p>三種準則都是分割 2 較好，三句話都錯。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（7 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC16-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.2-1</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A node of a classification tree has two classes with proportions 0.3 and 0.7.</p>
+<p>Calculate the Gini index of the node.</p>
+<div class="opts">
+<p>(A) 0.42</p>
+<p>(B) 0.21</p>
+<p>(C) 0.30</p>
+<p>(D) 0.61</p>
+<p>(E) 0.58</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>分類樹某節點兩類比例 0.3、0.7，求 Gini 指數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(0.3(0.7)+0.7(0.3)=0.42\)。(B) 只算了一項；(D) 是熵 \(-0.3\ln0.3-0.7\ln0.7=0.611\)；(C) 是錯誤率。</p></div></div></article><article class="exercise concept-q" id="qC16-2-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.2-2</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A node of a classification tree has two classes in equal proportions.</p>
+<p>Calculate the entropy of the node (natural logarithm).</p>
+<div class="opts">
+<p>(A) 0.500</p>
+<p>(B) 1.000</p>
+<p>(C) 0.250</p>
+<p>(D) 0.347</p>
+<p>(E) 0.693</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>分類樹某節點兩類各半，求熵（自然對數）。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(-2(0.5\ln0.5)=\ln2=0.693\)，這是兩類時熵的最大值。(A) 是 Gini 的最大值；(B) 是以 2 為底的熵。</p></div></div></article><article class="exercise concept-q" id="qC16-2-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.2-3</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A regression tree with one predictor is fitted to the data \((x,y)\): (1,1), (2,2), (3,7), (4,8).</p>
+<p>Calculate the RSS after the first split chosen by recursive binary splitting.</p>
+<div class="opts">
+<p>(A) 0.0</p>
+<p>(B) 1.0</p>
+<p>(C) 8.7</p>
+<p>(D) 36.7</p>
+<p>(E) 2.0</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>一個解釋變數的迴歸樹，資料 (1,1)、(2,2)、(3,7)、(4,8)。遞迴二元分割選出的第一刀之後，RSS 是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>切在 2 與 3 之間：兩群平均 1.5、7.5，RSS \(=0.5+0.5=1.0\)。切在 1、2 之間：\(\{1\}\) 與 \(\{2,7,8\}\)（平均 5.67，RSS 20.67）；切在 3、4 之間：\(\{1,2,7\}\)（平均 3.33，RSS 20.67）與 \(\{8\}\)。所以選中間那刀。(D) 是不分割時的總平方和。</p></div></div></article><article class="exercise concept-q" id="qC16-2-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.2-4</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A split produces two nodes: Node 1 has 10 observations (8 class A, 2 class B), and Node 2 has 30 observations (15 class A, 15 class B).</p>
+<p>Calculate the total Gini index after the split.</p>
+<div class="opts">
+<p>(A) 0.410</p>
+<p>(B) 0.320</p>
+<p>(C) 0.455</p>
+<p>(D) 0.500</p>
+<p>(E) 0.820</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>分割後兩個節點：節點 1 有 10 筆（A 8、B 2），節點 2 有 30 筆（A、B 各 15）。求分割後的總 Gini。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>節點 1：\(2(0.8)(0.2)=0.32\)；節點 2：\(0.5\)。以觀察數加權：\(\frac{10(0.32)+30(0.5)}{40}=0.455\)。</p>
+<p>(A) 是兩者的簡單平均；(E) 是直接相加。</p></div></div></article><article class="exercise concept-q" id="qC16-2-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.2-5</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about recursive binary splitting is/are true.</p>
+<div class="items">
+<p>I. It is greedy: each split is the best split at that step only.</p>
+<p>II. It is top-down: it starts from a single region containing all observations.</p>
+<p>III. It is guaranteed to find the tree with the lowest possible RSS for its number of terminal nodes.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and II only</p>
+<p>(D) I and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於遞迴二元分割，下列哪些正確？</p>
+<div class="items">
+<p>I. 它是貪婪的：每一刀只是當下最好。</p>
+<p>II. 它是由上而下的：從包含全部觀察的單一區域開始。</p>
+<p>III. 它保證找到同樣葉子數下 RSS 最小的樹。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對。III 錯：貪婪演算法不保證全域最佳，這正是它被稱為貪婪的原因。</p></div></div></article><article class="exercise concept-q" id="qC16-2-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.2-6</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine the main reason the Gini index or entropy, rather than the classification error rate, is used to grow classification trees.</p>
+<div class="opts">
+<p>(A) They are more sensitive to changes in node purity</p>
+<p>(B) They are always smaller than the error rate</p>
+<p>(C) They can only be computed for two classes</p>
+<p>(D) They do not require counting observations</p>
+<p>(E) They guarantee that each split changes the predicted classes</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>長分類樹時用 Gini 或熵而不用分類錯誤率，主要原因是什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>錯誤率只看多數類別的比例，很多讓節點變純的分割不會改變它；Gini 與熵是平滑的凹函數，對純度的改善都有反應。(E) 相反：用 Gini 時常出現兩邊預測同一類的分割。</p></div></div></article><article class="exercise concept-q" id="qC16-2-7"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.2-7</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A node with 16 class A and 4 class B observations is split into one node with 10 A and another with 6 A and 4 B.</p>
+<p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. Both new nodes predict class A.</p>
+<p>II. The split reduces the number of classification errors.</p>
+<p>III. The split reduces the weighted Gini index.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and II only</p>
+<p>(D) I and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>A 16、B 4 的節點分成「A 10」與「A 6、B 4」兩個節點。</p>
+<div class="items">
+<p>I. 兩個新節點都預測 A。</p>
+<p>II. 這個分割減少了錯誤數。</p>
+<p>III. 這個分割降低了加權 Gini。哪些正確？</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對。II 錯：分割前後都是 4 個 B 被分錯。III 對：0.32 降到 \(0.5(0)+0.5(0.48)=0.24\)。</p></div></div></article></div></section><section class="unit" id="s3"><h2>16.3 修剪：成本複雜度</h2><h3>一、為什麼要修剪</h3>
+<p>一直分下去的大樹會<strong>過度配適</strong>：葉子越多，偏差越低、變異數越高（樣題 25：「分割越多變異數越低」是錯的）。先長一棵大樹 \(T_0\)，再修剪成適當大小的子樹。</p>
+<h3>二、成本複雜度修剪</h3>
+<p>給一個調整參數 \(\alpha\ge0\)，找讓
+\[\sum_{m=1}^{|T|}\sum_{i:x_i\in R_m}(y_i-\hat y_{R_m})^2+\alpha|T|\tag{16.1}\]
+最小的子樹 \(T\)。每多一片葉子要付 \(\alpha\) 的成本，和 lasso 的 \(\lambda\sum|\beta_j|\)（<a href="ch08.html">第 8 章</a>）是同一個想法。也叫<strong>最弱連結修剪</strong>（weakest link pruning）。</p>
+<ul>
+<li>\(\alpha=0\)：不懲罰，選最大的樹 \(T_0\)。</li>
+<li>\(\alpha\) 越大：樹越小。</li>
+<li>隨 \(\alpha\) 增加得到的子樹是<strong>巢狀</strong>的序列，很容易全部算出來。</li>
+<li>用<strong>交叉驗證</strong>選 \(\alpha\)（等價於選葉子數），再用最後選中的 \(\alpha\) 修剪在全部訓練資料上長的大樹。</li>
+</ul>
+<div class="box derive">
+<div class="box-t">推導：剪掉一個分割的門檻 \(\alpha\)</div>
+<p>把節點 \(t\) 底下的分割剪掉，讓它變成一片葉子：RSS 增加 \(\Delta=\text{RSS}(t\text{ 當葉子})-\text{RSS}(t\text{ 底下的葉子})\)，葉子數減少 \(\ell-1\)（\(\ell\) 是 \(t\) 底下的葉子數）。</p>
+<p>剪掉比較好的條件：\(\Delta-\alpha(\ell-1)\le0\)，即
+\[\alpha\ge\frac{\Delta}{\ell-1}.\]
+\(\Delta/(\ell-1)\) 最小的節點最先被剪掉，這就是「最弱連結」。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 16-6：剪掉的最小 \(\alpha\)（習題 16.11）</div>
+<p>兩片葉子 \(R_4\)：2、3、3、4、5；\(R_5\)：2、4、6。</p>
+<p>分開時：\(R_4\) 平均 3.4，平方和 5.2；\(R_5\) 平均 4，平方和 8；合計 13.2。合併後平均 3.625，平方和 13.875。</p>
+<p>\(\Delta=0.675\)，葉子少 1，所以 \(\alpha\ge0.675\) 就會剪掉。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 16-7：比較修剪策略（MAS-II-F18:38，習題 16.9）</div>
+<p>葉子 RSS：U 82、V 81、W 11、Y 20、Z 58；剪在 S、T、X 時的 RSS 分別是 251、209、86。\(\alpha=9\)。</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>RSS</th>
+<th>葉子數</th>
+<th>RSS＋9×葉子數</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>不剪</td>
+<td>252</td>
+<td>5</td>
+<td>297</td>
+</tr>
+<tr>
+<td>剪 S</td>
+<td>251＋11＋20＋58＝340</td>
+<td>4</td>
+<td>376</td>
+</tr>
+<tr>
+<td>剪 T</td>
+<td>82＋81＋209＝372</td>
+<td>3</td>
+<td>399</td>
+</tr>
+<tr>
+<td>剪 X</td>
+<td>82＋81＋11＋86＝260</td>
+<td>4</td>
+<td><strong>296</strong></td>
+</tr>
+<tr>
+<td>剪 S 和 X</td>
+<td>251＋11＋86＝348</td>
+<td>3</td>
+<td>375</td>
+</tr>
+</tbody>
+</table>
+<p>剪 X 最小，答案 (D)。剪 X 只讓 RSS 增加 8，卻省下一片葉子的成本 9。</p>
+</div>
+<figure><img src="assets/fig/ch16-prune.svg" alt="300 筆模擬資料長出的大樹，依成本複雜度剪成不同大小。訓練 MSE（藍）隨葉子增加一路下降，56 片葉子時只剩 0.74；測試 MSE（紅）在 10～15 片葉子附近最低，56 片時回升到 4.64。5 折交叉驗證（金）選 10 片葉子，對應的測試 MSE 3.65。" loading="lazy"><figcaption>300 筆模擬資料長出的大樹，依成本複雜度剪成不同大小。訓練 MSE（藍）隨葉子增加一路下降，56 片葉子時只剩 0.74；測試 MSE（紅）在 10～15 片葉子附近最低，56 片時回升到 4.64。5 折交叉驗證（金）選 10 片葉子，對應的測試 MSE 3.65。</figcaption></figure>
+
+<div class="box exam">
+<div class="box-t">考試怎麼考：修剪</div>
+<ul>
+<li>計算 \(\text{RSS}+\alpha|T|\) 比較策略；或求使剪枝發生的最小 \(\alpha\)。</li>
+<li>概念（樣題 25）：遞迴二元分割可能過度配適；分割越多變異數越<strong>高</strong>；\(\alpha=0\) 得到很大的樹。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q16-9"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.9 題</b><small>・講義 p.291・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-F18:38] You are given the following unpruned decision tree:</p>
+<figure><img src="assets/fig/ch16-ex9.svg" alt="依題目原圖重畫。" loading="lazy"><figcaption>依題目原圖重畫。</figcaption></figure>
+
+<p>The values at each terminal node are the residual sums of squares (RSS) at that node. The table below gives the RSS at nodes S, T, and X if the tree was pruned at those nodes:</p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>S</th>
+<th>T</th>
+<th>X</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RSS</td>
+<td>251</td>
+<td>209</td>
+<td>86</td>
+</tr>
+</tbody>
+</table>
+<p>The RSS for the null model is 486. You use the cost complexity pruning algorithm with the tuning parameter, \(\alpha\), equal to 9 in order to evaluate the following pruning strategies:</p>
+<div class="items">
+<p>I. No nodes pruned</p>
+<p>II. Prune node S only</p>
+<p>III. Prune node T only</p>
+<p>IV. Prune node X only</p>
+<p>V. Prune both nodes S and X</p>
+</div>
+<p>Determine which pruning strategy is selected.</p>
+<div class="opts">
+<p>(A) I</p>
+<p>(B) II</p>
+<p>(C) III</p>
+<p>(D) IV</p>
+<p>(E) V</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 秋季 MAS-II 第 38 題）未修剪的決策樹如下，葉子的數字是該葉的殘差平方和（RSS）：</p>
+<p>若在 S、T、X 修剪（變成葉子），RSS 分別是 251、209、86。虛無模型的 RSS 是 486。用 \(\alpha=9\) 的成本複雜度修剪評估以下策略：I. 不剪；II. 只剪 S；III. 只剪 T；IV. 只剪 X；V. 剪 S 和 X。會選哪一個？</p>
+<div class="opts">
+<p>(A) I　(B) II　(C) III　(D) IV　(E) V</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>計算 RSS ＋ 9 ×葉子數：</p>
+<ul>
+<li>I：\(82+81+11+20+58=252\)，5 片，297。</li>
+<li>II：\(251+11+20+58=340\)，4 片，376。</li>
+<li>III：\(82+81+209=372\)，3 片，399。</li>
+<li>IV：\(82+81+11+86=260\)，4 片，296。</li>
+<li>V：\(251+11+86=348\)，3 片，375。</li>
+</ul>
+<p>IV 最小。虛無模型的 RSS 用不到。</p></div></div></article><article class="exercise" id="q16-11"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.11 題</b><small>・講義 p.292・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>For a regression tree, two nodes of the tree have the following response values:</p>
+<p>\(R_4\): 2, 3, 3, 4, 5
+\(R_5\): 2, 4, 6</p>
+<p>The tree is pruned using cost complexity pruning. The split of \(R_4\) and \(R_5\) is the optimal one to prune.</p>
+<p>Determine the smallest value of \(\alpha\) for which pruning will occur.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>迴歸樹的兩個節點的反應值：\(R_4\)：2、3、3、4、5；\(R_5\)：2、4、6。以成本複雜度修剪，\(R_4\) 與 \(R_5\) 的分割是最適合剪掉的。求會發生修剪的最小 \(\alpha\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.675</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>分開：\(R_4\) 平均 3.4，平方和 \(1.96+0.16+0.16+0.36+2.56=5.2\)；\(R_5\) 平均 4，平方和 8；合計 13.2。</p>
+<p>合併：8 個值平均 3.625，平方和 \(119-8(3.625^2)=13.875\)。</p>
+<p>剪掉使 RSS 增加 0.675、葉子少 1，\(\alpha\ge0.675\) 時剪掉。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（4 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC16-3-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.3-1</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>In cost complexity pruning, collapsing a certain internal node into a single leaf increases the RSS by 12 and reduces the number of terminal nodes from 4 to 1.</p>
+<p>Determine the smallest \(\alpha\) for which this pruning is worthwhile.</p>
+<div class="opts">
+<p>(A) 12</p>
+<p>(B) 3</p>
+<p>(C) 6</p>
+<p>(D) 4</p>
+<p>(E) 48</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>成本複雜度修剪中，把某個內部節點收成一片葉子，RSS 增加 12，該處的葉子從 4 片變成 1 片。\(\alpha\) 至少多少時值得剪？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>少了 3 片葉子，省下 \(3\alpha\)；\(3\alpha\ge12\)，\(\alpha\ge4\)。(B) 是除以 4。</p></div></div></article><article class="exercise concept-q" id="qC16-3-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.3-2</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine the effect of increasing the tuning parameter \(\alpha\) in cost complexity pruning.</p>
+<div class="opts">
+<p>(A) The selected subtree becomes larger</p>
+<p>(B) The selected subtree becomes smaller</p>
+<p>(C) The training RSS of the selected subtree decreases</p>
+<p>(D) The variance of the selected subtree increases</p>
+<p>(E) The selected subtree is unchanged</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>成本複雜度修剪中，\(\alpha\) 增加的效果是什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>每片葉子的成本變高，選出的樹變小：訓練 RSS 上升、變異數下降、偏差上升。\(\alpha=0\) 時是整棵大樹。</p></div></div></article><article class="exercise concept-q" id="qC16-3-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.3-3</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine how the tuning parameter \(\alpha\) is typically selected in cost complexity pruning.</p>
+<div class="opts">
+<p>(A) By maximizing the training \(R^2\)</p>
+<p>(B) By setting \(\alpha=0\)</p>
+<p>(C) By cross-validation</p>
+<p>(D) By setting \(\alpha\) equal to the number of terminal nodes</p>
+<p>(E) By the Gini index</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>成本複雜度修剪的 \(\alpha\) 通常怎麼選？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>對一系列 \(\alpha\) 用 \(K\) 折交叉驗證估計測試誤差，選最小的。(A)、(B) 都會選到最大的樹。</p></div></div></article><article class="exercise concept-q" id="qC16-3-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.3-4</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Two subtrees are compared using cost complexity pruning with \(\alpha=5\). Tree A has RSS 100 and 8 terminal nodes; Tree B has RSS 130 and 4 terminal nodes.</p>
+<p>Determine which tree is selected and its cost.</p>
+<div class="opts">
+<p>(A) Tree A; 140</p>
+<p>(B) Tree B; 150</p>
+<p>(C) Tree A; 108</p>
+<p>(D) Tree B; 134</p>
+<p>(E) They tie at 145</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(\alpha=5\) 比較兩棵子樹：A 的 RSS 100、8 片葉子；B 的 RSS 130、4 片葉子。選哪一棵？成本多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>A：\(100+5(8)=140\)；B：\(130+5(4)=150\)。選 A。(C)、(D) 忘了乘 \(\alpha\)。</p></div></div></article></div></section><section class="unit" id="s4"><h2>16.4 樹與線性模型</h2><p><strong>樹的優點</strong>（樣題 29）：</p>
+<ol>
+<li>容易解釋，甚至比線性迴歸更容易向非專業人士說明。</li>
+<li>比較接近人做決定的方式。</li>
+<li>可以畫成圖。</li>
+<li>不需要指標變數就能處理類別變數。</li>
+</ol>
+<p><strong>樹的缺點</strong>：預測準確度通常不如其他方法；<strong>不穩健</strong>：資料稍微改變，樹可能整個不同（高變異數）。</p>
+<p><strong>什麼時候哪個好</strong>：</p>
+<ul>
+<li>真實關係接近線性 → 線性模型較好。</li>
+<li>真實關係高度非線性、決策邊界由水平與垂直線構成 → 樹較好。</li>
+<li>樹只能做出與座標軸平行的邊界。斜線或曲線邊界，樹只能用很多階梯近似，<strong>不能完全正確</strong>（樣題 26 只有直角的那一張圖可以零錯誤）。</li>
+<li>如果 \(y\) 與 \(x\) 是二次關係，GLM 加入 \(x^2\) 就能處理，不需要隨機森林（樣題 39）。</li>
+</ul>
+<p><strong>彈性與可解釋性</strong>（樣題 12、50）：線性迴歸彈性低；lasso 比線性迴歸更沒彈性；bagging 彈性高；彈性高的方法通常難解釋。以推論為目的時，lasso 這種可解釋的方法比 bagging 有明顯優勢。彈性高不保證對新資料預測更準。</p>
+<div class="box exam">
+<div class="box-t">考試怎麼考：樹 vs 其他方法</div>
+<ul>
+<li>樹的優點（可解釋、可畫圖、比線性迴歸好解釋）都對（樣題 29）。</li>
+<li>哪一種圖形能被樹完美分類：只有邊界全部平行座標軸的（樣題 26）。</li>
+<li>二次關係：GLM 加多項式項即可（樣題 39）。</li>
+<li>彈性與可解釋性的取捨（樣題 12、50）。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q16-21"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.21 題</b><small>・講義 p.295・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #39] You are given a dataset with two variables, which is graphed below. You want to predict \(y\) using \(x\).</p>
+<figure><img src="assets/fig/ch16-ex21.svg" alt="依題目原圖重畫的示意： 與  呈開口向下的拋物線， 附近約 25， 附近約 0，散布大致相同。" loading="lazy"><figcaption>依題目原圖重畫的示意：\(y\) 與 \(x\) 呈開口向下的拋物線，\(x=0\) 附近約 25，\(x=\pm5\) 附近約 0，散布大致相同。</figcaption></figure>
+
+<p>Determine which statement regarding using a generalized linear model (GLM) or a random forest is true.</p>
+<div class="opts">
+<p>(A) A random forest is appropriate because the dataset contains only quantitative variables.</p>
+<p>(B) A random forest is appropriate because the data does not follow a straight line.</p>
+<p>(C) A GLM is not appropriate because the variance of \(y\) given \(x\) is not constant.</p>
+<p>(D) A random forest is appropriate because there is a clear relationship between \(y\) and \(x\).</p>
+<p>(E) A GLM is appropriate because it can accommodate polynomial relationships.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 39 題）資料有兩個變數，圖如下。要用 \(x\) 預測 \(y\)。</p>
+<p>關於使用廣義線性模型（GLM）或隨機森林，下列哪一個正確？</p>
+<div class="opts">
+<p>(A) 隨機森林適合，因為資料只有數值變數。</p>
+<p>(B) 隨機森林適合，因為資料不是一條直線。</p>
+<p>(C) GLM 不適合，因為給定 \(x\) 時 \(y\) 的變異數不固定。</p>
+<p>(D) 隨機森林適合，因為 \(y\) 與 \(x\) 有明確關係。</p>
+<p>(E) GLM 適合，因為它可以容納多項式關係。</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>資料是二次關係，GLM（甚至線性迴歸）加入 \(x^2\) 就能處理。</p>
+<p>(A) 錯：只有數值變數不是選樹的理由，樹反而更擅長類別變數。(B) 錯：非直線不代表要用樹，多項式也能處理。(C) 錯：圖上的散布大致固定。(D) 錯：有明確關係反而適合用有公式的模型。</p></div></div></article><article class="exercise" id="q16-24"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.24 題</b><small>・講義 p.298・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #26] Each picture below represents a two dimensional space where observations are classified into two categories. The categories are represented by light and dark shading. A classification tree is to be constructed for each space.</p>
+<figure><img src="assets/fig/ch16-ex24.svg" alt="依題目原圖重畫。I：右下角是一塊與座標軸平行的淺色長方形，其餘深色；II：深淺的分界是一條曲線；III：深淺的分界是一條斜線。" loading="lazy"><figcaption>依題目原圖重畫。I：右下角是一塊與座標軸平行的淺色長方形，其餘深色；II：深淺的分界是一條曲線；III：深淺的分界是一條斜線。</figcaption></figure>
+
+<p>Determine which space can be modeled with no error by a classification tree.</p>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 26 題）下圖每一張代表一個二維空間，觀察分成兩類（深色、淺色）。要為每個空間建立分類樹。</p>
+<p>哪一個空間可以用分類樹零錯誤地建模？</p>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>樹的區域是與座標軸平行的長方形。I 的邊界都是水平或垂直線，兩刀就能完全分開。II 的曲線、III 的斜線都只能用階梯近似，無法零錯誤。</p></div></div></article></div></section><section class="unit" id="s5"><h2>16.5 Bagging 與隨機森林</h2><p>單一棵樹的變異數很高。以下三種方法都用「很多棵樹」來降低誤差。</p>
+<h3>一、Bootstrap 與 bagging</h3>
+<p><strong>Bootstrap</strong>：從 \(n\) 筆資料中<strong>取後放回</strong>抽 \(n\) 筆，得到一個新樣本。把手上的資料當成母體，從它重複模擬。</p>
+<p><strong>Bagging</strong>（bootstrap aggregation）：</p>
+<ol>
+<li>抽 \(B\) 個 bootstrap 樣本。</li>
+<li>每個樣本長一棵<strong>不修剪</strong>的大樹（偏差低、變異數高）。</li>
+<li>迴歸：\(\hat f_{\text{bag}}(x)=\frac1B\sum_{b=1}^B\hat f^{*b}(x)\)；分類：多數決。</li>
+</ol>
+<div class="box derive">
+<div class="box-t">推導：平均為什麼能降低變異數，以及它的極限</div>
+<p>設每棵樹的預測變異數 \(\sigma^2\)，任兩棵的相關係數 \(\rho\)。\(B\) 棵平均的變異數：
+\[\mathrm{Var}\Big(\frac1B\sum_b\hat f^{*b}\Big)=\frac{1}{B^2}\Big[B\sigma^2+B(B-1)\rho\sigma^2\Big]=\rho\sigma^2+\frac{1-\rho}{B}\sigma^2 .\]
+- 樹獨立（\(\rho=0\)）時是 \(\sigma^2/B\)，\(B\) 越大越小。
+- 有相關時，\(B\to\infty\) 只能降到 \(\rho\sigma^2\)。<strong>相關性決定了 bagging 的極限</strong>，這就是隨機森林要解決的問題。
+- \(B\) 增加只會讓第二項變小，不會讓誤差上升：<strong>bagging 不會因為 \(B\) 太大而過度配適</strong>。</p>
+</div>
+<h3>二、袋外（OOB）誤差</h3>
+<p>一筆資料沒被某個 bootstrap 樣本抽到的機率是 \(\left(1-\frac1n\right)^n\to e^{-1}=0.368\)。所以每棵樹大約有 1/3 的資料沒用到，叫<strong>袋外</strong>（out-of-bag）觀察。</p>
+<p>對每筆資料，只用「沒用到它的那些樹」預測它，算出的誤差就是 OOB 誤差。它免費提供了測試誤差的估計，不需要另外做交叉驗證；\(B\) 夠大時，它幾乎等同於留一交叉驗證誤差。</p>
+<figure><img src="assets/fig/ch16-oob.svg" alt="一筆資料沒被 bootstrap 樣本抽到的機率 。 時是 0， 時 0.349，很快趨近 ；金色點是每個  模擬 400 次的平均，和公式一致。" loading="lazy"><figcaption>一筆資料沒被 bootstrap 樣本抽到的機率 \((1-1/n)^n\)。\(n=1\) 時是 0，\(n=10\) 時 0.349，很快趨近 \(1/e=0.368\)；金色點是每個 \(n\) 模擬 400 次的平均，和公式一致。</figcaption></figure>
+
+<h3>三、變數重要性</h3>
+<p>bagging 平均了幾百棵樹，失去了單一棵樹的可解釋性。補救方法是<strong>變數重要性</strong>：記錄每個變數在所有樹中的分割讓 RSS（迴歸）或 Gini（分類）總共下降多少，取平均，畫成長條圖（通常把最大的設為 100）。</p>
+<h3>四、隨機森林</h3>
+<p>bagging 的樹彼此相關：如果有一個很強的變數，幾乎每棵樹的第一刀都用它，樹長得很像。<strong>隨機森林</strong>在每一次分割時，只從<strong>隨機抽出的 \(m\) 個變數</strong>中選擇：</p>
+<ul>
+<li>每次分割重新抽 \(m\) 個（不是整棵樹用同一組，樣題 10 的 II 錯）。</li>
+<li>通常取 \(m\approx\sqrt p\)。</li>
+<li>\(m=p\) 時就是 bagging。</li>
+<li>強變數在某次分割<strong>不被考慮</strong>的機率是 \(\frac{p-m}{p}\)（從 \(p\) 個中抽 \(m\) 個，沒抽到它的機率 \(\binom{p-1}{m}/\binom{p}{m}=\frac{p-m}{p}\)）。</li>
+<li>樹之間的相關性 \(\rho\) 下降（<strong>去相關</strong>），平均的變異數極限 \(\rho\sigma^2\) 降低。</li>
+<li>和 bagging 一樣，\(B\) 太大不會過度配適。</li>
+</ul>
+<figure><img src="assets/fig/ch16-ensemble.svg" alt="400 筆訓練資料、10 個彼此相關的解釋變數，4000 筆測試資料。單一棵不修剪的樹測試 MSE 4.83。bagging 隨  增加穩定下降到 2.15 後持平；隨機森林（）因為樹之間比較不相關，降到 1.85；boosting 在  左右最低（1.65），之後慢慢回升（ 時 1.88），這就是 boosting 的  要用交叉驗證選的原因。" loading="lazy"><figcaption>400 筆訓練資料、10 個彼此相關的解釋變數，4000 筆測試資料。單一棵不修剪的樹測試 MSE 4.83。bagging 隨 \(B\) 增加穩定下降到 2.15 後持平；隨機森林（\(m=3\)）因為樹之間比較不相關，降到 1.85；boosting 在 \(B=146\) 左右最低（1.65），之後慢慢回升（\(B=3000\) 時 1.88），這就是 boosting 的 \(B\) 要用交叉驗證選的原因。</figcaption></figure>
+
+<div class="box exam">
+<div class="box-t">考試怎麼考：bagging 與隨機森林</div>
+<ul>
+<li><strong>樣題 10、41、MAS-II-F19:38</strong>：\(m=p\) 等於 bagging；每次分割都重新隨機選變數；隨機森林的改進來自樹去相關；強變數不被考慮的機率 \(\frac{p-m}{p}\)；典型的 \(m\) 是 \(\sqrt p\)（不是 \(p/2\)）。單一棵樹的變異數比隨機森林高。</li>
+<li><strong>概念</strong>：bagging 的樹不修剪；\(B\) 大不會過度配適；OOB 約 1/3；變數重要性用 RSS 或 Gini 的平均下降量。</li>
+<li><strong>圖形題</strong>（MAS-II-F18:39）：很快持平且最高的是 bagging，持平在較低處的是隨機森林，持續下降最久的是 boosting。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q16-13"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.13 題</b><small>・講義 p.292・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #41] For a random forest, let \(p\) be the total number of features and \(m\) be the number of features selected at each split.</p>
+<p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. When \(m=p\), random forest and bagging are the same procedure.</p>
+<p>II. \(\frac{p-m}{p}\) is the probability a split will not consider the strongest predictor.</p>
+<p>III. The typical choice of \(m\) is \(\frac p2\).</p>
+</div>
+<div class="opts">
+<p>(A) None of I, II, or III is true</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The answer is not given by (A), (B), (C), or (D)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 41 題）隨機森林中，\(p\) 是特徵總數，\(m\) 是每次分割選用的特徵數。下列哪些正確？</p>
+<div class="items">
+<p>I. \(m=p\) 時，隨機森林與 bagging 是相同的程序。</p>
+<p>II. \(\frac{p-m}{p}\) 是某次分割不會考慮最強預測變數的機率。</p>
+<p>III. \(m\) 的典型選擇是 \(\frac p2\)。</p>
+</div>
+<div class="opts">
+<p>(A) 都不正確　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對。II 對：從 \(p\) 個中隨機抽 \(m\) 個，抽到最強那個的機率 \(m/p\)，沒抽到 \(\frac{p-m}{p}\)。III 錯：讀本的典型選擇是 \(\sqrt p\)（SOA 解答也提到分類用 \(\sqrt p\)、迴歸有時用 \(p/3\)，但不是 \(p/2\)）。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（6 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC16-5-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.5-1</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Each of \(B=100\) bagged trees has prediction variance \(\sigma^2=4\) at a point, and any two trees have correlation \(\rho=0.25\).</p>
+<p>Calculate the variance of the bagged prediction.</p>
+<div class="opts">
+<p>(A) 0.04</p>
+<p>(B) 1.00</p>
+<p>(C) 1.03</p>
+<p>(D) 4.00</p>
+<p>(E) 0.25</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>100 棵 bagging 的樹在某點的預測變異數都是 4，任兩棵相關係數 0.25。求平均預測的變異數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\rho\sigma^2+\frac{1-\rho}{B}\sigma^2=1+\frac{0.75}{100}(4)=1.03\)。</p>
+<p>(A) 假設樹獨立（\(\sigma^2/B\)）；(B) 是 \(B\to\infty\) 的極限。</p></div></div></article><article class="exercise concept-q" id="qC16-5-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.5-2</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Bagged trees have prediction variance \(\sigma^2=4\) and pairwise correlation \(\rho=0.25\).</p>
+<p>Determine the limit of the variance of the bagged prediction as \(B\to\infty\).</p>
+<div class="opts">
+<p>(A) 1.00</p>
+<p>(B) 0</p>
+<p>(C) 0.25</p>
+<p>(D) 4.00</p>
+<p>(E) 3.00</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>bagging 的樹預測變異數 4、兩兩相關 0.25。\(B\to\infty\) 時平均預測的變異數趨近多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>極限是 \(\rho\sigma^2=1\)。樹之間有相關，再多棵也降不到 0；隨機森林就是要降低 \(\rho\)。</p></div></div></article><article class="exercise concept-q" id="qC16-5-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.5-3</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>For a large training set, determine the approximate proportion of observations that are not used to build a given bagged tree.</p>
+<div class="opts">
+<p>(A) 0.500</p>
+<p>(B) 0.368</p>
+<p>(C) 0.632</p>
+<p>(D) 0.250</p>
+<p>(E) 0.100</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>訓練資料很大時，某一棵 bagging 的樹大約有多少比例的觀察沒被用到？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\((1-1/n)^n\to e^{-1}=0.368\)，這些是袋外觀察。(C) 是被用到的比例。</p></div></div></article><article class="exercise concept-q" id="qC16-5-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.5-4</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>A random forest uses \(m=4\) of \(p=16\) predictors at each split.</p>
+<p>Calculate the probability that a given split does not consider the strongest predictor.</p>
+<div class="opts">
+<p>(A) 0.25</p>
+<p>(B) 0.0625</p>
+<p>(C) 0.50</p>
+<p>(D) 0.75</p>
+<p>(E) 0.94</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>隨機森林每次分割從 16 個變數中選 4 個。某次分割沒有考慮最強變數的機率是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\frac{p-m}{p}=\frac{12}{16}=0.75\)。(A) 是考慮到它的機率。</p></div></div></article><article class="exercise concept-q" id="qC16-5-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.5-5</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>A random forest is built for a problem with \(p=16\) predictors.</p>
+<p>Determine the typical choice of \(m\), the number of predictors considered at each split.</p>
+<div class="opts">
+<p>(A) 16</p>
+<p>(B) 8</p>
+<p>(C) 2</p>
+<p>(D) 1</p>
+<p>(E) 4</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>16 個解釋變數的問題建立隨機森林，每次分割考慮的變數數 \(m\) 通常取多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(m\approx\sqrt p=4\)。(A) 就是 bagging；(B) 是 \(p/2\)（樣題 41 的錯誤選項）。</p></div></div></article><article class="exercise concept-q" id="qC16-5-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.5-6</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about bagging is/are true.</p>
+<div class="items">
+<p>I. Each bagged tree is pruned to reduce its variance.</p>
+<p>II. Using too many trees causes bagging to overfit.</p>
+<p>III. Bagging is a random forest with \(m=p\).</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) I and II only</p>
+<p>(D) I and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於 bagging，下列哪些正確？</p>
+<div class="items">
+<p>I. 每棵樹都會修剪以降低變異數。</p>
+<p>II. 樹太多會讓 bagging 過度配適。</p>
+<p>III. bagging 是 \(m=p\) 的隨機森林。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：bagging 的樹不修剪，讓偏差低，變異數靠平均降低。II 錯：\(B\) 大只會讓變異數更小。III 對。</p></div></div></article></div></section><section class="unit" id="s6"><h2>16.6 Boosting</h2><h3>一、做法</h3>
+<p>Boosting 不平行地長很多棵獨立的樹，而是<strong>依序</strong>地長小樹，每一棵去配適目前的<strong>殘差</strong>，然後只加入一小部分。它「慢慢學」。</p>
+<p><strong>三個參數</strong>：</p>
+<ol>
+<li>\(B\)：樹的棵數。<strong>\(B\) 太大會過度配適</strong>（雖然很慢），要用交叉驗證選。</li>
+<li>\(\lambda\)：收縮參數（小的正數，例如 0.01 或 0.001），每次只加入 \(\lambda\) 倍的新樹。\(\lambda\) 越小，需要的 \(B\) 越大。</li>
+<li>\(d\)：每棵樹的分割數（葉子數 \(d+1\)），控制交互作用的深度。\(d=1\) 時每棵樹只用一個變數（樹樁），整個模型是可加的，沒有交互作用。</li>
+</ol>
+<p><strong>演算法</strong>（迴歸）：</p>
+<ol>
+<li>令 \(\hat f(x)=0\)，殘差 \(r_i=y_i\)。</li>
+<li>對 \(b=1,\ldots,B\)：
+   (a) 以 \((x_i,r_i)\) 配適一棵有 \(d\) 個分割的樹 \(\hat f^b\)。
+   (b) 更新模型：\(\hat f(x)\leftarrow\hat f(x)+\lambda\hat f^b(x)\)。
+   (c) 更新殘差：\(r_i\leftarrow r_i-\lambda\hat f^b(x_i)\)。</li>
+<li>輸出 \(\hat f(x)=\sum_{b=1}^B\lambda\hat f^b(x)\)。</li>
+</ol>
+<div class="box ex">
+<div class="box-t">例題 16-8：第一棵樹之後的更新（SOA 樣題第 68、69 題）</div>
+<p>\(\lambda=0.08\)，每棵樹一個分割。第一棵樹：\(x&lt;17.5\) 預測 125.4，\(x\ge17.5\) 預測 350.5。三筆訓練資料 \((x,y)\)：(15.2, 139)、(12.9, 156)、(23.6, 289)。</p>
+<p>一開始 \(\hat f=0\)、殘差就是 \(y\)。</p>
+<p><strong>更新後的預測</strong>：\(\hat f=0+0.08\times\)（樹的預測）：\(0.08(125.4)=10.0\)、\(10.0\)、\(0.08(350.5)=28.0\)。（樣題 69，答案 (C)）</p>
+<p><strong>更新後的殘差</strong>：\(r=y-0.08\times\)（樹的預測）：\(139-10.0=129.0\)、\(156-10.0=146.0\)、\(289-28.0=261.0\)。（樣題 68，答案 (E)）</p>
+<p>注意兩者相加正好是 \(y\)：任何時候「目前的預測＋目前的殘差＝\(y\)」。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 16-9：用已長好的 boosting 模型預測（MAS-II-S19:39，習題 16.23）</div>
+<p>\(\lambda=0.2\)，四棵樹對某筆資料的輸出分別是 3.14、3.5、2.81、0.34。預測 \(=0.2(3.14+3.5+2.81+0.34)=1.958\)。每棵樹的輸出都要乘 \(\lambda\) 再加總。</p>
+</div>
+<h3>二、三種方法的比較</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>bagging</th>
+<th>隨機森林</th>
+<th>boosting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>樹怎麼長</td>
+<td>平行、各自用 bootstrap 樣本</td>
+<td>同 bagging，但每次分割只看 \(m\) 個變數</td>
+<td>依序，每棵配適前一步的殘差</td>
+</tr>
+<tr>
+<td>樹的大小</td>
+<td>大、不修剪</td>
+<td>大、不修剪</td>
+<td>小（\(d\) 個分割）</td>
+</tr>
+<tr>
+<td>主要降低</td>
+<td>變異數</td>
+<td>變異數（再加上去相關）</td>
+<td>偏差（慢慢學）</td>
+</tr>
+<tr>
+<td>\(B\) 太大</td>
+<td>不會過度配適</td>
+<td>不會過度配適</td>
+<td><strong>會</strong>過度配適</td>
+</tr>
+<tr>
+<td>參數</td>
+<td>\(B\)</td>
+<td>\(B\)、\(m\)</td>
+<td>\(B\)、\(\lambda\)、\(d\)</td>
+</tr>
+</tbody>
+</table>
+<div class="box exam">
+<div class="box-t">考試怎麼考：boosting</div>
+<ul>
+<li><strong>計算</strong>：更新預測（加 \(\lambda\hat f^b\)）、更新殘差（減 \(\lambda\hat f^b\)）（樣題 68、69）；用多棵樹做預測（MAS-II-S19:39）。</li>
+<li><strong>概念</strong>：三個參數各自的作用；\(d=1\) 是可加模型；\(B\) 太大會過度配適，和 bagging、隨機森林不同。</li>
+</ul>
+</div>
+<div class="box key">
+<div class="box-t">本章總整理</div>
+<ul>
+<li>樹＝把預測變數空間切成與座標軸平行的長方形；迴歸葉子用平均，分類葉子用多數決。</li>
+<li>遞迴二元分割：由上而下、貪婪；迴歸用 RSS，分類用 Gini \(\sum\hat p(1-\hat p)\) 或熵 \(-\sum\hat p\ln\hat p\)（加權平均），錯誤率 \(1-\max\hat p\) 不夠敏感但適合修剪。</li>
+<li>成本複雜度：最小化 \(\text{RSS}+\alpha|T|\)；\(\alpha=0\) 最大樹；剪掉一個節點的門檻 \(\alpha=\Delta\text{RSS}/(\text{少掉的葉子數})\)；用交叉驗證選 \(\alpha\)。</li>
+<li>樹：好解釋、可畫圖、處理類別變數方便；但準確度較低、不穩健。</li>
+<li>bagging：bootstrap＋不修剪的大樹＋平均；變異數 \(\rho\sigma^2+\frac{1-\rho}{B}\sigma^2\)；OOB 約 \(1/e=0.368\)；\(B\) 大不過度配適。</li>
+<li>隨機森林：每次分割隨機選 \(m\approx\sqrt p\) 個變數；\(m=p\) 即 bagging；去相關；強變數不被考慮的機率 \(\frac{p-m}{p}\)。</li>
+<li>boosting：依序配適殘差的小樹；\(\hat f\mathrel{+}=\lambda\hat f^b\)、\(r\mathrel{-}=\lambda\hat f^b\)；參數 \(B\)（太大會過度配適）、\(\lambda\)、\(d\)（\(d=1\) 可加）。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q16-22"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.22 題</b><small>・講義 p.296・<a href="#s6">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-F18:39] An actuary creates three tree-based models using bagging, boosting, and random forests. The error on a test data set, as a function of the number of trees in each model, is plotted on the graph below.</p>
+<figure><img src="assets/fig/ch16-ex22.svg" alt="依題目原圖重畫的示意：I（點線）約 100 棵就持平在 0.40；II（虛線）約 150 棵持平在 0.355；III（實線）一路緩慢下降，到 700 棵時約 0.28。" loading="lazy"><figcaption>依題目原圖重畫的示意：I（點線）約 100 棵就持平在 0.40；II（虛線）約 150 棵持平在 0.355；III（實線）一路緩慢下降，到 700 棵時約 0.28。</figcaption></figure>
+
+<p>Determine the type of model most likely to have created each of the lines on the graph.</p>
+<div class="opts">
+<p>(A) I: Boosting, II: Bagging, III: Random forest</p>
+<p>(B) I: Bagging, II: Boosting, III: Random forest</p>
+<p>(C) I: Bagging, II: Random forest, III: Boosting</p>
+<p>(D) I: Random forest, II: Bagging, III: Boosting</p>
+<p>(E) The answer is not given by (A), (B), (C), or (D)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 秋季 MAS-II 第 39 題）精算師用 bagging、boosting、隨機森林建立三個樹模型，測試誤差隨樹的棵數變化如下：</p>
+<p>各條線最可能是哪一種模型？</p>
+<div class="opts">
+<p>(A) I：boosting，II：bagging，III：隨機森林</p>
+<p>(B) I：bagging，II：boosting，III：隨機森林</p>
+<p>(C) I：bagging，II：隨機森林，III：boosting</p>
+<p>(D) I：隨機森林，II：bagging，III：boosting</p>
+<p>(E) 以上皆非</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>bagging 與隨機森林在 \(B\) 夠大後就持平；隨機森林去相關，持平的位置比 bagging 低。boosting 慢慢學，誤差可以持續下降很久（\(B\) 過大才會回升）。所以 I bagging、II 隨機森林、III boosting。</p></div></div></article><article class="exercise" id="q16-23"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 16.23 題</b><small>・講義 p.297・<a href="#s6">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-S19:39] A boosted tree model is defined by \(\lambda=0.2\) and the following four trees:</p>
+<figure><img src="assets/fig/ch16-ex23.svg" alt="依題目原圖重畫的四棵樹。" loading="lazy"><figcaption>依題目原圖重畫的四棵樹。</figcaption></figure>
+
+<p>You are given the following record:</p>
+<table>
+<thead>
+<tr>
+<th>\(X_1\)</th>
+<th>\(X_2\)</th>
+<th>\(X_3\)</th>
+<th>\(X_4\)</th>
+<th>\(X_5\)</th>
+<th>\(X_6\)</th>
+<th>\(X_7\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>N</td>
+<td>6</td>
+<td>Y</td>
+<td>4</td>
+<td>0.5</td>
+<td>0.25</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the prediction of the boosted tree model for this record.</p>
+<div class="opts">
+<p>(A) Less than 2</p>
+<p>(B) At least 2, but less than 5</p>
+<p>(C) At least 5, but less than 8</p>
+<p>(D) At least 8, but less than 11</p>
+<p>(E) At least 11</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 春季 MAS-II 第 39 題）boosting 模型的 \(\lambda=0.2\)，由以下四棵樹組成（左＝成立）：</p>
+<p>一筆資料：\(X_1=\) N、\(X_2=6\)、\(X_3=\) Y、\(X_4=4\)、\(X_5=0.5\)、\(X_6=0.25\)、\(X_7=6\)。求 boosting 模型對這筆資料的預測。</p>
+<div class="items">
+<p>(B) 至少 2，小於 5</p>
+<p>(C) 至少 5，小於 8</p>
+<p>(D) 至少 8，小於 11</p>
+<p>(E) 至少 11</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><ul>
+<li>第 1 棵：\(X_2&lt;1\) 否 → \(X_3=\) Y 是 → \(X_1=\) Y 否 → 3.14。</li>
+<li>第 2 棵：\(X_4&lt;2.67\) 否 → \(X_3=\) Y 是 → \(X_4&lt;3\) 否 → \(X_7&lt;8\) 是 → 3.5。</li>
+<li>第 3 棵：\(X_7&lt;6.5\) 是 → \(X_1=\) Y 否 → 2.81。</li>
+<li>第 4 棵：\(X_6&lt;1\) 是 → 0.34。</li>
+</ul>
+<p>預測 \(=0.2(3.14+3.5+2.81+0.34)=1.958\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>忘了乘 \(\lambda\) 會得到 9.79，選 (D)。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC16-6-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.6-1</b><small>仿 SOA 樣題・<a href="#s6">回到本節開頭</a></small></div><div class="prompt"><p>A boosted regression tree uses \(\lambda=0.1\). Initially \(\hat f=0\). For an observation with \(y=80\), the first tree predicts 50.</p>
+<p>Calculate the residual for this observation after the first update.</p>
+<div class="opts">
+<p>(A) 30</p>
+<p>(B) 72</p>
+<p>(C) 75</p>
+<p>(D) 5</p>
+<p>(E) 45</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>boosting 的 \(\lambda=0.1\)，一開始 \(\hat f=0\)。某觀察 \(y=80\)，第一棵樹預測 50。第一次更新後的殘差是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(r=80-0.1(50)=75\)。(A) 忘了乘 \(\lambda\)；(B) 是乘在 \(y\) 上；(D) 是更新後的預測。</p></div></div></article><article class="exercise concept-q" id="qC16-6-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.6-2</b><small>仿 SOA 樣題・<a href="#s6">回到本節開頭</a></small></div><div class="prompt"><p>A boosted regression tree uses \(\lambda=0.1\). Initially \(\hat f=0\). For an observation with \(y=80\), the first tree predicts 50.</p>
+<p>Calculate the updated prediction \(\hat f(x)\) for this observation.</p>
+<div class="opts">
+<p>(A) 5</p>
+<p>(B) 50</p>
+<p>(C) 8</p>
+<p>(D) 75</p>
+<p>(E) 0</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同上題，第一次更新後的預測 \(\hat f(x)\) 是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat f=0+0.1(50)=5\)。檢查：預測 5 ＋殘差 75 ＝ \(y=80\)。</p></div></div></article><article class="exercise concept-q" id="qC16-6-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.6-3</b><small>仿 SOA 樣題・<a href="#s6">回到本節開頭</a></small></div><div class="prompt"><p>In boosting, the number of splits in each tree is set to \(d=1\).</p>
+<p>Determine the consequence.</p>
+<div class="opts">
+<p>(A) The model can capture all two-way interactions</p>
+<p>(B) The fitted model is additive, with no interactions between predictors</p>
+<p>(C) The model becomes identical to bagging</p>
+<p>(D) The shrinkage parameter has no effect</p>
+<p>(E) The model cannot overfit</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>boosting 每棵樹的分割數設為 \(d=1\)，結果是什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>每棵樹只用一個變數（樹樁），總和是各變數函數的相加，沒有交互作用。\(d\) 是交互作用的深度。</p></div></div></article><article class="exercise concept-q" id="qC16-6-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.6-4</b><small>仿 SOA 樣題・<a href="#s6">回到本節開頭</a></small></div><div class="prompt"><p>Determine which ensemble method can overfit if the number of trees \(B\) is too large.</p>
+<div class="opts">
+<p>(A) Bagging</p>
+<p>(B) Random forests</p>
+<p>(C) Both bagging and random forests</p>
+<p>(D) Boosting</p>
+<p>(E) None of them</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>哪一種集成方法在樹的棵數 \(B\) 太大時會過度配適？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>boosting 每加一棵樹都在配適殘差，持續加下去會開始配適雜訊（本章「集成方法」圖：boosting 在 \(B=146\) 左右最低，之後回升）。bagging 與隨機森林是平均，不會。</p></div></div></article><article class="exercise concept-q" id="qC16-6-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C16.6-5</b><small>仿 SOA 樣題・<a href="#s6">回到本節開頭</a></small></div><div class="prompt"><p>In boosting, the shrinkage parameter \(\lambda\) is made smaller.</p>
+<p>Determine the typical consequence.</p>
+<div class="opts">
+<p>(A) Fewer trees are needed</p>
+<p>(B) Each tree must have more splits</p>
+<p>(C) The model becomes a random forest</p>
+<p>(D) The residuals are no longer updated</p>
+<p>(E) More trees are needed to achieve good performance</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>boosting 的收縮參數 \(\lambda\) 調小，通常的結果是什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>每一步只學一點點，要更多步（更大的 \(B\)）才能學到同樣的程度。\(\lambda\) 與 \(B\) 要一起調。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（10 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q16-1"><div class="ex-head"><span class="ex-tag">練習</span><b>第 16.1 題</b><small>・講義 p.285・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #29] Determine which of the following considerations may make decision trees preferable to other statistical methods.</p>
+<div class="items">
+<p>I. Decision trees are easily interpretable.</p>
+<p>II. Decision trees can be displayed graphically.</p>
+<p>III. Decision trees are easier to explain than linear regression models.</p>
+</div>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 29 題）下列哪些考量可能讓決策樹比其他統計方法更好？</p>
+<div class="items">
+<p>I. 決策樹容易解讀。</p>
+<p>II. 決策樹可以用圖形呈現。</p>
+<p>III. 決策樹比線性迴歸模型容易說明。</p>
+</div>
+<div class="opts">
+<p>(A) 都不是　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>三個都是樹的優點（ISLR 8.1.4），I、II、III 都對，不在 (A)～(D) 中。</p></div></div></article><article class="exercise" id="q16-5"><div class="ex-head"><span class="ex-tag">練習</span><b>第 16.5 題</b><small>・講義 p.287・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>A regression tree is being constructed. There is one explanatory variable \(X\) and the response variable is \(Y\). Four observations of \((X,Y)\) are: (0,8), (1,5), (3,8), (6,6).</p>
+<p>After one iteration of recursive binary splitting, the observations are split into two groups.</p>
+<p>Determine the members of the two groups.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>建立迴歸樹，一個解釋變數 \(X\)，反應變數 \(Y\)。四筆觀察 \((X,Y)\)：(0,8)、(1,5)、(3,8)、(6,6)。做一次遞迴二元分割後，觀察被分成兩群。求兩群的成員。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>{(0,8)} 與 {(1,5), (3,8), (6,6)}</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>只需要比較三種切法（在相鄰 \(x\) 之間切）：</p>
+<ul>
+<li>切在 0 與 1 之間：右群 5、8、6 平均 19/3，RSS \(=1.778+2.778+0.111=4.667\)。</li>
+<li>切在 1 與 3 之間：平均 6.5、7，RSS \(=2(1.5^2)+2(1^2)=6.5\)。</li>
+<li>切在 3 與 6 之間：左群平均 7，RSS \(=1+1+0=6\)。</li>
+</ul>
+<p>第一種 RSS 最小。</p></div></div></article><article class="exercise" id="q16-12"><div class="ex-head"><span class="ex-tag">練習</span><b>第 16.12 題</b><small>・講義 p.292・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #25] Determine which of the following statements concerning decision tree pruning is/are true.</p>
+<div class="items">
+<p>I. The recursive binary splitting method can lead to overfitting the data.</p>
+<p>II. A tree with more splits tends to have lower variance.</p>
+<p>III. When using the cost complexity pruning method, \(\alpha=0\) results in a very large tree.</p>
+</div>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 25 題）關於決策樹修剪，下列哪些正確？</p>
+<div class="items">
+<p>I. 遞迴二元分割可能導致過度配適。</p>
+<p>II. 分割越多的樹，變異數往往越低。</p>
+<p>III. 成本複雜度修剪中，\(\alpha=0\) 會得到很大的樹。</p>
+</div>
+<div class="opts">
+<p>(A) 都不正確　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對。II 錯：分割越多，彈性越高、變異數越<strong>高</strong>。III 對：沒有懲罰，就保留整棵大樹。</p></div></div></article><article class="exercise" id="q16-14"><div class="ex-head"><span class="ex-tag">練習</span><b>第 16.14 題</b><small>・講義 p.292・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>A classification tree is used to predict classification based on region. You are given the following numbers of observations in each class and region:</p>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>Class A</th>
+<th>Class B</th>
+<th>Class C</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I</td>
+<td>72</td>
+<td>22</td>
+<td>6</td>
+</tr>
+<tr>
+<td>II</td>
+<td>55</td>
+<td>25</td>
+<td>10</td>
+</tr>
+<tr>
+<td>III</td>
+<td>20</td>
+<td>32</td>
+<td>28</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the classification error rate for Region I.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>分類樹依地區預測類別，各地區、各類別的觀察數：</p>
+<p>求地區 I 的分類錯誤率。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.28</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>地區 I 預測 A（最多），錯誤率 \(1-\frac{72}{100}=0.28\)。</p></div></div></article><article class="exercise" id="q16-15"><div class="ex-head"><span class="ex-tag">練習</span><b>第 16.15 題</b><small>・講義 p.292・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>Use the data of Exercise 16.14. Calculate the Gini index for Region II.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同習題 <a href="ch16.html#q16-14">16.14</a>，求地區 II 的 Gini 指數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.5370</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>比例 \(\frac{55}{90}\)、\(\frac{25}{90}\)、\(\frac{10}{90}\)：
+\[0.6111(0.3889)+0.2778(0.7222)+0.1111(0.8889)=0.2377+0.2006+0.0988=0.5370 .\]</p></div></div></article><article class="exercise" id="q16-16"><div class="ex-head"><span class="ex-tag">練習</span><b>第 16.16 題</b><small>・講義 p.292・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>Use the data of Exercise 16.14. Calculate the entropy of Region I.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同習題 <a href="ch16.html#q16-14">16.14</a>，求地區 I 的熵。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.7384</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(-(0.72\ln0.72+0.22\ln0.22+0.06\ln0.06)=0.2365+0.3331+0.1688=0.7384\)。</p></div></div></article><article class="exercise" id="q16-19"><div class="ex-head"><span class="ex-tag">練習</span><b>第 16.19 題</b><small>・講義 p.294・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #50] Determine which of the following statements regarding statistical learning methods is/are true.</p>
+<div class="items">
+<p>I. Methods that are highly interpretable are more likely to be highly flexible.</p>
+<p>II. When inference is the goal, there are clear advantages to using a lasso method versus a bagging method.</p>
+<p>III. Using a more flexible method will produce a more accurate prediction against unseen data.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The answer is not given by (A), (B), (C), or (D)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 50 題）關於統計學習方法，下列哪些正確？</p>
+<div class="items">
+<p>I. 可解釋性高的方法比較可能是高彈性的。</p>
+<p>II. 以推論為目的時，lasso 比 bagging 有明顯優勢。</p>
+<p>III. 用更有彈性的方法，對未見過的資料會得到更準確的預測。</p>
+</div>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：可解釋的方法通常簡單、彈性低。II 對：lasso 選出少數變數、係數可解讀；bagging 平均幾百棵樹，很難推論。III 錯：彈性太高會過度配適。</p></div></div></article><article class="exercise" id="q16-20"><div class="ex-head"><span class="ex-tag">練習</span><b>第 16.20 題</b><small>・講義 p.294・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #10] Determine which of the following statements about random forests is/are true.</p>
+<div class="items">
+<p>I. If the number of predictors used at each split is equal to the total number of available predictors, the result is the same as using bagging.</p>
+<p>II. When building a specific tree, the same subset of predictor variables is used at each split.</p>
+<p>III. Random forests are an improvement over bagging because the trees are decorrelated.</p>
+</div>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 10 題）關於隨機森林，下列哪些正確？</p>
+<div class="items">
+<p>I. 每次分割使用的預測變數數目等於全部預測變數時，結果與 bagging 相同。</p>
+<p>II. 建立某一棵樹時，每次分割都使用同一組預測變數子集。</p>
+<p>III. 隨機森林比 bagging 好，是因為樹之間去相關。</p>
+</div>
+<div class="opts">
+<p>(A) 都不正確　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對。II 錯：每次分割都重新隨機抽變數。III 對。</p></div></div></article><article class="exercise" id="q16-25"><div class="ex-head"><span class="ex-tag">練習</span><b>第 16.25 題</b><small>・講義 p.298・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #12] Determine which of the following statements is true.</p>
+<div class="opts">
+<p>(A) Linear regression is a flexible approach</p>
+<p>(B) Lasso is more flexible than a linear regression approach</p>
+<p>(C) Bagging is a low flexibility approach</p>
+<p>(D) There are methods that have high flexibility and are also easy to interpret</p>
+<p>(E) None of (A), (B), (C), or (D) are true</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 12 題）下列哪一個正確？</p>
+<div class="opts">
+<p>(A) 線性迴歸是有彈性的方法。</p>
+<p>(B) lasso 比線性迴歸更有彈性。</p>
+<p>(C) bagging 是低彈性的方法。</p>
+<p>(D) 有些方法既高彈性又容易解讀。</p>
+<p>(E) (A)～(D) 都不正確。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>(A) 錯：線性迴歸是低彈性。(B) 錯：lasso 把係數縮向 0，比線性迴歸更沒彈性。(C) 錯：bagging 高彈性。(D) 錯：高彈性的方法難以解讀（ISLR 圖 2.7）。</p></div></div></article><article class="exercise" id="q16-26"><div class="ex-head"><span class="ex-tag">練習</span><b>第 16.26 題</b><small>・講義 p.299・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>[MAS-II-F19:38] You are given the following three statements about tree-based methods for regression and classification:</p>
+<div class="items">
+<p>I. The main difference between bagging and random forests is the number of predictors considered at each step in building individual trees.</p>
+<p>II. Single decision tree models generally have higher variance than random forest models.</p>
+<p>III. Random forests provide an improvement over bagging because trees in a random forest are less correlated than those in bagged trees.</p>
+</div>
+<p>Determine which of the statements I, II, and III are true.</p>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 秋季 MAS-II 第 38 題）關於迴歸與分類的樹方法：</p>
+<div class="items">
+<p>I. bagging 與隨機森林的主要差別在於建立每棵樹時，每一步考慮的預測變數數目。</p>
+<p>II. 單一決策樹模型的變異數通常高於隨機森林。</p>
+<p>III. 隨機森林比 bagging 好，是因為隨機森林中的樹相關性較低。</p>
+</div>
+<p>哪些正確？</p>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>三個都對：I 是兩者唯一的差別；II 是集成方法的目的；III 是去相關的效果。</p></div></div></article></section><button class="toggle-all float" type="button">顯示全部解答</button><div class="navfoot"><a href="ch15.html">← 第 15 章</a><a href="ch17.html">第 17 章 →</a></div></main></body></html>

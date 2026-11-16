@@ -1,6 +1,1845 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第 11 章　廣義線性模型：分配、連結與估計｜SRM 精算筆記</title><link rel="stylesheet" href="assets/site.css"><link rel="stylesheet" href="assets/katex/katex.min.css"><script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/site.js"></script></head><body><nav aria-label="課程導覽"><a class="brand" href="index.html">SRM 精算筆記</a><label for="chapter">章節</label><select id="chapter"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html" selected>第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題與參考解答</option></select><a href="practice.html">題庫</a></nav><main><header><div class="kicker">SRM · 第 11 章</div><h1>廣義線性模型：分配、連結與估計</h1><p>為什麼計數、比例與金額不適合一律套常態線性模型？</p><div class="chips"><a href="pdf/ch11.pdf">下載本章 PDF</a><a href="practice.html#chapter11">習題索引</a></div></header><section class="panel"><h2>本章閱讀順序</h2><ol><li><a href="#s1">11.1 線性指數族：均值與變異從哪裡來？</a></li><li><a href="#s2">11.2 為什麼先連結，再反轉？</a></li><li><a href="#s3">11.3 最大概似、分數、資訊與迭代</a></li><li><a href="#s4">11.4 過度離散：均值對，信賴區間仍可能太窄</a></li></ol><div class="minititle">優先練習 · 10 題</div><div class="chips"><a href="#q11-2">11.2</a><a href="#q11-6">11.6</a><a href="#q11-9">11.9</a><a href="#q11-10">11.10</a><a href="#q11-12">11.12</a><a href="#q11-19">11.19</a><a href="#q11-20">11.20</a><a href="#q11-22">11.22</a><a href="#q11-27">11.27</a><a href="#q11-28">11.28</a></div></section><article class="unit" id="s1"><div class="kicker">概念 01</div><h2>11.1 線性指數族：均值與變異從哪裡來？</h2><p>理賠件數非負整數，賠款常右偏；硬套常態等變異模型，會預測負件數或錯估尾部。廣義線性模型（generalized linear model，GLM）拆為三步：給定特徵選反應分配；用 \(\eta_i=x_i^\top\beta\) 彙整線性影響；再用連結 \(g(\mu_i)=\eta_i\) 把線性值轉成合法條件平均。線性指參數如何進入 \(\eta\)，不要求平均本身呈直線。</p>
-<p>線性指數族可寫為 \(f(y;\theta,\phi)=\exp\{[y\theta-b(\theta)]/\phi+c(y,\phi)\}\)。\(\theta\) 是自然參數，\(\phi\) 調尺度；\(b\) 讓總機率為一。在可交換積分與微分的正則條件下，微分 \(\int f=1\) 得 \(0=E[(Y-b&#x27;(\theta))/\phi]\)，所以 \(\mu=b&#x27;(\theta)\)。再對均值微分，\(b&#x27;&#x27;(\theta)=E[Y(Y-\mu)]/\phi=\operatorname{Var}(Y)/\phi\)。這就是均值和變異被分配聯結的原因，並非任意兩個公式。</p>
-<p>把 \(b&#x27;&#x27;\) 改以均值表示為 \(V(\mu)\)。Bernoulli 的 \(V=\mu(1-\mu)\)，Poisson 為 \(\mu\)，常態為 1，Gamma 為 \(\mu^2\)，逆高斯為 \(\mu^3\)。Tweedie 冪變異模型給 \(\operatorname{Var}(Y)=\phi\mu^p\)；\(1&lt;p&lt;2\) 時可表為 Poisson 件數加獨立 Gamma 金額之和。零件時總賠款恰為零，有件時連續，故不宜用只有正值的 Gamma 直接描述整體。</p><div class="related"><small>接著讀：<a class="concept" data-definition="某事件發生的機率除以不發生的機率。" data-target="第 12 章 · 勝算" href="ch12.html#s1">勝算</a> · <a class="concept" data-definition="觀察承保或營運的長度或規模；以計數模型比較單位曝險率。" data-target="第 13 章 · 曝險量" href="ch13.html#s1">曝險量</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q11-2">11.2</a><a href="#q11-3">11.3</a><a href="#q11-4">11.4</a><a href="#q11-5">11.5</a><a href="#q11-6">11.6</a><a href="#q11-7">11.7</a><a href="#q11-20">11.20</a><a href="#q11-21">11.21</a><a href="#q11-23">11.23</a><a href="#q11-25">11.25</a><a href="#q11-26">11.26</a><a href="#q11-29">11.29</a></div></article><article class="exercise" id="q11-2"><button class="toggle" aria-controls="a-q11-2" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 11.2 · 講義 p.174</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-2">題目連結</a></small><p>幾何分布 \(P(Y=y)=(1-p)p^y\)，將自然參數設為 \(\log p\)，求 \(b(\theta)\)。</p><div class="solution" id="a-q11-2"><strong class="label">參考解答</strong><p>\(-\log(1-e^\theta)\)。</p><strong class="label">解析</strong><p>對數機率 \(y\log p+\log(1-p)\)，將非 y 的常數寫成 \(-b\)。</p></div></article><article class="exercise" id="q11-6"><button class="toggle" aria-controls="a-q11-6" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 11.6 · 講義 p.175</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-6">題目連結</a></small><p>指數族對數密度含 \(-25y/\mu^2+50/\mu\)，其餘項與均值無關；\(\mu=10\) 求變異。</p><div class="solution" id="a-q11-6"><strong class="label">參考解答</strong><p>20。</p><strong class="label">解析</strong><p>設 \(\theta=-25/\mu^2\)，\(b=-10\sqrt{-\theta}\)，則 \(b&#x27;&#x27;=2.5(-\theta)^{-3/2}\)；代入 −.25。</p></div></article><article class="exercise" id="q11-20"><button class="toggle" aria-controls="a-q11-20" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 11.20 · 講義 p.182</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-20">題目連結</a></small><p>\(\sqrt\mu=.8+.6x_1+1.4x_2\)，\(x=(2,1)\)，\(V=.5\mu^3\)。求變異。</p><div class="solution" id="a-q11-20"><strong class="label">參考解答</strong><p>772.40。</p><strong class="label">解析</strong><p>先算 \(\mu=3.4^2=11.56\)，再算 \(.5(11.56)^3\)。</p></div></article><article class="unit" id="s2"><div class="kicker">概念 02</div><h2>11.2 為什麼先連結，再反轉？</h2><p>\(g\) 應在均值允許範圍可微且一對一，反連結 \(g^{-1}\) 將線性預測值還原到原尺度。若以自然參數直接當 \(\eta\)，則 \(g=(b&#x27;)^{-1}\)，稱正則連結（canonical link）。由 \(b&#x27;=\mu\) 可得：二項 logit、Poisson 對數、常態恆等、Gamma 自然參數 \(-1/\mu\)、逆高斯 \(-1/(2\mu^2)\)。後兩者在不同教材也常用比例變換後的倒數或逆平方連結，係數需配套改寫。正則不是唯一可用選擇，且不保證每個係數有限樣本不偏。</p>
-<p>例如 Gamma 損失採 log 連結，\(\eta=2.21+.0004(10000)-.4+.7=6.51\)，平均損失是 \(e^{6.51}=671.83\)，\(\phi=.5\) 時變異是 \(.5(671.83)^2\)。相同設計每增加 \(\Delta x\)，均值乘 \(e^{\beta\Delta x}\)；不是增加 \(\beta\) 元。對 sqrt 或 inverse 連結更要確認估得的 \(\eta\) 落在合法值域。</p><div class="related"><small>接著讀：<a class="concept" data-definition="某事件發生的機率除以不發生的機率。" data-target="第 12 章 · 勝算" href="ch12.html#s1">勝算</a> · <a class="concept" data-definition="觀察承保或營運的長度或規模；以計數模型比較單位曝險率。" data-target="第 13 章 · 曝險量" href="ch13.html#s1">曝險量</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q11-8">11.8</a><a href="#q11-9">11.9</a><a href="#q11-10">11.10</a><a href="#q11-11">11.11</a><a href="#q11-12">11.12</a><a href="#q11-13">11.13</a><a href="#q11-14">11.14</a><a href="#q11-15">11.15</a><a href="#q11-16">11.16</a><a href="#q11-17">11.17</a><a href="#q11-18">11.18</a><a href="#q11-19">11.19</a><a href="#q11-24">11.24</a><a href="#q11-27">11.27</a><a href="#q11-28">11.28</a></div></article><article class="exercise" id="q11-9"><button class="toggle" aria-controls="a-q11-9" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 11.9 · 講義 p.175</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-9">題目連結</a></small><p>非負反應，候選包括 Poisson/恆等、複合 Poisson–Gamma/log、常態/恆等、Gamma/log、Poisson/log；何者同時保正且是正則配對？</p><div class="solution" id="a-q11-9"><strong class="label">參考解答</strong><p>Poisson/log（E）。</p><strong class="label">解析</strong><p>\(\mu=e^\eta&gt;0\)；正則連結提供分數的平衡性質，但不能由此斷言任意 GLM 係數都不偏，且實際分配須符合資料類型。</p></div></article><article class="exercise" id="q11-10"><button class="toggle" aria-controls="a-q11-10" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 11.10 · 講義 p.176</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-10">題目連結</a></small><p>A、B 二元因子四格 (00,10,01,11) 均值 .50、.80、.40、.70。identity、inverse、log 哪些有非零交互？</p><div class="solution" id="a-q11-10"><strong class="label">參考解答</strong><p>inverse 與 log（D）。</p><strong class="label">解析</strong><p>任一連結的交互等於 \(g(.7)-g(.8)-g(.4)+g(.5)\)，恆等時為零。</p></div></article><article class="exercise" id="q11-12"><button class="toggle" aria-controls="a-q11-12" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 11.12 · 講義 p.177</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-12">題目連結</a></small><p>男為基準，年齡 30、所得 10 萬；Poisson/log 截距 −2.45，千元所得係數 −.04、年齡係數 .10。求預期件數。</p><div class="solution" id="a-q11-12"><strong class="label">參考解答</strong><p>\(e^{-3.45}=0.03175\)。</p><strong class="label">解析</strong><p>收入換為 100 千元，再代入 \(-2.45-.04(100)+.1(30)\)。</p></div></article><article class="exercise" id="q11-19"><button class="toggle" aria-controls="a-q11-19" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 11.19 · 講義 p.182</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-19">題目連結</a></small><p>女性碩士的考分 log 模型化簡為 \(.5+.5x\)，x 以百小時為單位。欲達預期 6 分，公司提供所需時數的一半。</p><div class="solution" id="a-q11-19"><strong class="label">參考解答</strong><p>129.18 小時（C）。</p><strong class="label">解析</strong><p>解 \(.5+.5x=\log6\) 得 \(x=2.5835\)，再乘 100/2。</p></div></article><article class="exercise" id="q11-27"><button class="toggle" aria-controls="a-q11-27" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 11.27 · 講義 p.186</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-27">題目連結</a></small><p>Gamma、Poisson、二項各採自然參數作連結，同一組係數給 \(\eta=2+2-1=3\)；比較預測。</p><div class="solution" id="a-q11-27"><strong class="label">參考解答</strong><p>Poisson 與二項為 20.086、.9526；Gamma 這組預測不合法。</p><strong class="label">解析</strong><p>Gamma 自然參數 \(-1/\mu\) 必須為負。形式上算 \(-1/3\) 會落在均值定義域外，因此不能把負賠款預測當成有效 Gamma 均值。</p></div></article><article class="exercise" id="q11-28"><button class="toggle" aria-controls="a-q11-28" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 11.28 · 講義 p.186</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-28">題目連結</a></small><p>地域 Q/R、性別男/女的四格均值：男性 148、545；女性 446、4024。含 log 交互，求 R×女性係數。</p><div class="solution" id="a-q11-28"><strong class="label">參考解答</strong><p>約 .896（B）。</p><strong class="label">解析</strong><p>對數尺度交互為 \(\log(4024)-\log(545)-\log(446)+\log(148)\)。</p></div></article><article class="unit" id="s3"><div class="kicker">概念 03</div><h2>11.3 最大概似、分數、資訊與迭代</h2><p>獨立觀察的聯合機率是乘積，取對數後變成逐筆相加。以平均參數化並用鏈鎖律微分，分數 \(U_j=\partial\ell/\partial\beta_j=\sum_i (y_i-\mu_i)(d\mu_i/d\eta_i)x_{ij}/[\phi V(\mu_i)]\)。令分數為零是在找概似極值，再確認最大值與可識別性。正則連結下 \(d\mu/d\eta=V(\mu)\)，含截距而權重一致時常得到擬合與觀察總和相等；這是樣本平衡，不是所有估計都不偏。</p>
-<p>一般沒有閉式解。當前預測附近局部線性化得到工作反應 \(z_i=\eta_i+(y_i-\mu_i)/(d\mu_i/d\eta_i)\)、權重 \(w_i=(d\mu_i/d\eta_i)^2/[\phi V(\mu_i)]\)，解加權最小平方後更新，直到分數接近零，即 IRLS。Fisher 資訊 \(I=-E(\partial^2\ell/\partial\beta\partial\beta^\top)=X^\top WX\) 衡量曲率；大型樣本下 \(I^{-1}\) 近似係數共變異。</p>
-<p>常態恆等連結且同變異時，\(\ell=\text{常數}-\sum(y_i-\beta_0-\beta_1x_i)^2/(2\sigma^2)\)，最大化等於最小平方；兩個分數使殘差和為零、與 \(x\) 內積為零，得到 \(\hat\beta_1=S_{xy}/S_{xx}\) 與 \(\hat\beta_0=\bar y-\hat\beta_1\bar x\)。</p><div class="related"><small>接著讀：<a class="concept" data-definition="某事件發生的機率除以不發生的機率。" data-target="第 12 章 · 勝算" href="ch12.html#s1">勝算</a> · <a class="concept" data-definition="觀察承保或營運的長度或規模；以計數模型比較單位曝險率。" data-target="第 13 章 · 曝險量" href="ch13.html#s1">曝險量</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q11-1">11.1</a><a href="#q11-22">11.22</a><a href="#q11-30">11.30</a></div></article><article class="exercise" id="q11-22"><button class="toggle" aria-controls="a-q11-22" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 11.22 · 講義 p.183</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q11-22">題目連結</a></small><p>對數密度中含 \(.5\log\theta-\theta(x-1)^2/(2x)\)。判斷是否對 x 為線性指數族、求 score 與 Fisher 資訊。</p><div class="solution" id="a-q11-22"><strong class="label">參考解答</strong><p>不是線性指數族；\(U=1/(2\theta)-(x-1)^2/(2x)\)，\(I=1/(2\theta^2)\)（B）。</p><strong class="label">解析</strong><p>涉及參數的統計量不是單獨 x；二階微分為負，再取負期望。</p></div></article><article class="unit" id="s4"><div class="kicker">概念 04</div><h2>11.4 過度離散：均值對，信賴區間仍可能太窄</h2><p>若資料實際波動比條件分配允許的大，可令 \(\operatorname{Var}(Y_i\mid x)=\kappa V_i^{(0)}\)。每個 Pearson 殘差平方 \(r_i^2=(y_i-\hat\mu_i)^2/V_i^{(0)}\) 應約反映尺度；用 \(n-p\) 個殘差自由度調整，\(\hat\kappa=\sum r_i^2/(n-p)\)。大於一提示過度離散，小於一提示不足。這不是任何額外變異都只需乘一個係數：也要檢查遺漏變數、相依性與零膨脹。若只是共同尺度，相同均值模型的係數通常不變，標準誤按 \(\sqrt{\hat\kappa}\) 調整。</p><div class="related"><small>接著讀：<a class="concept" data-definition="某事件發生的機率除以不發生的機率。" data-target="第 12 章 · 勝算" href="ch12.html#s1">勝算</a> · <a class="concept" data-definition="觀察承保或營運的長度或規模；以計數模型比較單位曝險率。" data-target="第 13 章 · 曝險量" href="ch13.html#s1">曝險量</a></small></div><p class="minititle">相關講義練習（跨節）：<a href="ch13.html#q13-9">13.9 · 從件數資料看額外變異</a></p></article><article class="unit" id="terms"><div class="kicker">TERMS</div><h2>本章中英術語</h2><table><thead><tr><th>中文</th><th>English</th><th>解題時的意思</th></tr></thead><tbody><tr><td>線性指數族</td><td>linear exponential family</td><td>用自然參數、累積量函數與尺度描述分配。</td></tr><tr><td>連結函數</td><td>link function</td><td>把條件平均轉換到線性預測尺度。</td></tr><tr><td>過度離散</td><td>overdispersion</td><td>實際變異大於原模型指定的均值－變異關係。</td></tr></tbody></table></article><section class="panel" id="remaining"><h2>章末其餘習題 · 20 題</h2><p>按講義題號排列。做題前可用各題自己的按鈕隱藏解答。</p></section><article class="exercise" id="q11-1"><button class="toggle" aria-controls="a-q11-1" aria-expanded="true">隱藏解答</button><h3>練習 · 11.1 · 講義 p.174</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q11-1">題目連結</a></small><p>Gamma/log 模型比較 k 折與留一驗證：計算量、偏誤、變異何者通常對 k 折有利？</p><div class="solution" id="a-q11-1"><strong class="label">參考解答</strong><p>計算量與估計誤差的變異（C）。</p><strong class="label">解析</strong><p>k 折只需 k 次擬合；訓練樣本較少，偏誤未必較小。留一各次訓練集高度重疊，估計的變異可能較高。</p></div></article><article class="exercise" id="q11-3"><button class="toggle" aria-controls="a-q11-3" aria-expanded="true">隱藏解答</button><h3>練習 · 11.3 · 講義 p.174</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-3">題目連結</a></small><p>給定 Gamma 型密度，其對數中涉及尺度 \(u\) 的項為 \(-y/u-4\log u\)。取自然參數 \(-1/u\)，求 \(b\) 的函數形狀。</p><div class="solution" id="a-q11-3"><strong class="label">參考解答</strong><p>與 \(-\log(-\theta)\) 成比例。</p><strong class="label">解析</strong><p>\(4\log u=-4\log(-\theta)\)；取尺度 1 時 \(b=-4\log(-\theta)\)。</p></div></article><article class="exercise" id="q11-4"><button class="toggle" aria-controls="a-q11-4" aria-expanded="true">隱藏解答</button><h3>練習 · 11.4 · 講義 p.174</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-4">題目連結</a></small><p>\(P(Y=y)=(y+1)(1-p)^2p^y\)，求 \(b(\theta)\)。</p><div class="solution" id="a-q11-4"><strong class="label">參考解答</strong><p>\(-2\log(1-e^\theta)\)（E）。</p><strong class="label">解析</strong><p>取對數，\(\theta=\log p\)，\(\log(y+1)\) 留在與參數無關的項。</p></div></article><article class="exercise" id="q11-5"><button class="toggle" aria-controls="a-q11-5" aria-expanded="true">隱藏解答</button><h3>練習 · 11.5 · 講義 p.174</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-5">題目連結</a></small><p>指數反應的均值是 \(\mu\)，變異數如何隨均值改變？</p><div class="solution" id="a-q11-5"><strong class="label">參考解答</strong><p>\(\mu^2\)（D）。</p><strong class="label">解析</strong><p>指數分布是 Gamma 形狀為一，標準差等於平均。</p></div></article><article class="exercise" id="q11-7"><button class="toggle" aria-controls="a-q11-7" aria-expanded="true">隱藏解答</button><h3>練習 · 11.7 · 講義 p.175</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-7">題目連結</a></small><p>比較密度 \(\theta y^{-\theta-1}\) 與 \(\theta e^{-\theta y}\)：何者可直接以 \(Y\) 作線性指數族的統計量？</p><div class="solution" id="a-q11-7"><strong class="label">參考解答</strong><p>第二個。</p><strong class="label">解析</strong><p>第一個的參數乘 \(\log y\) 而非 y；第二個取自然參數 \(-\theta\) 即可。</p></div></article><article class="exercise" id="q11-8"><button class="toggle" aria-controls="a-q11-8" aria-expanded="true">隱藏解答</button><h3>練習 · 11.8 · 講義 p.175</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-8">題目連結</a></small><p>均值範圍為全實線時，二次函數 \(2+3y+3(y-5)^2\)、\(4-4y\)、\(|y|\) 哪個可作可逆連結？</p><div class="solution" id="a-q11-8"><strong class="label">參考解答</strong><p>只有第二個（B）。</p><strong class="label">解析</strong><p>線性遞減仍一對一；其餘並非全域單調，絕對值在零也不可微。</p></div></article><article class="exercise" id="q11-11"><button class="toggle" aria-controls="a-q11-11" aria-expanded="true">隱藏解答</button><h3>練習 · 11.11 · 講義 p.177</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-11">題目連結</a></small><p>20 歲、收入 4 萬落入的兩類係數 15、12，截距 22，平方根連結。預期賠款？</p><div class="solution" id="a-q11-11"><strong class="label">參考解答</strong><p>2,401。</p><strong class="label">解析</strong><p>線性值 \(22+15+12=49\)，反轉為 \(49^2\)。給定誤差尺度不改均值。</p></div></article><article class="exercise" id="q11-13"><button class="toggle" aria-controls="a-q11-13" aria-expanded="true">隱藏解答</button><h3>練習 · 11.13 · 講義 p.178</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-13">題目連結</a></small><p>一名成人、一名年輕駕駛，基準成人係數零、年輕係數 .132、截距 −2.663；log 連結預測件數。</p><div class="solution" id="a-q11-13"><strong class="label">參考解答</strong><p>\(e^{-2.531}=.07958\)（E）。</p><strong class="label">解析</strong><p>將所屬類別指標設為一，非所屬設零。</p></div></article><article class="exercise" id="q11-14"><button class="toggle" aria-controls="a-q11-14" aria-expanded="true">隱藏解答</button><h3>練習 · 11.14 · 講義 p.178</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-14">題目連結</a></small><p>Gamma/log 純保費，第二風險組係數 −.20、第二車型係數 .42、截距 4.78。求平均。</p><div class="solution" id="a-q11-14"><strong class="label">參考解答</strong><p>\(e^5=148.41\)（D）。</p><strong class="label">解析</strong><p>兩個類別一起加入線性預測。</p></div></article><article class="exercise" id="q11-15"><button class="toggle" aria-controls="a-q11-15" aria-expanded="true">隱藏解答</button><h3>練習 · 11.15 · 講義 p.179</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-15">題目連結</a></small><p>log 純保費截距 5.26，第三風險組與第二區係數 .37、.12，求平均。</p><div class="solution" id="a-q11-15"><strong class="label">參考解答</strong><p>\(e^{5.75}=314.19\)（D）。</p><strong class="label">解析</strong><p>取反連結，不要直接報 5.75 元。</p></div></article><article class="exercise" id="q11-16"><button class="toggle" aria-controls="a-q11-16" aria-expanded="true">隱藏解答</button><h3>練習 · 11.16 · 講義 p.179</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-16">題目連結</a></small><p>倒數連結模型 \(1/\mu=2+3x_1+4x_2\)，\(x=(5,6)\)。</p><div class="solution" id="a-q11-16"><strong class="label">參考解答</strong><p>\(1/41\)。</p><strong class="label">解析</strong><p>右側為 41，連結是倒數，非自然對數。</p></div></article><article class="exercise" id="q11-17"><button class="toggle" aria-controls="a-q11-17" aria-expanded="true">隱藏解答</button><h3>練習 · 11.17 · 講義 p.180</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-17">題目連結</a></small><p>續約機率用平方根連結；4 年年資為基準、費率調整對應 −.0920、保額 225 千元，截距 .6102、保額係數 .0015。求續約機率。</p><div class="solution" id="a-q11-17"><strong class="label">參考解答</strong><p>\(.8557^2=.7322\)（C）。</p><strong class="label">解析</strong><p>先算 \(.6102-.0920+225(.0015)\)，再平方。</p></div></article><article class="exercise" id="q11-18"><button class="toggle" aria-controls="a-q11-18" aria-expanded="true">隱藏解答</button><h3>練習 · 11.18 · 講義 p.181</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-18">題目連結</a></small><p>log 模型，區域 3、貨車、高齡組係數 1.336、1.406、1.800，截距 2.100，求預測金額。</p><div class="solution" id="a-q11-18"><strong class="label">參考解答</strong><p>\(e^{6.642}=766.63\)（D）。</p><strong class="label">解析</strong><p>只求均值，離散參數不進入反連結。</p></div></article><article class="exercise" id="q11-21"><button class="toggle" aria-controls="a-q11-21" aria-expanded="true">隱藏解答</button><h3>練習 · 11.21 · 講義 p.182</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-21">題目連結</a></small><p>Gamma 純保費，尺度 1，log 均值為 \(3.25+.4+.45\)，求變異。</p><div class="solution" id="a-q11-21"><strong class="label">參考解答</strong><p>3,640.95（B）。</p><strong class="label">解析</strong><p>平均 \(e^{4.10}=60.3403\)，變異為平均平方。</p></div></article><article class="exercise" id="q11-23"><button class="toggle" aria-controls="a-q11-23" aria-expanded="true">隱藏解答</button><h3>練習 · 11.23 · 講義 p.184</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-23">題目連結</a></small><p>Gamma/log 的第 4 區、轎車、中年均為基準；截距 2.1，尺度 1。求賠款變異。</p><div class="solution" id="a-q11-23"><strong class="label">參考解答</strong><p>\(e^{4.2}=66.686\)（D）。</p><strong class="label">解析</strong><p>先反推平均 \(e^{2.1}\)，再用 \(\phi\mu^2\)。</p></div></article><article class="exercise" id="q11-24"><button class="toggle" aria-controls="a-q11-24" aria-expanded="true">隱藏解答</button><h3>練習 · 11.24 · 講義 p.184</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q11-24">題目連結</a></small><p>逆高斯反應，\(1/\mu^2=.0135+.0582x\)，x 從 10 變 11 時均值差？</p><div class="solution" id="a-q11-24"><strong class="label">參考解答</strong><p>約 −.0590。</p><strong class="label">解析</strong><p>\((.0135+.0582\times11)^{-1/2}-(.0135+.0582\times10)^{-1/2}\)。</p></div></article><article class="exercise" id="q11-25"><button class="toggle" aria-controls="a-q11-25" aria-expanded="true">隱藏解答</button><h3>練習 · 11.25 · 講義 p.185</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-25">題目連結</a></small><p>\(b(\theta)=-\sqrt{-2\theta}\)，\(\theta=-.3,\phi=1.6\)，求平均。</p><div class="solution" id="a-q11-25"><strong class="label">參考解答</strong><p>\(1/\sqrt{.6}=1.2910\)（D）。</p><strong class="label">解析</strong><p>平均是 \(b&#x27;\)，尺度只影響變異。</p></div></article><article class="exercise" id="q11-26"><button class="toggle" aria-controls="a-q11-26" aria-expanded="true">隱藏解答</button><h3>練習 · 11.26 · 講義 p.185</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-26">題目連結</a></small><p>Gamma/log、尺度 2，農村男性的 log 均值為 \(2.32-.64+.76\)，求變異。</p><div class="solution" id="a-q11-26"><strong class="label">參考解答</strong><p>263.3（E）。</p><strong class="label">解析</strong><p>\(\mu=e^{2.44}\)；\(2\mu^2\)。</p></div></article><article class="exercise" id="q11-29"><button class="toggle" aria-controls="a-q11-29" aria-expanded="true">隱藏解答</button><h3>練習 · 11.29 · 講義 p.187</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q11-29">題目連結</a></small><p>Tweedie 變異冪 p：常態 0、複合 Poisson–Gamma 介於 1 與 2、逆高斯 −1，哪些對？</p><div class="solution" id="a-q11-29"><strong class="label">參考解答</strong><p>前兩項（B）。</p><strong class="label">解析</strong><p>逆高斯的變異與均值三次方成比例。</p></div></article><article class="exercise" id="q11-30"><button class="toggle" aria-controls="a-q11-30" aria-expanded="true">隱藏解答</button><h3>練習 · 11.30 · 講義 p.187</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q11-30">題目連結</a></small><p>以圖找內點最大概似估計：score、deviance、資訊量，哪些單獨可用定位？</p><div class="solution" id="a-q11-30"><strong class="label">參考解答</strong><p>通常用前兩者（B）。</p><strong class="label">解析</strong><p>找分數零點並驗證是最大；或找偏差最小點。資訊量是曲率，不單獨標示最大點。</p></div></article><section class="panel"><h2>用模擬考複習本章</h2><div class="chips"><a href="exams.html#exam1">第 1 回 · 題 3</a><a href="exams.html#exam1">第 1 回 · 題 4</a><a href="exams.html#exam3">第 3 回 · 題 25</a><a href="exams.html#exam3">第 3 回 · 題 33</a><a href="exams.html#exam3">第 3 回 · 題 34</a><a href="exams.html#exam4">第 4 回 · 題 16</a><a href="exams.html#exam4">第 4 回 · 題 34</a><a href="exams.html#exam6">第 6 回 · 題 22</a></div></section><div class="navfoot"><a href="ch10.html">← 上一章</a><a href="ch12.html">下一章 →</a></div><footer>SRM 精算考試中文研讀筆記 · 依所附第四版教材章序編寫，中文解析為參考解答。</footer></main></body></html>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 11 章　廣義線性模型：分配、連結與估計｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
+<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html" selected>第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 11 章</div><h1>廣義線性模型：分配、連結與估計</h1><p class="ch-sub">線性迴歸假設反應變數是常態、變異數固定。理賠次數、理賠金額、會不會住院都不符合。廣義線性模型（GLM）保留「解釋變數的線性組合」，但讓反應變數可以是 Poisson、gamma、二項等分配，並用一個連結函數把平均數和線性組合接起來。本章從線性指數族的形式推出平均數與變異數，說明典型連結怎麼來，練熟考試最常見的「給係數表、求平均數或變異數」計算，最後看參數怎麼估計、過度離散怎麼處理。</p><div class="chips"><a href="pdf/ch11.pdf">下載本章 PDF</a><a href="#exercises">章末習題（30 題）</a><span class="chip-note">觀念題 27 題（在各節後面）</span><button class="toggle-all" type="button">顯示全部解答</button></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">11.1 為什麼需要廣義線性模型</a></li><li><a href="#s2">11.2 線性指數族：GLM 的分配</a></li><li><a href="#s3">11.3 連結函數與預測</a></li><li><a href="#s4">11.4 估計：最大概似、分數與資訊</a></li><li><a href="#s5">11.5 過度離散</a></li></ol><p>本章對應講義第 11 課，讀本是 Frees 13.1～13.3.2 與 13.6 節。會用到第 2 章的指標變數與交互作用、第 3 章的係數變異數。</p>
+<p><strong>記號。</strong> 第 \(i\) 筆觀察的反應變數 \(y_i\)，平均數 \(\mu_i=E(y_i)\)。<strong>線性預測式</strong>（systematic component）\(\eta_i=\beta_0+\beta_1x_{i1}+\cdots+\beta_kx_{ik}\)。<strong>連結函數</strong> \(g\) 滿足 \(g(\mu_i)=\eta_i\)，它的反函數 \(g^{-1}\) 叫<strong>平均數函數</strong>（mean function），\(\mu_i=g^{-1}(\eta_i)\)。\(\theta\) 是線性指數族的參數，\(\phi\) 是尺度參數（dispersion／scale parameter）。</p>
+<div class="box map">
+<div class="box-t">考點地圖：這一章在考試裡的位置</div>
+<p><strong>對應考綱</strong>：主題 2「線性模型」（占 40～50%）。學習成果 b：「說明 GLM 的三個組成（反應分配、線性預測式、連結函數）」；c：「選擇適當的分配與連結」；d：「計算並解讀 GLM 的預測值」。</p>
+<p><strong>SOA 官方樣題裡的樣子</strong>：第 7 題（住院與否該用哪一組分配與連結）、第 20 題（線性模型預測出小於 0、大於 1 的機率，該怎麼改）、第 45 題（log 連結的係數表含交互作用，反推讓期望分數等於 6 的讀書時數）。歷年考題（S、MAS-I）大量出現「給 GLM 輸出表、求某一類保戶的平均數或變異數」。</p>
+<table>
+<thead>
+<tr>
+<th>會考的東西</th>
+<th>題目長什麼樣</th>
+<th>判斷或計算的依據</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>選分配與連結</td>
+<td>二元結果、次數、正的金額、含 0 的純保費各用什麼</td>
+<td>二項＋logit；Poisson＋log；gamma＋log；Tweedie＋log</td>
+</tr>
+<tr>
+<td>線性指數族</td>
+<td>給一個密度，判斷是不是線性指數族、求 \(b(\theta)\)</td>
+<td>寫成 \(\exp\big[\frac{y\theta-b(\theta)}{\phi}+S(y,\phi)\big]\)，\(y\) 只能以一次方和 \(\theta\) 相乘</td>
+</tr>
+<tr>
+<td>平均數與變異數</td>
+<td>給 \(b(\theta)\)、\(\theta\)、\(\phi\)，求 \(E(Y)\) 或 \(\mathrm{Var}(Y)\)</td>
+<td>\(E(Y)=b&#x27;(\theta)\)，\(\mathrm{Var}(Y)=\phi\,b&#x27;&#x27;(\theta)\)</td>
+</tr>
+<tr>
+<td>變異數函數</td>
+<td>常態、Poisson、gamma、逆高斯、Tweedie 的 \(p\)</td>
+<td>\(\mathrm{Var}(Y)=\phi\mu^p\)，\(p=0,1,2,3\)，Tweedie \(1&lt;p&lt;2\)</td>
+</tr>
+<tr>
+<td>典型連結</td>
+<td>各分配的典型連結；同一個 \(\eta\) 代進不同典型連結比大小</td>
+<td>\(g=(b&#x27;)^{-1}\)：恆等、log、logit、\(-1/\mu\)、\(-1/(2\mu^2)\)</td>
+</tr>
+<tr>
+<td>預測計算</td>
+<td>係數表（類別變數有基準類別）、log 或其他連結，求平均數</td>
+<td>加總 \(\eta\)，再用 \(g^{-1}\) 還原；log 連結時係數變成乘數 \(e^\beta\)</td>
+</tr>
+<tr>
+<td>預測的變異數</td>
+<td>gamma、log 連結、給 \(\phi\)，求變異數</td>
+<td>先求 \(\mu\)，gamma 的變異數 \(\phi\mu^2\)</td>
+</tr>
+<tr>
+<td>交互作用反推</td>
+<td>給四格的預測值，求交互作用係數</td>
+<td>先套連結（如取 log），再解四條方程式</td>
+</tr>
+<tr>
+<td>估計</td>
+<td>分數函數、資訊矩陣、哪一張圖能找 MLE</td>
+<td>分數＝0、離差最小的地方是 MLE；資訊不行</td>
+</tr>
+<tr>
+<td>過度離散</td>
+<td>變異數比模型假設大，怎麼估 \(\phi\)</td>
+<td>\(\hat\phi=\frac{1}{N-p}\sum\frac{(y_i-\hat\mu_i)^2}{V(\hat\mu_i)}\)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>讀完這一章要會</strong>：</p>
+<ol>
+<li>說出線性機率模型的三個缺點，以及 GLM 的三個組成。</li>
+<li>把 Poisson、常態、二項、gamma、逆高斯、幾何分配寫成線性指數族，讀出 \(\theta\)、\(b(\theta)\)、\(\phi\)。</li>
+<li>推導 \(E(Y)=b&#x27;(\theta)\)、\(\mathrm{Var}(Y)=\phi b&#x27;&#x27;(\theta)\)，並用它們求平均數與變異數。</li>
+<li>從 \(b(\theta)\) 推出典型連結；說出連結函數的條件（單調、可微分）。</li>
+<li>熟練「係數表 → 線性預測式 → 平均數 → 變異數」的計算，包括各種非 log 的連結。</li>
+<li>說出 MLE、分數函數、資訊矩陣的意義；會估計過度離散參數。</li>
+</ol>
+</div></section><section class="unit" id="s1"><h2>11.1 為什麼需要廣義線性模型</h2><h3>一、線性迴歸碰到的三種反應變數</h3>
+<p>第 2～10 章的線性迴歸假設 \(y_i=\beta_0+\beta_1x_{i1}+\cdots+\varepsilon_i\)，\(\varepsilon_i\sim N(0,\sigma^2)\)。也就是說：反應變數是常態、平均數是解釋變數的線性組合、變異數固定。保險資料常常三個都不成立：</p>
+<table>
+<thead>
+<tr>
+<th>反應變數</th>
+<th>可能的值</th>
+<th>線性迴歸的問題</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>會不會住院（是／否）</td>
+<td>0 或 1</td>
+<td>只有兩個值，不可能是常態；預測值可能小於 0 或大於 1</td>
+</tr>
+<tr>
+<td>一年的理賠次數</td>
+<td>0, 1, 2, …</td>
+<td>非負整數；平均越大、變異數越大</td>
+</tr>
+<tr>
+<td>一筆理賠的金額</td>
+<td>正數，右偏</td>
+<td>不可能是負的；平均越大、變異數越大（大約和平均的平方成正比）</td>
+</tr>
+</tbody>
+</table>
+<h3>二、線性機率模型的三個缺點</h3>
+<p>處理是／否的最直接做法，是把「是」記成 1、「否」記成 0，直接做線性迴歸，預測值當成機率 \(\pi\)。這叫<strong>線性機率模型</strong>（linear probability model）。它有三個缺點，講義和 SOA 樣題第 20 題都考：</p>
+<ol>
+<li><strong>反應變數不是常態</strong>：\(y\) 只有 0 和 1 兩個值，殘差分析（<a href="ch05.html">第 5 章</a>）失去意義。</li>
+<li><strong>預測值會跑出 \([0,1]\)</strong>：直線沒有上下限，\(x\) 夠大或夠小時一定超出，但機率不可能小於 0 或大於 1。</li>
+<li><strong>變異數不是固定的</strong>：\(y\) 是 Bernoulli，\(\mathrm{Var}(y)=\pi(1-\pi)\)，隨平均數改變。</li>
+</ol>
+<figure><img src="assets/fig/ch11-lpm.svg" alt="120 筆模擬資料：住院機率隨年齡上升。紅線是線性機率模型（最小平方直線），年齡 10 歲時預測出 −0.40、100 歲時預測出 1.33，都是不可能的機率。藍線是 GLM（二項分配＋logit 連結）配適的 S 形曲線，永遠在 0 和 1 之間。" loading="lazy"><figcaption>120 筆模擬資料：住院機率隨年齡上升。紅線是線性機率模型（最小平方直線），年齡 10 歲時預測出 −0.40、100 歲時預測出 1.33，都是不可能的機率。藍線是 GLM（二項分配＋logit 連結）配適的 S 形曲線，永遠在 0 和 1 之間。</figcaption></figure>
+
+<h3>三、GLM 的三個組成</h3>
+<p>GLM 保留線性迴歸「好用」的部分（解釋變數的線性組合），把「不合用」的部分放寬：</p>
+<ol>
+<li><strong>隨機成分</strong>（random component）：\(y_i\) 服從<strong>線性指數族</strong>（<a href="ch11.html#s2">11.2 節</a>）裡的某個分配，例如常態、Poisson、二項、gamma、逆高斯。</li>
+<li><strong>系統成分</strong>（systematic component），也就是線性預測式：\(\eta_i=\beta_0+\beta_1x_{i1}+\cdots+\beta_kx_{ik}=\sum_{j=0}^k\beta_jx_{ij}\)（\(x_{i0}=1\)）。</li>
+<li><strong>連結函數</strong>（link function）\(g\)：把平均數和線性預測式接起來，
+\[g(\mu_i)=\eta_i=\sum_{j=0}^k\beta_jx_{ij}.\]</li>
+</ol>
+<p>線性迴歸是 GLM 的特例：<strong>常態分配＋恆等連結</strong> \(g(\mu)=\mu\)。</p>
+<div class="box intuit">
+<div class="box-t">直覺：GLM 改的不是「線性」，是「線性預測式和平均數之間的關係」</div>
+<p>線性迴歸說「平均數就是直線」。GLM 說「平均數經過 \(g\) 轉換之後才是直線」。例如 log 連結：\(\ln\mu=\eta\)，所以 \(\mu=e^\eta\) 永遠是正的；logit 連結：\(\ln\frac{\mu}{1-\mu}=\eta\)，所以 \(\mu\) 永遠在 0 和 1 之間。連結函數的工作，就是把「可以是任何實數」的 \(\eta\) 送進反應變數合理的範圍。</p>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：選分配與連結</div>
+<ul>
+<li><strong>SOA 樣題第 7 題型</strong>：「住院或沒住院」是二元結果，用<strong>二項分配＋logit 連結</strong>。常態分配不對（只有兩個值）；二項配「線性」連結也不對（預測值會超出 0～1）。</li>
+<li><strong>SOA 樣題第 20 題型</strong>：線性模型預測出小於 0、大於 1 的機率，正確做法是<strong>用 logit 轉換</strong>。刪掉資料或把預測值截在 0、1 都會讓估計偏誤；Poisson 的典型連結是 log，只保證正數，不保證小於 1。</li>
+<li>常見配對：理賠次數 → Poisson＋log；理賠金額 → gamma＋log（或逆高斯＋log）；純保費（很多 0、其餘連續）→ Tweedie＋log；二元 → 二項＋logit。</li>
+</ul>
+</div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（4 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC11-1-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.1-1</b><small>仿 SOA 樣題・跨章：第 2 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>An analyst models whether a policyholder files a claim (1 = yes, 0 = no) using ordinary least squares on several predictors (a linear probability model).</p>
+<p>Determine which of the following statements about this model is/are true.</p>
+<div class="items">
+<p>I. Some fitted values may be less than 0 or greater than 1.</p>
+<p>II. The variance of the response is constant across observations.</p>
+<p>III. The response is not normally distributed, so residual analysis is not meaningful.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and II only</p>
+<p>(D) I and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以最小平方對 0／1 的反應變數做迴歸（線性機率模型）。下列哪些正確？</p>
+<div class="items">
+<p>I. 部分配適值可能小於 0 或大於 1。</p>
+<p>II. 反應變數的變異數在各觀察值之間固定。</p>
+<p>III. 反應變數不是常態，殘差分析沒有意義。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：直線沒有上下限（本章圖「線性機率模型」中，10 歲預測 −0.40、100 歲預測 1.33）。</p>
+<p>II 錯：Bernoulli 的變異數是 \(\pi(1-\pi)\)，隨平均數改變。這正是線性機率模型的第三個缺點。</p>
+<p>III 對：\(y\) 只有兩個值，不可能是常態。</p></div></div></article><article class="exercise concept-q" id="qC11-1-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.1-2</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>An insurer wants to model the annual number of claims for each auto policy as a function of driver characteristics.</p>
+<p>Determine the most appropriate combination of response distribution and link function.</p>
+<div class="opts">
+<p>(A) Poisson distribution, log link</p>
+<p>(B) Normal distribution, identity link</p>
+<p>(C) Binomial distribution, logit link</p>
+<p>(D) Gamma distribution, log link</p>
+<p>(E) Poisson distribution, logit link</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>保險公司要用駕駛人特徵建模每張汽車保單一年的理賠次數。最適合的分配與連結組合是哪一個？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>次數是非負整數，用 Poisson；log 連結讓平均數 \(e^\eta\) 一定為正，而且是 Poisson 的典型連結。</p>
+<p>(B) 常態可能預測出負數；(C) 二項是二元結果；(D) gamma 是正的連續變數（理賠金額）；(E) logit 會把平均數限制在 0 和 1 之間，但次數的平均可以大於 1。</p></div></div></article><article class="exercise concept-q" id="qC11-1-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.1-3</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following is NOT one of the three components of a generalized linear model.</p>
+<div class="opts">
+<p>(A) A constant variance for every observation</p>
+<p>(B) A response distribution from the linear exponential family</p>
+<p>(C) A linear predictor in the explanatory variables</p>
+<p>(D) A monotonic, differentiable link function</p>
+<p>(E) All of (A) through (D) are components of a GLM</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪一個<strong>不是</strong> GLM 的三個組成之一？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>GLM 的三個組成：隨機成分（線性指數族的分配）、系統成分（線性預測式）、連結函數。</p>
+<p>GLM 的重點之一就是<strong>允許</strong>變異數隨平均數改變（\(\mathrm{Var}=\phi V(\mu)\)），「每筆觀察的變異數相同」是線性迴歸的假設，不是 GLM 的組成。</p></div></div></article><article class="exercise concept-q" id="qC11-1-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.1-4</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about generalized linear models is/are true.</p>
+<div class="items">
+<p>I. Ordinary linear regression is a GLM with a normal response and the identity link.</p>
+<p>II. The link function is applied to each observed response \(y_i\) before fitting.</p>
+<p>III. A GLM requires the mean of the response to be a linear function of the predictors.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and II only</p>
+<p>(D) I and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪些正確？</p>
+<div class="items">
+<p>I. 一般線性迴歸是常態反應、恆等連結的 GLM。</p>
+<p>II. 連結函數是在配適前套用在每個觀察值 \(y_i\) 上。</p>
+<p>III. GLM 要求反應變數的平均數是解釋變數的線性函數。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對。</p>
+<p>II 錯：連結函數作用在<strong>平均數</strong> \(\mu_i\) 上，不是作用在 \(y_i\) 上。例如 Poisson 的 \(y_i=0\) 時 \(\ln y_i\) 不存在，但 \(\ln\mu_i\) 沒問題。這也是 GLM 和「先把 \(y\) 取 log 再做線性迴歸」不同的地方。</p>
+<p>III 錯：線性的是 \(g(\mu_i)\)，不是 \(\mu_i\) 本身。</p></div></div></article></div></section><section class="unit" id="s2"><h2>11.2 線性指數族：GLM 的分配</h2><h3>一、定義</h3>
+<p><strong>線性指數族</strong>（linear exponential family）的機率密度（離散時是機率函數）可以寫成
+\[f(y;\theta,\phi)=\exp\!\left[\frac{y\theta-b(\theta)}{\phi}+S(y,\phi)\right].\tag{11.1}\]</p>
+<ul>
+<li>\(\theta\)：我們關心的參數（parameter of interest，也叫自然參數）。</li>
+<li>\(\phi\)：尺度參數。</li>
+<li>\(b(\theta)\)：只跟 \(\theta\) 有關的函數，<strong>決定了平均數和變異數</strong>。</li>
+<li>\(S(y,\phi)\)：只跟 \(y\)、\(\phi\) 有關，和 \(\theta\) 無關，求平均、變異數時用不到。</li>
+</ul>
+<p>關鍵條件：<strong>\(y\) 和 \(\theta\) 只在 \(y\theta\) 這一項一起出現，而且 \(y\) 是一次方</strong>，沒有平方、沒有取對數、沒有倒數。「線性」指的就是這件事。</p>
+<p>線性指數族的成員：二項、常態、Poisson、指數、gamma、逆高斯、負二項（固定形狀參數時）、幾何、Tweedie。</p>
+<h3>二、怎麼把一個分配寫成線性指數族：四步驟</h3>
+<ol>
+<li>把整個密度寫成 \(\exp(\ln f)\)。</li>
+<li>展開 \(\ln f\)，找出 \(y\) 和參數相乘的那一項。</li>
+<li>讓那一項變成 \(y\theta/\phi\)，決定 \(\theta\)（以及 \(\phi\)）。</li>
+<li>剩下只含參數的部分是 \(-b(\theta)/\phi\)；只含 \(y\)（和 \(\phi\)）的丟進 \(S\)。</li>
+</ol>
+<p><strong>例一：Poisson。</strong> \(f(y)=e^{-\lambda}\lambda^y/y!\)。
+\[f(y)=\exp(-\lambda+y\ln\lambda-\ln y!).\]
+\(y\) 乘上 \(\ln\lambda\)，所以 \(\theta=\ln\lambda\)，\(\lambda=e^\theta\)：
+\[f(y)=\exp(y\theta-e^\theta-\ln y!).\]
+對照 (11.1)：\(\phi=1\)，\(b(\theta)=e^\theta\)，\(S(y,\phi)=-\ln y!\)。</p>
+<p><strong>例二：常態。</strong> 兩個參數 \(\mu,\sigma^2\)，選 \(\mu\) 當關心的參數。
+\[f(y)=\exp\!\left[-\frac{(y-\mu)^2}{2\sigma^2}-\ln\sigma-\tfrac12\ln2\pi\right]=\exp\!\left[\frac{y\mu-\tfrac12\mu^2}{\sigma^2}-\frac{y^2}{2\sigma^2}-\tfrac12\ln\sigma^2-\tfrac12\ln2\pi\right].\]
+\(\theta=\mu\)，\(\phi=\sigma^2\)，\(b(\theta)=\tfrac12\theta^2\)，其他（含 \(y^2\) 的那項）放進 \(S\)。注意 \(y^2/(2\sigma^2)\) 不含 \(\theta\)，所以不違反條件。</p>
+<p><strong>例三：Bernoulli（二項，一次試驗）。</strong> \(f(y)=\pi^y(1-\pi)^{1-y}\)，\(y=0,1\)。
+\[f(y)=\exp\!\left[y\ln\frac{\pi}{1-\pi}+\ln(1-\pi)\right].\]
+\(\theta=\ln\frac{\pi}{1-\pi}\)（log odds），\(\pi=\frac{e^\theta}{1+e^\theta}\)，\(\ln(1-\pi)=-\ln(1+e^\theta)\)，所以 \(b(\theta)=\ln(1+e^\theta)\)，\(\phi=1\)。</p>
+<p><strong>例四：gamma。</strong> 用平均數 \(\mu\) 和形狀參數 \(\alpha\) 寫：\(f(y)=\frac{1}{\Gamma(\alpha)}\left(\frac{\alpha}{\mu}\right)^\alpha y^{\alpha-1}e^{-\alpha y/\mu}\)。
+\[\ln f=-\frac{\alpha y}{\mu}-\alpha\ln\mu+\underbrace{\alpha\ln\alpha+(\alpha-1)\ln y-\ln\Gamma(\alpha)}_{S}=\frac{y(-1/\mu)-\ln\mu}{1/\alpha}+S.\]
+\(\theta=-1/\mu\)，\(\phi=1/\alpha\)，\(b(\theta)=\ln\mu=-\ln(-\theta)\)。</p>
+<p><strong>例五：逆高斯。</strong> \(f(y)=\sqrt{\frac{\lambda}{2\pi y^3}}\exp\!\left[-\frac{\lambda(y-\mu)^2}{2\mu^2y}\right]\)。把平方展開：
+\[-\frac{\lambda(y^2-2\mu y+\mu^2)}{2\mu^2y}=\lambda\left[y\left(-\frac{1}{2\mu^2}\right)+\frac1\mu\right]-\frac{\lambda}{2y}.\]
+\(\theta=-\frac{1}{2\mu^2}\)，\(\phi=1/\lambda\)，\(b(\theta)=-\frac1\mu=-\sqrt{-2\theta}\)。</p>
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li>\(b(\theta)\) 只要求到「差一個常數倍」：題目常問「\(b(\theta)\) 是哪個函數的倍數」，例如幾何分配的 \(b(\theta)=-\ln(1-e^\theta)\)。</li>
+<li><strong>定義域跟著參數變的分配不是線性指數族</strong>，例如 \(f(y)=\theta y^{-\theta-1}\)，\(y&gt;\theta\)（單參數 Pareto）。另外它取 log 後和 \(\theta\) 相乘的是 \(\ln y\)，不是 \(y\)。</li>
+<li>指數分配 \(f(y)=\theta e^{-y\theta}\) 是線性指數族（\(y\) 乘上 \(-\theta\)），而且是 gamma 在 \(\alpha=1\) 的特例。</li>
+</ul>
+</div>
+<h3>三、平均數與變異數：\(b&#x27;(\theta)\) 和 \(\phi\,b&#x27;&#x27;(\theta)\)</h3>
+<p>\[E(Y)=b&#x27;(\theta),\qquad \mathrm{Var}(Y)=\phi\,b&#x27;&#x27;(\theta).\tag{11.2, 11.3}\]</p>
+<div class="box derive">
+<div class="box-t">推導：為什麼 \(E(Y)=b&#x27;(\theta)\)、\(\mathrm{Var}(Y)=\phi b&#x27;&#x27;(\theta)\)</div>
+<p><strong>出發點</strong>：密度積分（或加總）等於 1，對每一個 \(\theta\) 都成立：
+\[\int\exp\!\left[\frac{y\theta-b(\theta)}{\phi}+S(y,\phi)\right]dy=1 .\]</p>
+<p><strong>對 \(\theta\) 微分一次</strong>（積分和微分可以交換）。指數裡對 \(\theta\) 的導數是 \(\frac{y-b&#x27;(\theta)}{\phi}\)，所以
+\[\int\frac{y-b&#x27;(\theta)}{\phi}f(y)\,dy=0\ \Longrightarrow\ E(Y)-b&#x27;(\theta)=0\ \Longrightarrow\ E(Y)=b&#x27;(\theta).\]</p>
+<p><strong>再微分一次</strong>。對 \(\frac{y-b&#x27;(\theta)}{\phi}f(y)\) 用乘法法則：
+\[\int\left[-\frac{b&#x27;&#x27;(\theta)}{\phi}+\frac{(y-b&#x27;(\theta))^2}{\phi^2}\right]f(y)\,dy=0 .\]
+第二項的積分是 \(\mathrm{Var}(Y)/\phi^2\)（因為 \(b&#x27;(\theta)=E(Y)\)），所以
+\[\frac{\mathrm{Var}(Y)}{\phi^2}=\frac{b&#x27;&#x27;(\theta)}{\phi}\ \Longrightarrow\ \mathrm{Var}(Y)=\phi\,b&#x27;&#x27;(\theta).\]</p>
+</div>
+<p><strong>驗算。</strong> Poisson：\(b=e^\theta\)，\(b&#x27;=e^\theta=\lambda\)，\(b&#x27;&#x27;=e^\theta=\lambda\)，\(\phi=1\)，變異數 \(\lambda\)。常態：\(b=\theta^2/2\)，\(b&#x27;=\theta=\mu\)，\(b&#x27;&#x27;=1\)，變異數 \(\phi=\sigma^2\)。gamma：\(b=-\ln(-\theta)\)，\(b&#x27;=-1/\theta=\mu\)，\(b&#x27;&#x27;=1/\theta^2=\mu^2\)，變異數 \(\phi\mu^2=\mu^2/\alpha\)。逆高斯：\(b&#x27;=(-2\theta)^{-1/2}=\mu\)，\(b&#x27;&#x27;=(-2\theta)^{-3/2}=\mu^3\)，變異數 \(\phi\mu^3\)。</p>
+<h3>四、變異數函數：變異數怎麼跟著平均數變</h3>
+<p>把 \(b&#x27;&#x27;(\theta)\) 寫成 \(\mu\) 的函數，叫<strong>變異數函數</strong> \(V(\mu)\)，於是 \(\mathrm{Var}(Y)=\phi V(\mu)\)。</p>
+<table>
+<thead>
+<tr>
+<th>分配</th>
+<th>\(V(\mu)\)</th>
+<th>冪次 \(p\)（\(V=\mu^p\)）</th>
+<th>\(\phi\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>常態</td>
+<td>\(1\)</td>
+<td>0</td>
+<td>\(\sigma^2\)</td>
+</tr>
+<tr>
+<td>Poisson</td>
+<td>\(\mu\)</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Tweedie</td>
+<td>\(\mu^p\)</td>
+<td>\(1&lt;p&lt;2\)</td>
+<td>估計</td>
+</tr>
+<tr>
+<td>gamma</td>
+<td>\(\mu^2\)</td>
+<td>2</td>
+<td>\(1/\alpha\)</td>
+</tr>
+<tr>
+<td>逆高斯</td>
+<td>\(\mu^3\)</td>
+<td>3</td>
+<td>\(1/\lambda\)</td>
+</tr>
+<tr>
+<td>二項（比例）</td>
+<td>\(\mu(1-\mu)\)</td>
+<td>不是冪次</td>
+<td>1（\(m\) 次試驗時 \(1/m\)）</td>
+</tr>
+</tbody>
+</table>
+<figure><img src="assets/fig/ch11-varfun.svg" alt="變異數函數 （）。所有曲線都經過 。平均數大於 1 時， 越大變異數長得越快：逆高斯（）最快，常態（）不動。選分配其實就是在選「變異數怎麼跟著平均數變」。" loading="lazy"><figcaption>變異數函數 \(V(\mu)=\mu^p\)（\(\phi=1\)）。所有曲線都經過 \((1,1)\)。平均數大於 1 時，\(p\) 越大變異數長得越快：逆高斯（\(p=3\)）最快，常態（\(p=0\)）不動。選分配其實就是在選「變異數怎麼跟著平均數變」。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 11-1：從給定的密度求變異數（習題 11.6）</div>
+<p>\(f(y;u,\phi)=\exp\!\left(-\frac{25y}{u^2}+\frac{50}{u}+S(y,\phi)\right)\)，求 \(u=10\) 時的 \(\mathrm{Var}(Y)\)。</p>
+<p><strong>讀出 \(\theta\)</strong>：和 \(y\) 相乘的是 \(-25/u^2\)，令 \(\theta=-25/u^2\)，\(\phi=1\)。則 \(u=5/\sqrt{-\theta}\)。</p>
+<p><strong>讀出 \(b\)</strong>：\(-b(\theta)=50/u=10\sqrt{-\theta}\)，所以 \(b(\theta)=-10\sqrt{-\theta}\)。</p>
+<p><strong>微分</strong>：\(b&#x27;(\theta)=5(-\theta)^{-1/2}\)（\(u=10\) 時 \(\theta=-0.25\)，\(b&#x27;=5/0.5=10=u\)，檢查無誤）；\(b&#x27;&#x27;(\theta)=2.5(-\theta)^{-3/2}\)。</p>
+<p><strong>代入</strong>：\(\mathrm{Var}(Y)=2.5(0.25)^{-3/2}=2.5/0.125=20\)。</p>
+<p>（這其實是逆高斯：\(\mathrm{Var}=\mu^3/\lambda=1000/50=20\)。）</p>
+</div>
+<h3>五、Tweedie 分配：純保費用的分配</h3>
+<p>保險的<strong>總理賠</strong>（一張保單一年的理賠總額）\(S=X_1+\cdots+X_N\) 是複合分配。<strong>Tweedie 分配</strong>是：</p>
+<ul>
+<li>次數 \(N\sim\) Poisson，</li>
+<li>每筆金額 \(X_j\sim\) gamma，彼此獨立，也和 \(N\) 獨立。</li>
+</ul>
+<p>它屬於線性指數族，\(\mathrm{Var}(Y)=\phi\mu^p\)，\(1&lt;p&lt;2\)。特性：</p>
+<ol>
+<li><strong>混合型分配</strong>（mixed distribution）：在 0 有一個點質量 \(\Pr(Y=0)=\Pr(N=0)=e^{-\lambda}\)，其餘部分是連續的。</li>
+<li>也可以看成 gamma 的<strong>混合</strong>：已知 \(N=n\) 時，\(Y\) 是 \(n\) 個 gamma 的和，仍是 gamma；權重是 Poisson 機率。</li>
+<li>正因為有一大堆 0、其餘是連續的正數，它很適合當<strong>純保費</strong>（pure premium）的分配。</li>
+</ol>
+<figure><img src="assets/fig/ch11-tweedie.svg" alt="模擬 20 萬張保單：次數 Poisson（），每筆金額 gamma（形狀 2、尺度 500）。左邊是  的點質量 0.301（理論 ），右邊是  時的連續部分。平均 1,200、變異數 ，都和理論值一致。這組參數對應的冪次是 ，落在 1 和 2 之間。" loading="lazy"><figcaption>模擬 20 萬張保單：次數 Poisson（\(\lambda=1.2\)），每筆金額 gamma（形狀 2、尺度 500）。左邊是 \(Y=0\) 的點質量 0.301（理論 \(e^{-1.2}=0.301\)），右邊是 \(Y&gt;0\) 時的連續部分。平均 1,200、變異數 \(1.80\times10^6\)，都和理論值一致。這組參數對應的冪次是 \(p=(\alpha+2)/(\alpha+1)=4/3\)，落在 1 和 2 之間。</figcaption></figure>
+
+<div class="box exam">
+<div class="box-t">考試怎麼考：線性指數族</div>
+<ul>
+<li><strong>判斷是不是成員</strong>：取 log，看和參數相乘的是不是「\(y\) 本身」；定義域含參數的直接排除（S-F16:33、S-F16:38 題型）。</li>
+<li><strong>求 \(b(\theta)\)</strong>：四步驟。選擇題的選項常是 \(\pm\ln(1\pm e^{\pm\theta})^2\) 這類，只差正負號，每一步都要小心。</li>
+<li><strong>給 \(b(\theta)\)、\(\theta\)、\(\phi\) 求平均數</strong>：\(E(Y)=b&#x27;(\theta)\)，和 \(\phi\) 無關（S-F15:31）。</li>
+<li><strong>冪次 \(p\)</strong>（S-F17:32）：常態 0、Poisson 1、Tweedie（複合 Poisson-gamma）介於 1 和 2、gamma 2、逆高斯 <strong>3</strong>（不是 −1）。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q11-4"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.4 題</b><small>・講義 p.174・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>The following discrete distribution is in the linear exponential family:
+\[f(y)=(y+1)(1-p)^2p^y\qquad y=0,1,2,\ldots\]
+Determine \(b(\theta)\).</p>
+<div class="opts">
+<p>(A) \(\ln(1+e^\theta)^2\)</p>
+<p>(B) \(\ln(1+e^{-\theta})^2\)</p>
+<p>(C) \(-\ln(1+e^{-\theta})^2\)</p>
+<p>(D) \(\ln(1-e^{-\theta})^2\)</p>
+<p>(E) \(-\ln(1-e^\theta)^2\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列離散分配屬於線性指數族：\(f(y)=(y+1)(1-p)^2p^y\)，\(y=0,1,2,\ldots\)。求 \(b(\theta)\)。</p>
+<div class="opts">
+<p>(A) \(\ln(1+e^\theta)^2\)</p>
+<p>(B) \(\ln(1+e^{-\theta})^2\)</p>
+<p>(C) \(-\ln(1+e^{-\theta})^2\)</p>
+<p>(D) \(\ln(1-e^{-\theta})^2\)</p>
+<p>(E) \(-\ln(1-e^\theta)^2\)</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\[f(y)=\exp\big(y\ln p+\ln(y+1)+2\ln(1-p)\big).\]
+令 \(\theta=\ln p\)，\(y\) 單獨和 \(\theta\) 相乘，符合條件。\(\ln(y+1)\) 只含 \(y\)，放進 \(S\)。</p>
+<p>\(-b(\theta)=2\ln(1-p)=2\ln(1-e^\theta)\)，所以
+\[b(\theta)=-2\ln(1-e^\theta)=-\ln(1-e^\theta)^2 .\]
+（這是 \(r=2\) 的負二項分配。）</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>五個選項只差正負號與 \(e^{\pm\theta}\)。\(\theta=\ln p\) 所以是 \(e^{\theta}\)；\(b\) 前面有負號，因為 \(\ln(1-p)\) 在指數裡帶正號。</p></div></div></article><article class="exercise" id="q11-5"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.5 題</b><small>・講義 p.174・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[S-F16:31] Within the context of Generalized Linear Models, suppose that \(y\) has an exponential distribution with probability density function expressed as:
+\[f(y)=\frac1\mu\exp\left(-\frac y\mu\right)\quad\text{for }y&gt;0\]
+Determine the variance of \(y\) in terms of \(\mu\).</p>
+<div class="opts">
+<p>(A) \(1/\mu\)</p>
+<p>(B) \(\sqrt\mu\)</p>
+<p>(C) \(\mu\)</p>
+<p>(D) \(\mu^2\)</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2016 秋季 S 第 31 題）在 GLM 的架構下，\(y\) 服從指數分配，\(f(y)=\frac1\mu\exp\!\left(-\frac y\mu\right)\)，\(y&gt;0\)。以 \(\mu\) 表示 \(y\) 的變異數。</p>
+<div class="opts">
+<p>(A) \(1/\mu\)　(B) \(\sqrt\mu\)　(C) \(\mu\)　(D) \(\mu^2\)　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>直接知道</strong>：指數分配的變異數是平均數的平方，這裡平均數是 \(\mu\)，變異數 \(\mu^2\)。</p>
+<p><strong>用 GLM 公式</strong>：\(f(y)=\exp\big(y(-1/\mu)-\ln\mu\big)\)。\(\theta=-1/\mu\)，\(\phi=1\)，\(b(\theta)=\ln\mu=-\ln(-\theta)\)。\(b&#x27;&#x27;(\theta)=1/\theta^2=\mu^2\)，\(\mathrm{Var}=\phi b&#x27;&#x27;=\mu^2\)。</p>
+<p>指數分配是 gamma 在形狀 1 的特例，gamma 的 \(V(\mu)=\mu^2\)。</p></div></div></article><article class="exercise" id="q11-6"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.6 題</b><small>・講義 p.175・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>For a distribution in the linear exponential family, you are given
+\[f(y;u,\phi)=\exp\left(-\frac{25y}{u^2}+\frac{50}{u}+S(y,\phi)\right)\]
+Determine \(\mathrm{Var}(Y)\), the variance of the distribution, when \(u=10\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>線性指數族中的分配：
+求 \(u=10\) 時的 \(\mathrm{Var}(Y)\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>20</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>讀出 \(\theta\)、\(\phi\)</strong>：令 \(\theta=-25/u^2\)，\(\phi=1\)，則 \(u=5/\sqrt{-\theta}\)。</p>
+<p><strong>讀出 \(b\)</strong>：\(\frac{50}{u}=10\sqrt{-\theta}\)，它在指數裡是 \(-b(\theta)\)，所以 \(b(\theta)=-10\sqrt{-\theta}\)。</p>
+<p><strong>微分</strong>：
+\[b&#x27;(\theta)=-10\cdot\tfrac12(-\theta)^{-1/2}\cdot(-1)=5(-\theta)^{-1/2},\]
+\[b&#x27;&#x27;(\theta)=5\cdot\left(-\tfrac12\right)(-\theta)^{-3/2}\cdot(-1)=2.5(-\theta)^{-3/2}.\]</p>
+<p><strong>代入</strong>：\(u=10\) 時 \(\theta=-0.25\)。先檢查 \(b&#x27;=5/0.5=10=u\)。\(\mathrm{Var}(Y)=1\times2.5(0.25)^{-3/2}=2.5/0.125=20\)。</p>
+<p>（這是 \(\lambda=50\) 的逆高斯，\(\mathrm{Var}=u^3/\lambda=20\)。）</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(-\theta\) 對 \(\theta\) 微分會多一個 \(-1\)，連鎖律兩次都不能漏。</p></div></div></article><article class="exercise" id="q11-7"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.7 題</b><small>・講義 p.175・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[Based on S-F16:33] You are given the following two probability density functions:</p>
+<div class="items">
+<p>(i) \(f(y;\theta)=\theta y^{-\theta-1}\) for \(y&gt;\theta\)</p>
+<p>(ii) \(f(y;\theta)=\theta e^{-y\theta}\) for \(y&gt;0\) and \(\theta&gt;0\)</p>
+</div>
+<p>Which of these distributions are in the linear exponential family?</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（改編自 2016 秋季 S 第 33 題）兩個密度：</p>
+<div class="items">
+<p>(i) \(f(y;\theta)=\theta y^{-\theta-1}\)，\(y&gt;\theta\)</p>
+<p>(ii) \(f(y;\theta)=\theta e^{-y\theta}\)，\(y&gt;0\)、\(\theta&gt;0\)</p>
+</div>
+<p>哪些屬於線性指數族？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>只有 (ii)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>(i) 不是</strong>：定義域 \(y&gt;\theta\) 跟著參數變。而且取 log 得 \(\exp\big(\ln\theta-(\theta+1)\ln y\big)\)，和 \(\theta\) 相乘的是 \(\ln y\)，不是 \(y\)。</p>
+<p><strong>(ii) 是</strong>：它是指數分配，\(\exp(\ln\theta-y\theta)\)，和參數相乘的是 \(y\) 本身。</p></div></div></article><article class="exercise" id="q11-25"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.25 題</b><small>・講義 p.185・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[S-F15:31] Given the following information:</p>
+<div class="items">
+<p>(i) \(Y\) is a random variable in the linear exponential family \(f(y)=\exp\left[\dfrac{y\theta-b(\theta)}{\phi}+S(y,\phi)\right]\)</p>
+<p>(ii) \(b(\theta)=-\sqrt{-2\theta}\)</p>
+<p>(iii) \(\theta=-0.3\)</p>
+<p>(iv) \(\phi=1.6\)</p>
+</div>
+<p>Calculate \(E[Y]\).</p>
+<div class="opts">
+<p>(A) Less than −1</p>
+<p>(B) At least −1, but less than 0</p>
+<p>(C) At least 0, but less than 1</p>
+<p>(D) At least 1, but less than 2</p>
+<p>(E) At least 2</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2015 秋季 S 第 31 題）\(Y\) 屬於線性指數族，\(f(y)=\exp\!\left[\frac{y\theta-b(\theta)}{\phi}+S(y,\phi)\right]\)，\(b(\theta)=-\sqrt{-2\theta}\)，\(\theta=-0.3\)，\(\phi=1.6\)。求 \(E[Y]\)。</p>
+<div class="items">
+<p>(B) 至少 −1，小於 0</p>
+<p>(C) 至少 0，小於 1</p>
+<p>(D) 至少 1，小於 2</p>
+<p>(E) 至少 2</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(E[Y]=b&#x27;(\theta)\)。
+\[b&#x27;(\theta)=-\tfrac12(-2\theta)^{-1/2}(-2)=(-2\theta)^{-1/2}.\]
+代入 \(\theta=-0.3\)：\(E[Y]=0.6^{-1/2}=1.291\)。</p>
+<p>\(\phi=1.6\) 只影響變異數，求平均數用不到。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>看到 \(\phi\) 就想乘進去。平均數是 \(b&#x27;(\theta)\)，沒有 \(\phi\)。</p></div></div></article><article class="exercise" id="q11-29"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.29 題</b><small>・講義 p.187・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[S-F17:32] Given a family of distributions where the variance is related to the mean through a power function: \(\mathrm{Var}(Y)=a\,E[Y]^p\). One can characterize members of the exponential family of distributions using this formula.</p>
+<p>You are given the following statements on the value of \(p\) for a given distribution:</p>
+<div class="items">
+<p>I. Normal (Gaussian) distribution, \(p=0\)</p>
+<p>II. Compound Poisson-gamma distribution, \(1&lt;p&lt;2\)</p>
+<p>III. Inverse Gaussian distribution, \(p=-1\)</p>
+</div>
+<p>Determine which of the above statements are correct.</p>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2017 秋季 S 第 32 題）一族分配的變異數和平均數的關係為冪次函數 \(\mathrm{Var}(Y)=aE[Y]^p\)，可以用來描述指數族的成員。</p>
+<div class="items">
+<p>I. 常態分配，\(p=0\)</p>
+<p>II. 複合 Poisson-gamma 分配，\(1&lt;p&lt;2\)</p>
+<p>III. 逆高斯分配，\(p=-1\)</p>
+</div>
+<p>哪些正確？</p>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：常態的變異數不隨平均數變，\(p=0\)。II 對：複合 Poisson-gamma 就是 Tweedie，\(1&lt;p&lt;2\)。III 錯：逆高斯的變異數是 \(\phi\mu^3\)，\(p=3\)。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（7 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC11-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.2-1</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A random variable \(Y\) belongs to the linear exponential family with \(b(\theta)=\ln(1+e^\theta)\), \(\phi=1\), and \(\theta=0.4\).</p>
+<p>Calculate \(\mathrm{Var}(Y)\).</p>
+<div class="opts">
+<p>(A) 0.2403</p>
+<p>(B) 0.4013</p>
+<p>(C) 0.5987</p>
+<p>(D) 0.3584</p>
+<p>(E) 1.4918</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>線性指數族，\(b(\theta)=\ln(1+e^\theta)\)、\(\phi=1\)、\(\theta=0.4\)。求 \(\mathrm{Var}(Y)\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>這是 Bernoulli。\(b&#x27;(\theta)=\frac{e^\theta}{1+e^\theta}\)，\(\theta=0.4\) 時 \(\mu=\frac{1.4918}{2.4918}=0.5987\)。</p>
+<p>\(b&#x27;&#x27;(\theta)=\frac{e^\theta}{(1+e^\theta)^2}=\mu(1-\mu)=0.5987\times0.4013=0.2403\)。</p>
+<p>(C) 是平均數 \(b&#x27;\)；(B) 是 \(1-\mu\)；(E) 是 \(e^\theta\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(b&#x27;&#x27;\) 可以直接寫成 \(\mu(1-\mu)\)，不用硬微分。</p></div></div></article><article class="exercise concept-q" id="qC11-2-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.2-2</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A gamma GLM has dispersion parameter \(\phi=0.25\). For a particular policy, the fitted mean claim size is 50.</p>
+<p>Calculate the variance of the claim size for this policy.</p>
+<div class="opts">
+<p>(A) 12.5</p>
+<p>(B) 625</p>
+<p>(C) 2,500</p>
+<p>(D) 10,000</p>
+<p>(E) 200</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>gamma GLM，\(\phi=0.25\)，某保單的配適平均理賠金額為 50。求其理賠金額的變異數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>gamma 的變異數 \(\phi\mu^2=0.25\times2500=625\)。</p>
+<p>(A) 是 \(\phi\mu\)（誤用 Poisson 的變異數函數）；(C) 忘了 \(\phi\)；(D) 是 \(\mu^2/\phi\)（把 \(\phi\) 當成形狀參數 \(\alpha\)）；(E) 是 \(\mu/\phi\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(\phi=1/\alpha\)。形狀參數 \(\alpha=4\)，變異數 \(\mu^2/\alpha=625\)，兩種寫法一致。</p></div></div></article><article class="exercise concept-q" id="qC11-2-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.2-3</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following distributions is NOT a member of the linear exponential family (with its usual parameter of interest).</p>
+<div class="opts">
+<p>(A) Poisson with mean \(\lambda\)</p>
+<p>(B) Uniform on \((0,\theta)\)</p>
+<p>(C) Gamma with mean \(\mu\) and fixed shape</p>
+<p>(D) Inverse Gaussian with mean \(\mu\)</p>
+<p>(E) Binomial with fixed \(m\) and probability \(\pi\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪一個分配<strong>不</strong>屬於線性指數族？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\((0,\theta)\) 上的均勻分配，定義域隨參數改變，密度 \(1/\theta\) 也無法寫成 \(\exp[(y\theta-b)/\phi+S]\) 的形式。</p>
+<p>其他四個都在 <a href="ch11.html#s2">11.2 節</a>寫成了線性指數族。</p></div></div></article><article class="exercise concept-q" id="qC11-2-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.2-4</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>For a distribution in the linear exponential family \(f(y)=\exp\left[\frac{y\theta-b(\theta)}{\phi}+S(y,\phi)\right]\), determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. \(E(Y)\) depends on the scale parameter \(\phi\).</p>
+<p>II. \(\mathrm{Var}(Y)=\phi\,b&#x27;&#x27;(\theta)\).</p>
+<p>III. The function \(S(y,\phi)\) affects the mean of \(Y\).</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and II only</p>
+<p>(D) I and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>對線性指數族，下列哪些正確？</p>
+<div class="items">
+<p>I. \(E(Y)\) 和尺度參數 \(\phi\) 有關。</p>
+<p>II. \(\mathrm{Var}(Y)=\phi b&#x27;&#x27;(\theta)\)。</p>
+<p>III. \(S(y,\phi)\) 會影響 \(Y\) 的平均數。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)：只有 II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：\(E(Y)=b&#x27;(\theta)\)，沒有 \(\phi\)。II 對。III 錯：推導 \(E(Y)\) 時對 \(\theta\) 微分，\(S\) 不含 \(\theta\)，微分後消失。</p></div></div></article><article class="exercise concept-q" id="qC11-2-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.2-5</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about the Tweedie distribution is/are true.</p>
+<div class="items">
+<p>I. It has a point mass at zero.</p>
+<p>II. Its variance is proportional to \(\mu^p\) with \(1&lt;p&lt;2\).</p>
+<p>III. It is continuous everywhere on \([0,\infty)\).</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於 Tweedie 分配，下列哪些正確？</p>
+<div class="items">
+<p>I. 在 0 有一個點質量。</p>
+<p>II. 變異數和 \(\mu^p\) 成正比，\(1&lt;p&lt;2\)。</p>
+<p>III. 在 \([0,\infty)\) 上處處連續。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：沒有理賠（\(N=0\)）時 \(Y=0\)，機率 \(e^{-\lambda}\)。II 對。III 錯：0 有點質量，所以是混合型分配，只有在 \(Y&gt;0\) 的部分是連續的。</p></div></div></article><article class="exercise concept-q" id="qC11-2-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.2-6</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A random variable \(Y\) belongs to the linear exponential family with \(b(\theta)=-\ln(-\theta)\), \(\theta=-0.02\), and \(\phi=0.5\).</p>
+<p>Calculate \(\mathrm{Var}(Y)\).</p>
+<div class="opts">
+<p>(A) 25</p>
+<p>(B) 50</p>
+<p>(C) 625</p>
+<p>(D) 1,250</p>
+<p>(E) 2,500</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(b(\theta)=-\ln(-\theta)\)、\(\theta=-0.02\)、\(\phi=0.5\)。求 \(\mathrm{Var}(Y)\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>這是 gamma。\(b&#x27;(\theta)=-1/\theta=50\)（平均數）；\(b&#x27;&#x27;(\theta)=1/\theta^2=2500\)。</p>
+<p>\(\mathrm{Var}=\phi b&#x27;&#x27;=0.5\times2500=1250\)。</p>
+<p>(B) 是平均數；(E) 忘了 \(\phi\)；(A) 是 \(\phi\mu\)。</p></div></div></article><article class="exercise concept-q" id="qC11-2-7"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.2-7</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Four GLMs each have dispersion parameter \(\phi=1\) and the same fitted mean \(\mu=0.5\) for an observation. The response distributions are normal, Poisson, gamma, and inverse Gaussian.</p>
+<p>Determine the correct ordering of the variances of the response for this observation.</p>
+<div class="opts">
+<p>(A) inverse Gaussian &lt; gamma &lt; Poisson &lt; normal</p>
+<p>(B) normal &lt; Poisson &lt; gamma &lt; inverse Gaussian</p>
+<p>(C) Poisson &lt; normal &lt; gamma &lt; inverse Gaussian</p>
+<p>(D) gamma &lt; inverse Gaussian &lt; normal &lt; Poisson</p>
+<p>(E) All four variances are equal</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>四個 GLM 的 \(\phi\) 都是 1，某筆觀察的配適平均都是 0.5，分配分別是常態、Poisson、gamma、逆高斯。變異數由小到大的順序為何？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\mathrm{Var}=\mu^p\)：常態 \(0.5^0=1\)、Poisson \(0.5\)、gamma \(0.25\)、逆高斯 \(0.125\)。</p>
+<p>平均數小於 1 時，冪次越高變異數越小（本章「變異數函數」圖的左半邊）。如果平均數大於 1，順序會整個倒過來，(B) 就是那種情況。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不要背「逆高斯的變異數最大」；要看 \(\mu\) 比 1 大還是小。</p></div></div></article></div></section><section class="unit" id="s3"><h2>11.3 連結函數與預測</h2><h3>一、連結函數的條件</h3>
+<p>連結函數 \(g\) 必須<strong>單調</strong>（monotonic）而且<strong>可微分</strong>（differentiable）。單調才有反函數，才能從 \(\eta\) 唯一地還原 \(\mu=g^{-1}(\eta)\)；可微分是估計（<a href="ch11.html#s4">11.4 節</a>）需要。</p>
+<p>例如 \(g(y)=4-4y\) 可以（遞減也算單調）；\(g(y)=|y|\) 和 \(g(y)=2+3y+3(y-5)^2\) 都不行（先降後升，不單調）。</p>
+<h3>二、典型連結：讓 \(\eta=\theta\)</h3>
+<p>每一個線性指數族的分配都有一個<strong>典型連結</strong>（canonical link）：讓線性預測式直接等於自然參數，\(\eta=\theta\)。</p>
+<div class="box derive">
+<div class="box-t">推導：典型連結 \(g=(b&#x27;)^{-1}\)</div>
+<ol>
+<li>連結的定義：\(g(\mu)=\eta\)。</li>
+<li>典型連結：\(\eta=\theta\)，所以 \(g(\mu)=\theta\)。</li>
+<li>線性指數族：\(\mu=b&#x27;(\theta)\)，代入得 \(g\big(b&#x27;(\theta)\big)=\theta\)。</li>
+<li>所以 \(g\) 是 \(b&#x27;\) 的反函數：\(g=(b&#x27;)^{-1}\)。</li>
+</ol>
+<p>換句話說：<strong>典型連結就是「把 \(\mu\) 寫成 \(\theta\)」的那個函數</strong>，在 <a href="ch11.html#s2">11.2 節</a>把分配寫成線性指數族時已經順便求出來了。</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>分配</th>
+<th>\(b(\theta)\)</th>
+<th>\(\mu=b&#x27;(\theta)\)（平均數函數）</th>
+<th>典型連結 \(g(\mu)=\theta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>常態</td>
+<td>\(\theta^2/2\)</td>
+<td>\(\theta\)</td>
+<td>\(\mu\)（恆等）</td>
+</tr>
+<tr>
+<td>Poisson</td>
+<td>\(e^\theta\)</td>
+<td>\(e^\theta\)</td>
+<td>\(\ln\mu\)</td>
+</tr>
+<tr>
+<td>二項</td>
+<td>\(\ln(1+e^\theta)\)</td>
+<td>\(\frac{e^\theta}{1+e^\theta}\)</td>
+<td>\(\ln\frac{\mu}{1-\mu}\)（logit）</td>
+</tr>
+<tr>
+<td>gamma</td>
+<td>\(-\ln(-\theta)\)</td>
+<td>\(-1/\theta\)</td>
+<td>\(-1/\mu\)</td>
+</tr>
+<tr>
+<td>逆高斯</td>
+<td>\(-\sqrt{-2\theta}\)</td>
+<td>\((-2\theta)^{-1/2}\)</td>
+<td>\(-1/(2\mu^2)\)</td>
+</tr>
+</tbody>
+</table>
+<p>連結乘上常數沒有影響（所有係數一起乘上同一個常數就抵消了），所以 gamma 的典型連結常寫成 \(1/\mu\)，逆高斯寫成 \(1/\mu^2\)。</p>
+<p><strong>實務上的選擇</strong>：常態、Poisson、二項通常就用典型連結；gamma 和逆高斯的典型連結（倒數）很難解釋，而且可能讓平均數變負，所以實務上幾乎都改用 <strong>log 連結</strong>。</p>
+<figure><img src="assets/fig/ch11-links.svg" alt="三種常用連結的平均數函數 。恆等連結的  可以是任何實數；log 連結把  送到正數；logit 連結把  送到 0 和 1 之間。連結函數要讓  落在反應變數合理的範圍裡。" loading="lazy"><figcaption>三種常用連結的平均數函數 \(\mu=g^{-1}(\eta)\)。恆等連結的 \(\mu\) 可以是任何實數；log 連結把 \(\eta\) 送到正數；logit 連結把 \(\eta\) 送到 0 和 1 之間。連結函數要讓 \(\mu\) 落在反應變數合理的範圍裡。</figcaption></figure>
+
+<div class="box key">
+<div class="box-t">典型連結的特別性質：配適值的總和等於觀察值的總和</div>
+<p>講義說「用典型連結時 GLM 的估計是不偏的」，考題（MAS-I-F19:27）也用這個說法。它實際上指的是下面這個性質。</p>
+<p>用典型連結時，對 \(\beta_j\) 的分數方程式（<a href="ch11.html#s4">11.4 節</a>）會化成
+\[\sum_{i=1}^n x_{ij}\,(y_i-\hat\mu_i)=0,\qquad j=0,1,\ldots,k .\]
+取 \(j=0\)（截距，\(x_{i0}=1\)）：\(\sum\hat\mu_i=\sum y_i\)。如果有類別變數，每一個類別也各自成立：<strong>每一類的配適值總和等於觀察值總和</strong>。這叫平衡性質（balance property），對費率釐訂很重要：模型算出來的總保費剛好等於實際的總損失。</p>
+<p>所以考題問「非負的反應變數、要估計不偏」時：log 連結讓平均數為正，而以 log 為典型連結的是 <strong>Poisson</strong>，答案選 Poisson＋log。</p>
+</div>
+<h3>三、預測的計算：係數表 → \(\eta\) → \(\mu\) → 變異數</h3>
+<p>考試最常見的 GLM 題就是這一種，四個步驟：</p>
+<ol>
+<li><strong>找出這位保戶每個變數的值</strong>。類別變數只加上「他所屬的那一類」的係數；基準類別（df 是 0、係數 0）不加。</li>
+<li><strong>加總得到線性預測式</strong> \(\eta=\beta_0+\sum\beta_jx_j\)。</li>
+<li><strong>用平均數函數還原</strong>：\(\mu=g^{-1}(\eta)\)。</li>
+<li><strong>（如果要）變異數</strong>：\(\mathrm{Var}(Y)=\phi V(\mu)\)，例如 gamma 是 \(\phi\mu^2\)、Poisson 是 \(\mu\)。</li>
+</ol>
+<p>常見連結的還原方式：</p>
+<table>
+<thead>
+<tr>
+<th>連結 \(g(\mu)\)</th>
+<th>還原 \(\mu\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(\ln\mu\)</td>
+<td>\(e^\eta\)</td>
+</tr>
+<tr>
+<td>\(\sqrt\mu\)</td>
+<td>\(\eta^2\)</td>
+</tr>
+<tr>
+<td>\(1/\mu\)</td>
+<td>\(1/\eta\)</td>
+</tr>
+<tr>
+<td>\(1/\mu^2\)</td>
+<td>\(\eta^{-1/2}\)</td>
+</tr>
+<tr>
+<td>\(\ln\frac{\mu}{1-\mu}\)</td>
+<td>\(\frac{e^\eta}{1+e^\eta}\)</td>
+</tr>
+</tbody>
+</table>
+<div class="box ex">
+<div class="box-t">例題 11-2：gamma＋log 連結，求平均數與變異數（講義例 11A）</div>
+<p>汽車保單一年的總損失，gamma 分配、log 連結，\(\phi=1/2\)。</p>
+<table>
+<thead>
+<tr>
+<th>參數</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>截距</td>
+<td>2.21</td>
+</tr>
+<tr>
+<td>行駛里程</td>
+<td>0.0004</td>
+</tr>
+<tr>
+<td>年齡類別 1／2／3</td>
+<td>0／−0.4／−0.6</td>
+</tr>
+<tr>
+<td>車型 轎車／雙門跑車／SUV</td>
+<td>0／0.7／0.9</td>
+</tr>
+</tbody>
+</table>
+<p>求年齡類別 2、開雙門跑車、一年 10,000 英里的駕駛人的期望損失和變異數。</p>
+<p><strong>線性預測式</strong>：\(\eta=2.21+0.0004(10{,}000)-0.4+0.7=6.51\)。</p>
+<p><strong>平均數</strong>：\(\mu=e^{6.51}=671.83\)。</p>
+<p><strong>變異數</strong>：gamma 的 \(\mathrm{Var}=\phi\mu^2=671.83^2/2=225{,}675\)。</p>
+</div>
+<p><strong>log 連結的係數是乘數。</strong> 因為 \(\mu=e^{\beta_0+\beta_1x_1+\cdots}=e^{\beta_0}\cdot e^{\beta_1x_1}\cdots\)，某一類的係數 \(\beta\) 代表「平均數乘上 \(e^\beta\)」，這叫<strong>相對係數</strong>（relativity）。費率表就是這樣做出來的。</p>
+<figure><img src="assets/fig/ch11-relativity.svg" alt="例 11A 的係數換成乘數。基準（年齡類別 1、轎車、10,000 英里）的平均是 ；年齡類別 2 乘 ，雙門跑車乘 ，所以 ，和例題相同。" loading="lazy"><figcaption>例 11A 的係數換成乘數。基準（年齡類別 1、轎車、10,000 英里）的平均是 \(e^{6.21}=497.7\)；年齡類別 2 乘 \(e^{-0.4}=0.670\)，雙門跑車乘 \(e^{0.7}=2.014\)，所以 \(497.7\times0.670\times2.014=671.8\)，和例題相同。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 11-3：不是 log 的連結（講義小測驗 11-1）</div>
+<p>gamma 分配、連結 \(g(\mu)=\sqrt\mu\)。係數：截距 18.4、男性 3.1、地區 B 1.0、地區 C 3.5（女性、地區 A 是基準）。變異數是平均數平方的 3 倍。求地區 B 的男性的理賠金額變異數。</p>
+<p>\(\eta=18.4+3.1+1.0=22.5\)；\(\sqrt\mu=22.5\)，\(\mu=506.25\)；\(\mathrm{Var}=3(506.25^2)=768{,}867\)。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 11-4：交互作用與反推（SOA 樣題第 45 題，習題 11.19）</div>
+<p>考試分數（0～10 分）的 GLM，log 連結。係數：截距 −0.1、讀書時數（每 100 小時）0.5、女性 0.5、碩士 −0.1、女性×碩士 0.2。公司想給 Patricia（女性、碩士）「讓期望分數達到 6.0 所需讀書時間」的一半。求要給多少小時。</p>
+<p><strong>線性預測式</strong>（\(x\) 是讀書時數，單位 100 小時）：女性、碩士兩個指標都是 1，交互作用也是 \(1\times1=1\)：
+\[\eta=-0.1+0.5x+0.5-0.1+0.2=0.5+0.5x .\]
+<strong>令期望分數為 6</strong>：\(e^{0.5+0.5x}=6\)，\(0.5+0.5x=\ln6=1.7918\)，\(x=2.5835\)（258.35 小時）。</p>
+<p><strong>取一半</strong>：\(129.2\) 小時，答案 (C)。</p>
+<p><strong>易錯</strong>：忘了交互作用項（得到 \(0.3+0.5x\)，\(x=2.98\)，一半是 149 小時，不在選項裡）；或忘了題目要「一半」。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 11-5：從四格預測值反推交互作用（習題 11.28）</div>
+<p>log 連結，地區（Q 為基準、R）與性別（男為基準、女），含交互作用。預測值：男 Q 148、男 R 545、女 Q 446、女 R 4,024。求「地區 R×女性」的係數。</p>
+<p>log 連結，所以先取對數：\(\ln148=4.9972\)、\(\ln545=6.3008\)、\(\ln446=6.1003\)、\(\ln4024=8.3000\)。</p>
+<p>四格的線性預測式：
+\[\beta_0=4.9972,\quad\beta_0+\beta_R=6.3008,\quad\beta_0+\beta_F=6.1003,\quad\beta_0+\beta_R+\beta_F+\beta_{RF}=8.3000 .\]
+所以 \(\beta_{RF}=8.3000-6.3008-6.1003+4.9972=0.8961\)，答案 (B)。</p>
+<p>換個方式看：交互作用係數是「對數尺度上的差中差」，等於 \(\ln\frac{4024\times148}{545\times446}\)。</p>
+</div>
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li>類別變數的<strong>基準類別</strong>不加任何東西。題目中 df＝0、係數 0.00 的那一列就是基準。</li>
+<li>數值變數要乘上它的值，而且注意單位（「收入（千）」代 100 不是 100,000；「每 100 小時」代 2.58 不是 258）。</li>
+<li><strong>離散參數 \(\phi\) 只影響變異數，不影響平均數</strong>。題目給了 \(\phi\) 但問平均數，\(\phi\) 是干擾。</li>
+<li>gamma 的變異數是 \(\phi\mu^2\)；題目若說「variance parameter \(\phi=2\)」，變異數是 \(2\mu^2\)，不是 \(\mu^2/2\)。</li>
+<li>平方根連結的還原是<strong>平方</strong>；倒數連結的還原是<strong>倒數</strong>。不要順手寫 \(e^\eta\)。</li>
+</ul>
+</div>
+<figure><img src="assets/fig/ch11-canon.svg" alt="習題 11.27：三個模型的係數相同（、、），在  的線性預測式都是 ，但各用自己的典型連結還原：gamma 、二項 、Poisson 。同一個 ，連結不同，預測值天差地遠。" loading="lazy"><figcaption>習題 11.27：三個模型的係數相同（\(\beta_0=2\)、\(\beta_1=1\)、\(\beta_2=-1\)），在 \((X_1,X_2)=(2,1)\) 的線性預測式都是 \(\eta=3\)，但各用自己的典型連結還原：gamma \(-1/3\)、二項 \(0.9526\)、Poisson \(e^3=20.09\)。同一個 \(\eta\)，連結不同，預測值天差地遠。</figcaption></figure>
+
+<div class="box exam">
+<div class="box-t">考試怎麼考：連結與預測</div>
+<ul>
+<li><strong>連結的條件</strong>（MAS-I-F18:27）：單調且可微分。</li>
+<li><strong>典型連結比大小</strong>（MAS-I-S18:25）：同一個 \(\eta\) 代進三個平均數函數比較。</li>
+<li><strong>連結與交互作用</strong>（MAS-I-F19:26）：四格配適值相同，恆等連結下交互作用剛好是 0（\(0.5-0.8-0.4+0.7=0\)），但換成倒數或 log 連結後，在轉換後的尺度上差中差不再是 0。</li>
+<li><strong>大量的「GLM 輸出表」計算題</strong>（S-F15:34、S-F16:32、S-F17:31、S-S16:31、S-S17:29、S-F15:32、MAS-I-S18:24）：照四步驟，最後一步記得用正確的平均數函數；問變異數時記得乘 \(\phi\)。</li>
+<li><strong>SOA 樣題第 45 題型</strong>：含交互作用，又要反推解釋變數。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q11-8"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.8 題</b><small>・講義 p.175・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F18:27] You are given the following three functions of a random variable, \(y\), where \(-\infty&lt;y&lt;\infty\).</p>
+<div class="items">
+<p>I. \(g(y)=2+3y+3(y-5)^2\)</p>
+<p>II. \(g(y)=4-4y\)</p>
+<p>III. \(g(y)=|y|\)</p>
+</div>
+<p>Determine which of the above could be used as link functions in a GLM.</p>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 秋季 MAS-I 第 27 題）\(y\) 的三個函數（\(-\infty&lt;y&lt;\infty\)）：</p>
+<div class="items">
+<p>I. \(g(y)=2+3y+3(y-5)^2\)</p>
+<p>II. \(g(y)=4-4y\)</p>
+<p>III. \(g(y)=|y|\)</p>
+</div>
+<p>哪些可以當 GLM 的連結函數？</p>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>連結函數必須單調且可微分。</p>
+<p>I 是開口向上的拋物線，先降後升，不單調。II 是遞減直線，單調且可微分，可以。III 在 0 先降後升，不單調（在 0 也不可微分）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>遞減的函數也算單調。</p></div></div></article><article class="exercise" id="q11-9"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.9 題</b><small>・講義 p.175・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F19:27] An actuary is asked to model a non-negative response variable and requires that the model produce an unbiased estimate.</p>
+<p>Determine which error structure and link function combination would be the best choice for the modelling request.</p>
+<div class="opts">
+<p>(A) Poisson and Identity</p>
+<p>(B) Compound Poisson-Gamma and Log</p>
+<p>(C) Normal and Identity</p>
+<p>(D) Gamma and Log</p>
+<p>(E) Poisson and Log</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 秋季 MAS-I 第 27 題）精算師要建模一個非負的反應變數，並要求模型的估計不偏。哪一組誤差結構與連結函數最好？</p>
+<div class="opts">
+<p>(A) Poisson 與恆等</p>
+<p>(B) 複合 Poisson-gamma 與 log</p>
+<p>(C) 常態與恆等</p>
+<p>(D) gamma 與 log</p>
+<p>(E) Poisson 與 log</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>非負</strong>：log 連結的平均數函數 \(e^\eta\) 永遠為正，適合非負的反應變數；恆等連結可能預測出負數，(A)、(C) 不好。</p>
+<p><strong>不偏</strong>：用典型連結時，配適值的總和等於觀察值的總和（<a href="ch11.html#s3">11.3 節</a>的平衡性質），這就是題目說的不偏。以 log 為典型連結的分配是 Poisson。gamma 的典型連結是倒數，Tweedie（複合 Poisson-gamma）的典型連結也不是 log，所以 (B)、(D) 雖然常用，卻不符合「不偏」。</p></div></div></article><article class="exercise" id="q11-10"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.10 題</b><small>・講義 p.176・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F19:26] A number of candidate models were fit using the following variables:</p>
+<ul>
+<li>An intercept term</li>
+<li>Variable A—a Yes/No indicator</li>
+<li>Variable B—a Yes/No indicator</li>
+<li>An interaction of Variables A and B</li>
+</ul>
+<p>There are four observations, which were arranged into the following design matrix:
+\[X=\begin{pmatrix}1&amp;0&amp;0&amp;0\\1&amp;1&amp;0&amp;0\\1&amp;0&amp;1&amp;0\\1&amp;1&amp;1&amp;1\end{pmatrix}\]
+This data was fit using three different link functions:</p>
+<div class="items">
+<p>I. Identity</p>
+<p>II. Inverse</p>
+<p>III. Log</p>
+</div>
+<p>The predicted values, given below, were the same under all three models:
+\[\hat y=\begin{pmatrix}0.50\\0.80\\0.40\\0.70\end{pmatrix}\]
+Determine for which of the above link functions the estimated interaction coefficient is non-zero.</p>
+<div class="opts">
+<p>(A) Identity, Inverse, and Log</p>
+<p>(B) Identity and Inverse only</p>
+<p>(C) Identity and Log only</p>
+<p>(D) Inverse and Log only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 秋季 MAS-I 第 26 題）候選模型使用：截距、變數 A（是／否）、變數 B（是／否）、A 與 B 的交互作用。四筆觀察的設計矩陣為
+分別用三種連結配適：I. 恆等　II. 倒數　III. log。三個模型的預測值都相同：
+哪些連結下估計的交互作用係數不是 0？</p>
+<div class="opts">
+<p>(A) 恆等、倒數、log</p>
+<p>(B) 只有恆等、倒數</p>
+<p>(C) 只有恆等、log</p>
+<p>(D) 只有倒數、log</p>
+<p>(E) 以上皆非</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>四個參數、四筆觀察，模型剛好配適，所以 \(g(\hat y_i)\) 就等於線性預測式：
+\[\beta_0=g(0.5),\quad\beta_0+\beta_A=g(0.8),\quad\beta_0+\beta_B=g(0.4),\quad\beta_0+\beta_A+\beta_B+\beta_{AB}=g(0.7).\]
+所以交互作用係數是<strong>轉換後的差中差</strong>：\(\beta_{AB}=g(0.7)-g(0.8)-g(0.4)+g(0.5)\)。</p>
+<ul>
+<li>恆等：\(0.7-0.8-0.4+0.5=0\)。</li>
+<li>倒數：\(1.4286-1.25-2.5+2=-0.3214\ne0\)。</li>
+<li>log：\(\ln0.7-\ln0.8-\ln0.4+\ln0.5=\ln\frac{0.7\times0.5}{0.8\times0.4}=\ln1.09375=0.0896\ne0\)。</li>
+</ul>
+<p>只有倒數和 log 的交互作用不是 0。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>「有沒有交互作用」要看在哪一個尺度上。原始尺度上剛好可加，取 log 或倒數之後就不可加了。</p></div></div></article><article class="exercise" id="q11-13"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.13 題</b><small>・講義 p.178・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[S-F15:34] You are given the following information for a model of vehicle claim counts by policy:</p>
+<div class="items">
+<p>(i) The response distribution is Poisson and the model has a log link function.</p>
+<p>(ii) The model uses two categorical explanatory variables: Number of Youthful Drivers and Number of Adult Drivers.</p>
+<p>(iii) The parameters of the model are given:</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Degrees of Freedom</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>−2.663</td>
+</tr>
+<tr>
+<td>Number of Youthful Drivers = 0</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Number of Youthful Drivers = 1</td>
+<td>1</td>
+<td>0.132</td>
+</tr>
+<tr>
+<td>Number of Adult Drivers = 1</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Number of Adult Drivers = 2</td>
+<td>1</td>
+<td>−0.031</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the predicted claim count for a policy with one adult driver and one youthful driver.</p>
+<div class="opts">
+<p>(A) Less than 0.072</p>
+<p>(B) At least 0.072, but less than 0.074</p>
+<p>(C) At least 0.074, but less than 0.076</p>
+<p>(D) At least 0.076, but less than 0.078</p>
+<p>(E) At least 0.078</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2015 秋季 S 第 34 題）每張保單的車輛理賠次數模型：Poisson 分配、log 連結；兩個類別變數：年輕駕駛人數、成年駕駛人數。</p>
+<p>求一位成年駕駛人、一位年輕駕駛人的保單的預測理賠次數。</p>
+<div class="items">
+<p>(B) 至少 0.072，小於 0.074</p>
+<p>(C) 至少 0.074，小於 0.076</p>
+<p>(D) 至少 0.076，小於 0.078</p>
+<p>(E) 至少 0.078</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>年輕駕駛人的基準是 0 人，這張保單有 1 人，加 0.132；成年駕駛人的基準是 <strong>1 人</strong>，這張保單剛好 1 人，不加。
+\[\eta=-2.663+0.132=-2.531,\qquad\mu=e^{-2.531}=0.07958 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>「一位成年駕駛人」是成年那一欄的基準類別。誤加 −0.031 會得到 \(e^{-2.562}=0.0772\)，落在 (D)。</p></div></div></article><article class="exercise" id="q11-17"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.17 題</b><small>・講義 p.180・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:24] You are given the following output from a model constructed to predict the probability that a Homeowner's policy will retain into the next policy term:</p>
+<p>Response variable: retention; Response distribution: binomial; Link: square root; Pseudo \(R^2\): 0.6521</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>df</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>0.6102</td>
+</tr>
+<tr>
+<td>Tenure &lt; 5 years</td>
+<td>0</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>Tenure ≥ 5 years</td>
+<td>1</td>
+<td>0.1320</td>
+</tr>
+<tr>
+<td>Prior Rate Change &lt; 0%</td>
+<td>1</td>
+<td>0.0160</td>
+</tr>
+<tr>
+<td>Prior Rate Change [0%, 10%]</td>
+<td>0</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>Prior Rate Change &gt; 10%</td>
+<td>1</td>
+<td>−0.0920</td>
+</tr>
+<tr>
+<td>Amount of Insurance (000's)</td>
+<td>1</td>
+<td>0.0015</td>
+</tr>
+</tbody>
+</table>
+<p>Let \(\pi\) be the probability that a policy with 4 years of tenure that experienced a 12% prior rate increase and has 225,000 in amount of insurance will retain into the next policy term.</p>
+<p>Calculate the value of \(\pi\).</p>
+<div class="opts">
+<p>(A) Less than 0.60</p>
+<p>(B) At least 0.60, but less than 0.70</p>
+<p>(C) At least 0.70, but less than 0.80</p>
+<p>(D) At least 0.80, but less than 0.90</p>
+<p>(E) At least 0.90</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 春季 MAS-I 第 24 題）預測住宅保單續保機率的模型：反應變數 retention、二項分配、<strong>平方根連結</strong>、pseudo \(R^2=0.6521\)。</p>
+<p>\(\pi\) 是一張投保 4 年、前次費率調漲 12%、保險金額 225,000 的保單續保的機率。求 \(\pi\)。</p>
+<div class="items">
+<p>(B) 至少 0.60，小於 0.70</p>
+<p>(C) 至少 0.70，小於 0.80</p>
+<p>(D) 至少 0.80，小於 0.90</p>
+<p>(E) 至少 0.90</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>二項分配的平均數就是機率 \(\pi\)。</p>
+<ul>
+<li>年資 4 年：基準類別，加 0。</li>
+<li>費率調漲 12%：屬於「&gt; 10%」，加 −0.0920。</li>
+<li>保險金額以千為單位：\(225\times0.0015=0.3375\)。</li>
+</ul>
+<p>\(\sqrt\pi=\eta=0.6102-0.0920+0.3375=0.8557\)，\(\pi=0.8557^2=0.7322\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>連結是平方根，不是 logit；還原用平方。pseudo \(R^2\) 是干擾資訊。</p></div></div></article><article class="exercise" id="q11-19"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.19 題</b><small>・講義 p.182・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #45] The actuarial student committee of a large firm has collected data on exam scores. A generalized linear model where the target is the exam score on a 0–10 scale is constructed using a log link, resulting in the following estimated coefficients</p>
+<table>
+<thead>
+<tr>
+<th>Predictor Variables</th>
+<th>Coefficient</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>−0.1</td>
+</tr>
+<tr>
+<td>Study Time (in units of 100 hours)</td>
+<td>0.5</td>
+</tr>
+<tr>
+<td>Gender (1 for Female, 0 for Male)</td>
+<td>0.5</td>
+</tr>
+<tr>
+<td>Master's degree (1 for Yes, 0 for No)</td>
+<td>−0.1</td>
+</tr>
+<tr>
+<td>Interaction of Gender and Master's degree</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<p>The company is about to offer a job to Patricia, who is a female with a Master's degree. It would like to offer her half of the study time that will result in an expected exam score of 6.0.</p>
+<p>Calculate the amount of study time that the company should offer Patricia.</p>
+<div class="opts">
+<p>(A) 123 hours</p>
+<p>(B) 126 hours</p>
+<p>(C) 129 hours</p>
+<p>(D) 132 hours</p>
+<p>(E) 135 hours</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 45 題）精算學生委員會蒐集了考試成績。以 0～10 分的考試分數為目標、log 連結建立 GLM，係數如下：</p>
+<p>公司要錄取 Patricia（女性、有碩士學位），想給她「讓期望分數達到 6.0 所需讀書時間」的一半。求應該給多少讀書時間。</p>
+<div class="opts">
+<p>(A) 123 小時　(B) 126 小時　(C) 129 小時　(D) 132 小時　(E) 135 小時</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>以 \(x\) 表示讀書時數（單位 100 小時）。女性＝1、碩士＝1、交互作用＝\(1\times1=1\)：
+\[\eta=-0.1+0.5x+0.5-0.1+0.2=0.5+0.5x .\]
+log 連結：\(e^{0.5+0.5x}=6\)，\(0.5+0.5x=\ln6=1.791759\)，\(x=2.583519\)。</p>
+<p>給一半，換成小時：\(0.5\times2.583519\times100=129.18\) 小時。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>漏掉交互作用得到 149 小時；忘了「一半」得到 258 小時；兩者都不在選項中，看到選項對不上就回頭檢查。</p></div></div></article><article class="exercise" id="q11-20"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.20 題</b><small>・講義 p.182・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You have estimated the following generalized linear model:
+\[g(\mu_i)=0.8+0.6x_{i1}+1.4x_{i2}\]
+The distribution of \(Y\) satisfies \(\mathrm{Var}(Y)=0.5\,E[Y]^3\). The link function is \(g(\mu)=\sqrt\mu\).</p>
+<p>Determine the variance of the response when \(x_1=2\) and \(x_2=1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>估計出的 GLM 為 \(g(\mu_i)=0.8+0.6x_{i1}+1.4x_{i2}\)。\(Y\) 的分配滿足 \(\mathrm{Var}(Y)=0.5E[Y]^3\)，連結 \(g(\mu)=\sqrt\mu\)。求 \(x_1=2\)、\(x_2=1\) 時反應變數的變異數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>772.40</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=0.8+0.6(2)+1.4(1)=3.4\)；平方根連結，\(\mu=3.4^2=11.56\)。</p>
+<p>\(\mathrm{Var}=0.5\times11.56^3=0.5\times1544.80=772.40\)。</p>
+<p>（變異數和平均數的三次方成正比，這是逆高斯。）</p></div></div></article><article class="exercise" id="q11-21"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.21 題</b><small>・講義 p.182・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[S-S17:29] You are given the following GLM output:</p>
+<p>Response variable: Pure Premium; Response distribution: Gamma; Link: log; Scale parameter (\(\phi\)): 1</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>df</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>3.25</td>
+</tr>
+<tr>
+<td>Risk Group 1</td>
+<td>0</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>Risk Group 2</td>
+<td>1</td>
+<td>0.30</td>
+</tr>
+<tr>
+<td>Risk Group 3</td>
+<td>1</td>
+<td>0.40</td>
+</tr>
+<tr>
+<td>Vehicle Symbol 1</td>
+<td>0</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>Vehicle Symbol 2</td>
+<td>1</td>
+<td>0.45</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the variance of the pure premium for an insured in Risk Group 3 with Vehicle Symbol Group 2.</p>
+<div class="opts">
+<p>(A) Less than 3,000</p>
+<p>(B) At least 3,000, but less than 4,000</p>
+<p>(C) At least 4,000, but less than 5,000</p>
+<p>(D) At least 5,000, but less than 6,000</p>
+<p>(E) At least 6,000</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2017 春季 S 第 29 題）GLM 輸出：純保費、gamma、log 連結、尺度參數 \(\phi=1\)。</p>
+<p>求風險組 3、車輛代號 2 的被保險人純保費的變異數。</p>
+<div class="items">
+<p>(B) 至少 3,000，小於 4,000</p>
+<p>(C) 至少 4,000，小於 5,000</p>
+<p>(D) 至少 5,000，小於 6,000</p>
+<p>(E) 至少 6,000</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\mu=e^{3.25+0.40+0.45}=e^{4.1}=60.340\)。gamma 的變異數 \(\phi\mu^2=60.340^2=3640.95\)。</p></div></div></article><article class="exercise" id="q11-24"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.24 題</b><small>・講義 p.184・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>A generalized linear model with an inverse Gaussian response uses the link \(g(\mu)=1/\mu^2\). The model has one explanatory variable \(x\) and an intercept. The estimated parameters are \(\mathbf b=(0.0135,\,0.0582)&#x27;\).</p>
+<p>Let \(\mu_1\) be the mean of the response when \(x=10\). Let \(\mu_2\) be the mean of the response when \(x=11\).</p>
+<p>Determine \(\mu_2-\mu_1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>逆高斯反應的 GLM 使用連結 \(g(\mu)=1/\mu^2\)，有一個解釋變數 \(x\) 與截距，估計值 \(\mathbf b=(0.0135,\,0.0582)&#x27;\)。\(\mu_1\) 是 \(x=10\) 時的平均數，\(\mu_2\) 是 \(x=11\) 時的平均數。求 \(\mu_2-\mu_1\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>−0.0590</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(1/\mu^2=0.0135+0.0582x\)，所以 \(\mu=(0.0135+0.0582x)^{-1/2}\)。</p>
+<ul>
+<li>\(x=10\)：\(\eta=0.5955\)，\(\mu_1=0.5955^{-1/2}=1.2959\)。</li>
+<li>\(x=11\)：\(\eta=0.6537\)，\(\mu_2=0.6537^{-1/2}=1.2368\)。</li>
+</ul>
+<p>\(\mu_2-\mu_1=-0.0590\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(\eta\) 變大時 \(\mu\) 變小，因為連結是遞減函數；答案是負的。</p></div></div></article><article class="exercise" id="q11-26"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.26 題</b><small>・講義 p.185・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[Version of S-F15:32] A GLM is used to model claim size. You are given the following information about the model:</p>
+<div class="items">
+<p>(i) Claim size follows a Gamma distribution.</p>
+<p>(ii) Log is the selected link function.</p>
+<p>(iii) Variance parameter \(\phi\) is estimated to be 2.</p>
+<p>(iv) Model Output:</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>\(b\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(Intercept)</td>
+<td>2.32</td>
+</tr>
+<tr>
+<td>Location—Urban</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>Location—Rural</td>
+<td>−0.64</td>
+</tr>
+<tr>
+<td>Gender—Female</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>Gender—Male</td>
+<td>0.76</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the variance of the predicted claim size for a rural male.</p>
+<div class="opts">
+<p>(A) Less than 25</p>
+<p>(B) At least 25, but less than 100</p>
+<p>(C) At least 100, but less than 175</p>
+<p>(D) At least 175, but less than 250</p>
+<p>(E) At least 250</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（改編自 2015 秋季 S 第 32 題）理賠金額的 GLM：gamma 分配、log 連結、變異數參數 \(\phi\) 估計為 2。</p>
+<p>求鄉村男性的理賠金額變異數。</p>
+<div class="items">
+<p>(B) 至少 25，小於 100</p>
+<p>(C) 至少 100，小於 175</p>
+<p>(D) 至少 175，小於 250</p>
+<p>(E) 至少 250</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\ln\mu=2.32-0.64+0.76=2.44\)，\(\mu=e^{2.44}=11.473\)。</p>
+<p>gamma 的變異數 \(\phi\mu^2=2(11.473^2)=263.26\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>用 \(\mu^2/\phi=65.8\)（把 \(\phi\) 當成形狀參數 \(\alpha\)）會選 (B)。題目說 \(\phi\) 是「變異數參數」，變異數是 \(\phi\mu^2\)。</p></div></div></article><article class="exercise" id="q11-27"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.27 題</b><small>・講義 p.186・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:25] Three separate GLMs are fit using the following model form: \(\beta_0+\beta_1X_1+\beta_2X_2\).</p>
+<p>The following error distributions were used for the three GLMs. Each model also used their canonical link functions: Model I: gamma; Model II: Poisson; Model III: binomial.</p>
+<p>When fit to the data, all three models resulted in the same parameter estimates: \(\beta_0=2.0\), \(\beta_1=1.0\), \(\beta_2=-1.0\).</p>
+<p>Determine the correct ordering of the models' predicted values at observed point \((X_1,X_2)=(2,1)\).</p>
+<div class="opts">
+<p>(A) I &lt; II &lt; III</p>
+<p>(B) I &lt; III &lt; II</p>
+<p>(C) II &lt; I &lt; III</p>
+<p>(D) II &lt; III &lt; I</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 春季 MAS-I 第 25 題）三個 GLM 都用模型形式 \(\beta_0+\beta_1X_1+\beta_2X_2\)，各自使用典型連結：模型 I gamma、模型 II Poisson、模型 III 二項。配適後三個模型的參數估計相同：\(\beta_0=2.0\)、\(\beta_1=1.0\)、\(\beta_2=-1.0\)。在觀察點 \((X_1,X_2)=(2,1)\)，三個模型預測值的大小順序為何？</p>
+<div class="opts">
+<p>(A) I &lt; II &lt; III　(B) I &lt; III &lt; II　(C) II &lt; I &lt; III　(D) II &lt; III &lt; I　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=2+1(2)-1(1)=3\)，再用各自典型連結的反函數：</p>
+<ul>
+<li>gamma：\(g(\mu)=-1/\mu\)，\(\mu=-1/3=-0.333\)。</li>
+<li>Poisson：\(g(\mu)=\ln\mu\)，\(\mu=e^3=20.09\)。</li>
+<li>二項：\(g(\mu)=\ln\frac{\mu}{1-\mu}\)，\(\mu=\frac{e^3}{1+e^3}=0.9526\)。</li>
+</ul>
+<p>順序 I &lt; III &lt; II。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>gamma 的典型連結有負號（\(-1/\mu\)）。如果用 \(1/\mu\)，gamma 的預測是 \(1/3\)，順序還是 I &lt; III &lt; II，這題剛好不影響，但其他題可能會。</p></div></div></article><article class="exercise" id="q11-28"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.28 題</b><small>・講義 p.186・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:39] A GLM was used to estimate the expected losses per customer across gender and territory. The following information is provided:</p>
+<div class="items">
+<p>(i) The link function selected is log.</p>
+<p>(ii) Q is the base level for Territory.</p>
+<p>(iii) Male is the base level for Gender.</p>
+<p>(iv) Interaction terms are included in the model.</p>
+</div>
+<p>The GLM produced the following predicted values for expected loss per customer:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Territory Q</th>
+<th>Territory R</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Male</td>
+<td>148</td>
+<td>545</td>
+</tr>
+<tr>
+<td>Female</td>
+<td>446</td>
+<td>4,024</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the estimated beta for the interaction of Territory R and Female.</p>
+<div class="opts">
+<p>(A) Less than 0.85</p>
+<p>(B) At least 0.85, but less than 0.95</p>
+<p>(C) At least 0.95, but less than 1.05</p>
+<p>(D) At least 1.05, but less than 1.15</p>
+<p>(E) At least 1.15</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 春季 MAS-I 第 39 題）GLM 估計每位客戶的期望損失，依性別與地區分類：log 連結；地區的基準是 Q；性別的基準是男性；模型含交互作用。預測值：</p>
+<p>求「地區 R×女性」交互作用的係數估計值。</p>
+<div class="items">
+<p>(B) 至少 0.85，小於 0.95</p>
+<p>(C) 至少 0.95，小於 1.05</p>
+<p>(D) 至少 1.05，小於 1.15</p>
+<p>(E) 至少 1.15</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>先取對數：4.9972、6.3008、6.1003、8.3000。
+\[\beta_0=4.9972,\ \ \beta_0+\beta_R=6.3008,\ \ \beta_0+\beta_F=6.1003,\ \ \beta_0+\beta_R+\beta_F+\beta_{RF}=8.3000 .\]
+\(\beta_0+\beta_R+\beta_F=6.3008+6.1003-4.9972=7.4039\)，所以 \(\beta_{RF}=8.3000-7.4039=0.8961\)。</p>
+<p>一步算法：\(\beta_{RF}=\ln\frac{4024\times148}{545\times446}=\ln2.4502=0.8961\)。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（10 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC11-3-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.3-1</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine the canonical link function for the inverse Gaussian distribution, up to a multiplicative constant.</p>
+<div class="opts">
+<p>(A) \(1/\mu^2\)</p>
+<p>(B) \(1/\mu\)</p>
+<p>(C) \(\ln\mu\)</p>
+<p>(D) \(\mu^3\)</p>
+<p>(E) \(\ln\dfrac{\mu}{1-\mu}\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>逆高斯分配的典型連結（不計常數倍）是哪一個？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>逆高斯寫成線性指數族時 \(\theta=-\frac{1}{2\mu^2}\)，典型連結 \(g(\mu)=\theta=-\frac{1}{2\mu^2}\)，去掉常數倍就是 \(1/\mu^2\)。</p>
+<p>(B) 是 gamma；(C) 是 Poisson；(E) 是二項；(D) 是逆高斯的<strong>變異數函數</strong>，不是連結。</p></div></div></article><article class="exercise concept-q" id="qC11-3-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.3-2</b><small>仿 SOA 樣題・跨章：第 13 章・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A Poisson GLM with a log link for annual claim counts has the following estimates: intercept \(-1.2\), Territory B \(0.3\) (Territory A is the base), Young driver \(0.5\) (Adult is the base).</p>
+<p>Calculate the probability that a young driver in Territory B has no claims in a year.</p>
+<div class="opts">
+<p>(A) 0.3297</p>
+<p>(B) 0.4884</p>
+<p>(C) 0.5116</p>
+<p>(D) 0.6703</p>
+<p>(E) 0.6977</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>理賠次數的 Poisson GLM（log 連結）：截距 −1.2、地區 B 0.3（A 為基準）、年輕駕駛 0.5（成年為基準）。求地區 B 的年輕駕駛人一年沒有理賠的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=-1.2+0.3+0.5=-0.4\)，\(\mu=e^{-0.4}=0.6703\)。</p>
+<p>Poisson 的 \(\Pr(N=0)=e^{-\mu}=e^{-0.6703}=0.5116\)。</p>
+<p>(D) 是平均數本身；(A) 是 \(1-\mu\)；(B) 是 \(1-0.5116\)（至少一次理賠的機率）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>GLM 給的是平均數；要機率還得再套用分配。</p></div></div></article><article class="exercise concept-q" id="qC11-3-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.3-3</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>In a GLM with a log link, the coefficient for male drivers is 0.20 (female is the base level). All other variables are held fixed.</p>
+<p>Determine the effect of being male on the expected response.</p>
+<div class="opts">
+<p>(A) The expected response is 0.20 higher</p>
+<p>(B) The expected response is 20.0% higher</p>
+<p>(C) The expected response is 22.1% higher</p>
+<p>(D) The expected response is 18.1% higher</p>
+<p>(E) The expected response is 2.2% higher</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>log 連結的 GLM，男性的係數是 0.20（女性為基準），其他變數不變。男性對期望反應的影響為何？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>log 連結下 \(\mu=e^{\eta}\)，男性多出 0.20，平均數乘上 \(e^{0.20}=1.2214\)，也就是高 22.1%。</p>
+<p>(B) 是近似值 \(e^\beta\approx1+\beta\)，係數小時接近但不精確；(A) 是恆等連結的解讀；(D) 是 \(1-e^{-0.2}\)。</p></div></div></article><article class="exercise concept-q" id="qC11-3-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.3-4</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A gamma GLM uses the link \(g(\mu)=1/\mu\) with estimates \(b_0=0.05\) and \(b_1=0.002\), and dispersion parameter \(\phi=0.5\).</p>
+<p>Calculate the variance of the response when \(x=10\).</p>
+<div class="opts">
+<p>(A) 7.14</p>
+<p>(B) 14.29</p>
+<p>(C) 102.04</p>
+<p>(D) 204.08</p>
+<p>(E) 408.16</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>gamma GLM，連結 \(1/\mu\)，\(b_0=0.05\)、\(b_1=0.002\)，\(\phi=0.5\)。求 \(x=10\) 時反應變數的變異數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=0.05+0.002(10)=0.07\)，倒數連結：\(\mu=1/0.07=14.286\)。</p>
+<p>\(\mathrm{Var}=\phi\mu^2=0.5\times204.08=102.04\)。</p>
+<p>(B) 是平均數；(D) 忘了 \(\phi\)；(E) 是 \(\mu^2/\phi\)；(A) 是 \(\phi\mu\)。</p></div></div></article><article class="exercise concept-q" id="qC11-3-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.3-5</b><small>仿 SOA 樣題・跨章：第 12 章・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A binomial GLM with a logit link models the probability of hospitalization. The estimates are intercept \(-1.5\) and smoker indicator \(0.8\).</p>
+<p>Calculate the fitted probability of hospitalization for a smoker.</p>
+<div class="opts">
+<p>(A) 0.1824</p>
+<p>(B) 0.3000</p>
+<p>(C) 0.4966</p>
+<p>(D) 0.6682</p>
+<p>(E) 0.3318</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>住院機率的二項 GLM（logit 連結）：截距 −1.5、吸菸指標 0.8。求吸菸者的配適住院機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=-1.5+0.8=-0.7\)，\(\pi=\frac{e^{-0.7}}{1+e^{-0.7}}=\frac{0.4966}{1.4966}=0.3318\)。</p>
+<p>(C) 是 \(e^{\eta}\)（誤用 log 連結）；(A) 漏了吸菸係數；(D) 是 \(1-\pi\)；(B) 是把 \(\eta\) 直接加上 1（\(-0.7+1\)）。</p></div></div></article><article class="exercise concept-q" id="qC11-3-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.3-6</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about link functions is/are true.</p>
+<div class="items">
+<p>I. A link function must be monotonic and differentiable.</p>
+<p>II. For a gamma response, the canonical link is the one most commonly used in practice.</p>
+<p>III. Multiplying a canonical link by a constant does not change the fitted values.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於連結函數，下列哪些正確？</p>
+<div class="items">
+<p>I. 連結函數必須單調且可微分。</p>
+<p>II. gamma 反應實務上最常用的是典型連結。</p>
+<p>III. 典型連結乘上常數不會改變配適值。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對。II 錯：gamma 的典型連結是倒數，難解釋又可能讓平均數變負，實務上幾乎都用 log。III 對：所有係數一起乘上同一個常數就抵消，配適值不變。</p></div></div></article><article class="exercise concept-q" id="qC11-3-7"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.3-7</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A gamma GLM with a log link has dispersion parameter \(\phi=0.25\). For a policy with fitted mean 200, calculate the coefficient of variation (standard deviation divided by mean) of the response.</p>
+<div class="opts">
+<p>(A) 0.0025</p>
+<p>(B) 0.25</p>
+<p>(C) 0.50</p>
+<p>(D) 2.00</p>
+<p>(E) 4.00</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>gamma GLM（log 連結），\(\phi=0.25\)。配適平均為 200 的保單，反應變數的變異係數（標準差除以平均數）是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\mathrm{Var}=\phi\mu^2=0.25\times40000=10000\)，標準差 100，變異係數 \(100/200=0.5\)。</p>
+<p>一般地，gamma 的變異係數是 \(\sqrt{\phi\mu^2}/\mu=\sqrt\phi\)，<strong>和平均數無關</strong>，所以平均數 200 其實用不到。這就是「gamma 適合理賠金額」的原因之一：大金額和小金額的相對波動差不多。</p></div></div></article><article class="exercise concept-q" id="qC11-3-8"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.3-8</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A Poisson GLM with the canonical link includes an intercept and a categorical variable for territory (A, B, C). In the data, policies in Territory B had a total of 37 claims, and the total over all territories was 120 claims.</p>
+<p>Calculate the sum of the fitted claim counts for the policies in Territory B.</p>
+<div class="opts">
+<p>(A) 37</p>
+<p>(B) 40</p>
+<p>(C) 120</p>
+<p>(D) 83</p>
+<p>(E) It cannot be determined from the information given</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Poisson GLM 用典型連結，含截距與地區類別變數（A、B、C）。資料中地區 B 的保單共有 37 次理賠，全部地區共 120 次。求地區 B 的保單配適理賠次數的總和。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>典型連結的分數方程式是 \(\sum_ix_{ij}(y_i-\hat\mu_i)=0\)。地區 B 的指標變數 \(x_{iB}\) 只在 B 的保單等於 1，所以 \(\sum_{i\in B}\hat\mu_i=\sum_{i\in B}y_i=37\)。</p>
+<p>這就是平衡性質：每一類的配適值總和等於觀察值總和。(B) 是把 120 平分成三份。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>這個性質需要「典型連結」和「該類有自己的指標變數」。換成 gamma＋log 就不一定成立。</p></div></div></article><article class="exercise concept-q" id="qC11-3-9"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.3-9</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A GLM with two binary predictors and their interaction produced the following fitted means:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>B = 0</th>
+<th>B = 1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A = 0</td>
+<td>100</td>
+<td>150</td>
+</tr>
+<tr>
+<td>A = 1</td>
+<td>200</td>
+<td>300</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the interaction coefficient if the model uses a log link.</p>
+<div class="opts">
+<p>(A) 0</p>
+<p>(B) 0.405</p>
+<p>(C) 50</p>
+<p>(D) −0.288</p>
+<p>(E) 0.693</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個二元變數加交互作用的 GLM，配適平均如表。若模型用 log 連結，交互作用係數是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>log 連結下，交互作用係數是對數尺度上的差中差：
+\[\ln300-\ln200-\ln150+\ln100=\ln\frac{300\times100}{200\times150}=\ln1=0 .\]
+四格的比例關係剛好是「乘法可加」：A 讓平均數乘 2、B 讓平均數乘 1.5，兩者一起就是乘 3，沒有額外的交互作用。</p>
+<p>如果是恆等連結，交互作用是 \(300-200-150+100=50\)，即 (C)。(B) 是 \(\ln1.5\)（B 的主效果）；(E) 是 \(\ln2\)（A 的主效果）。</p></div></div></article><article class="exercise concept-q" id="qC11-3-10"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.3-10</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A Poisson GLM uses the link \(g(\mu)=\sqrt\mu\). For a policy, the linear predictor equals 2.5.</p>
+<p>Calculate the variance of the claim count for this policy.</p>
+<div class="opts">
+<p>(A) 1.58</p>
+<p>(B) 2.50</p>
+<p>(C) 6.25</p>
+<p>(D) 12.18</p>
+<p>(E) 39.06</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Poisson GLM，連結 \(\sqrt\mu\)，某保單的線性預測式為 2.5。求理賠次數的變異數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平方根連結，\(\mu=2.5^2=6.25\)。Poisson 的變異數等於平均數，6.25。</p>
+<p>(E) 是 \(\mu^2\)（誤用 gamma 的變異數函數）；(D) 是 \(e^{2.5}\)（誤用 log 連結）；(B) 是 \(\eta\) 本身。</p></div></div></article></div></section><section class="unit" id="s4"><h2>11.4 估計：最大概似、分數與資訊</h2><h3>一、用最大概似法估計係數</h3>
+<p>GLM 的係數用<strong>最大概似估計</strong>（maximum likelihood estimation，MLE）。步驟：</p>
+<ol>
+<li>寫出對數概似函數 \(\ell(\boldsymbol\beta)=\sum\ln f(y_i)\)，其中 \(\mu_i=g^{-1}(\mathbf x_i&#x27;\boldsymbol\beta)\)。</li>
+<li>對每個 \(\beta_j\) 偏微分。這些偏導數叫<strong>分數</strong>（score），\(U_j=\partial\ell/\partial\beta_j\)。</li>
+<li>令所有分數等於 0，得到 \(k+1\) 條方程式、\(k+1\) 個未知數。</li>
+<li>通常沒有公式解，用<strong>反覆加權最小平方法</strong>（iterated weighted least squares，IWLS）數值求解。</li>
+</ol>
+<p>（這裡的「分數」和<a href="ch08.html">第 8 章</a>主成分的分數無關，只是同名。）</p>
+<p><strong>線性迴歸是特例</strong>：常態＋恆等連結時，對數概似是 \(-\sum(y_i-\beta_0-\beta_1x_i)^2/(2\sigma^2)\) 加上常數。極大化它就是極小化殘差平方和，所以 <strong>MLE 等於最小平方估計</strong>。分數方程式就是<a href="ch03.html">第 3 章</a>的正規方程式，解出 \(b_1=\frac{\sum(x_i-\bar x)(y_i-\bar y)}{\sum(x_i-\bar x)^2}\)、\(b_0=\bar y-b_1\bar x\)。</p>
+<h3>二、資訊矩陣與係數的變異數</h3>
+<p>把對數概似的二階偏導數排成矩陣，取期望值再加負號，就是<strong>資訊矩陣</strong>（information matrix）\(\mathcal I(\boldsymbol\beta)\)。它也是分數的共變異數矩陣。</p>
+<p>MLE 有兩個重要性質：<strong>一致</strong>（consistent，樣本越大越接近真值），而且<strong>漸近常態</strong>，共變異數矩陣等於資訊矩陣的反矩陣：
+\[\mathrm{Var}(\hat{\boldsymbol\beta})\approx\mathcal I(\boldsymbol\beta)^{-1}.\]
+係數的標準誤、\(z\) 檢定（<a href="ch14.html">第 14 章</a>）都從這裡來。</p>
+<p><strong>驗證：簡單迴歸。</strong> 對數概似的二階偏導數是 \(-n/\sigma^2\)、\(-\sum x_i/\sigma^2\)、\(-\sum x_i^2/\sigma^2\)，不含 \(y\)，所以
+\[\mathcal I=\frac{1}{\sigma^2}\begin{pmatrix}n&amp;\sum x_i\\\sum x_i&amp;\sum x_i^2\end{pmatrix}=\frac{X&#x27;X}{\sigma^2},\qquad \mathcal I^{-1}=\sigma^2(X&#x27;X)^{-1},\]
+正好是<a href="ch03.html">第 3 章</a>的係數共變異數矩陣。</p>
+<div class="box ex">
+<div class="box-t">例題 11-6：單一參數的分數與資訊（Poisson）</div>
+<p>20 筆 Poisson 觀察值，總和 \(\sum x_i=75\)。</p>
+<p><strong>對數概似</strong>：\(\ell(\theta)=\sum x_i\ln\theta-n\theta-\sum\ln x_i!=75\ln\theta-20\theta+\text{常數}\)。</p>
+<p><strong>分數</strong>：\(U(\theta)=\ell&#x27;(\theta)=75/\theta-20\)。令它為 0，\(\hat\theta=75/20=3.75=\bar x\)。</p>
+<p><strong>資訊</strong>：\(-\ell&#x27;&#x27;(\theta)=75/\theta^2\)；取期望值（\(E\sum x_i=n\theta\)）得 \(\mathcal I(\theta)=n/\theta=20/\theta\)。在 \(\hat\theta\) 處是 \(20/3.75=5.333\)。</p>
+<p><strong>MLE 的變異數</strong>：\(\mathrm{Var}(\hat\theta)\approx1/\mathcal I=3.75/20=0.1875\)，標準誤 0.433。這和直接算 \(\mathrm{Var}(\bar x)=\theta/n\) 一樣。</p>
+</div>
+<figure><img src="assets/fig/ch11-score.svg" alt="例題 11-6 的資料（，紅色虛線）。分數函數在 MLE 穿過 0；離差  在 MLE 最小；資訊（觀察到的  與期望的 ，兩者在  相交於 5.33）一路遞減，在 MLE 沒有任何特別的地方，所以看不出 MLE。這就是習題 11.30（MAS-I-S18:40）的三張圖。" loading="lazy"><figcaption>例題 11-6 的資料（\(\hat\theta=3.75\)，紅色虛線）。分數函數在 MLE 穿過 0；離差 \(2(\ell_{\text{飽和}}-\ell(\theta))\) 在 MLE 最小；資訊（觀察到的 \(75/\theta^2\) 與期望的 \(20/\theta\)，兩者在 \(\hat\theta\) 相交於 5.33）一路遞減，在 MLE 沒有任何特別的地方，所以看不出 MLE。這就是習題 11.30（MAS-I-S18:40）的三張圖。</figcaption></figure>
+
+<p><strong>離差</strong>（deviance）會在<a href="ch14.html">第 14 章</a>詳細介紹，這裡先知道：它是 \(2\) 倍的（飽和模型的對數概似 − 目前模型的對數概似），所以對數概似最大的地方，離差最小。</p>
+<div class="box exam">
+<div class="box-t">考試怎麼考：估計</div>
+<ul>
+<li><strong>概念題</strong>：GLM 用 MLE；分數＝對數概似的一階偏導數，在 MLE 等於 0；資訊矩陣＝負的二階偏導數的期望值；\(\mathcal I^{-1}\) 是 MLE 的漸近共變異數矩陣；常態＋恆等連結時 MLE＝最小平方。</li>
+<li><strong>計算題</strong>（S-F16:38 型）：給單一參數的密度，求分數 \(U(\theta)\) 和資訊 \(\mathcal I(\theta)\)。二階導數不含 \(y\) 時，期望值就是它自己。</li>
+<li><strong>圖形題</strong>（MAS-I-S18:40）：分數圖找穿過 0 的點、離差圖找最低點，都能看出 MLE；資訊圖不能。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q11-22"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.22 題</b><small>・講義 p.183・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[S-F16:38] You are given the following probability density function for a single random variable, \(X\):
+\[f(x\mid\theta)=\left(\frac{\theta}{2\pi x^3}\right)^{1/2}\exp\left(-\frac{\theta(x-1)^2}{2x}\right)\]
+Consider the following statements:</p>
+<div class="items">
+<p>I. \(f(x)\) is a member of the linear exponential family of distributions.</p>
+<p>II. The score function \(U(\theta)\) is \(\dfrac{1}{2\theta}-\dfrac{(x-1)^2}{2x}\).</p>
+<p>III. The information matrix \(I(\theta)\) is \(2\theta^2\).</p>
+</div>
+<p>Determine which of the above statements are true.</p>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2016 秋季 S 第 38 題）單一隨機變數 \(X\) 的密度：</p>
+<div class="items">
+<p>I. \(f(x)\) 屬於線性指數族。</p>
+<p>II. 分數函數為 \(U(\theta)=\dfrac{1}{2\theta}-\dfrac{(x-1)^2}{2x}\)。</p>
+<p>III. 資訊矩陣為 \(I(\theta)=2\theta^2\)。</p>
+</div>
+<p>哪些正確？</p>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>取對數：
+\[\ln f=\tfrac12\ln\theta-\tfrac12\ln(2\pi x^3)-\frac{\theta(x-1)^2}{2x}.\]</p>
+<p><strong>I 錯</strong>：和 \(\theta\) 相乘的是 \(\frac{(x-1)^2}{2x}=\frac x2-1+\frac{1}{2x}\)，不是 \(x\) 本身（還有 \(1/x\)），所以以 \(\theta\) 為參數時不是線性指數族。</p>
+<p><strong>II 對</strong>：分數是對 \(\theta\) 的一階導數，\(U(\theta)=\frac{1}{2\theta}-\frac{(x-1)^2}{2x}\)。</p>
+<p><strong>III 錯</strong>：二階導數 \(-\frac{1}{2\theta^2}\) 不含 \(x\)，期望值就是它自己；資訊是負的期望值，\(I(\theta)=\frac{1}{2\theta^2}\)，不是 \(2\theta^2\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>這是平均數固定為 1 的逆高斯，\(\theta\) 是形狀參數 \(\lambda\)。逆高斯是線性指數族，但那是以「平均數」那一個參數來寫；以 \(\lambda\) 為參數就不行。</p></div></div></article><article class="exercise" id="q11-30"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 11.30 題</b><small>・講義 p.187・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:40] An actuary fits a Poisson distribution to a sample of data, \(f(x)=\dfrac{\theta^xe^{-\theta}}{x!}\).</p>
+<p>To assure convergence of the maximum likelihood fitting procedure, the actuary plots three quantities of interest across different values of \(\theta\): Plot I: Score Function, \(U\) (a decreasing curve that crosses zero); Plot II: Deviance (a U-shaped curve with a minimum); Plot III: Information, \(J\) (a decreasing, always-positive curve).</p>
+<p>Determine which of the three plots the actuary can use to visually approximate the maximum likelihood estimate for \(\theta\).</p>
+<div class="opts">
+<p>(A) None can be used</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2018 春季 MAS-I 第 40 題）精算師用 Poisson 分配 \(f(x)=\theta^xe^{-\theta}/x!\) 配適一組資料。為了確認最大概似估計收斂，他把三個量對不同的 \(\theta\) 作圖：圖 I 分數函數 \(U\)（遞減曲線，從正值穿過 0 到負值）、圖 II 離差（U 形曲線，有最低點）、圖 III 資訊 \(J\)（遞減曲線，一直是正的）。</p>
+<p>哪些圖可以用來目測 \(\theta\) 的最大概似估計？</p>
+<div class="opts">
+<p>(A) 都不行　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>分數函數在 MLE 等於 0：看圖 I 穿過 0 的位置。離差在 MLE 最小：看圖 II 的最低點。</p>
+<p>資訊是變異數的倒數，描述估計有多精確，曲線一路遞減，在 MLE 沒有任何特別的特徵，看不出 MLE。本章圖「分數、離差、資訊」就是用 20 筆 Poisson 資料畫出的同樣三張圖。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（3 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC11-4-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.4-1</b><small>仿 SOA 樣題・跨章：第 3 章・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about estimation in generalized linear models is/are true.</p>
+<div class="items">
+<p>I. For a normal response with the identity link, the maximum likelihood estimates equal the least squares estimates.</p>
+<p>II. The inverse of the information matrix approximates the covariance matrix of the maximum likelihood estimates.</p>
+<p>III. The scores are the second partial derivatives of the loglikelihood.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I and II only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於 GLM 的估計，下列哪些正確？</p>
+<div class="items">
+<p>I. 常態反應、恆等連結時，MLE 等於最小平方估計。</p>
+<p>II. 資訊矩陣的反矩陣近似 MLE 的共變異數矩陣。</p>
+<p>III. 分數是對數概似的二階偏導數。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：常態的對數概似就是殘差平方和乘上負的常數。II 對：MLE 漸近常態，共變異數矩陣是 \(\mathcal I^{-1}\)；在簡單迴歸裡正好是 \(\sigma^2(X&#x27;X)^{-1}\)。III 錯：分數是<strong>一階</strong>偏導數；二階偏導數取期望值再加負號才是資訊矩陣。</p></div></div></article><article class="exercise concept-q" id="qC11-4-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.4-2</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>A sample of 10 observations from an exponential distribution with density \(f(y)=\theta e^{-\theta y}\) has \(\sum y_i=40\).</p>
+<p>Calculate the estimated asymptotic variance of the maximum likelihood estimator of \(\theta\), using the information evaluated at the MLE.</p>
+<div class="opts">
+<p>(A) 0.00625</p>
+<p>(B) 0.02500</p>
+<p>(C) 0.06250</p>
+<p>(D) 0.40000</p>
+<p>(E) 160</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>指數分配 \(f(y)=\theta e^{-\theta y}\) 的 10 筆觀察，\(\sum y_i=40\)。以 MLE 處的資訊，求 \(\hat\theta\) 的漸近變異數估計值。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>對數概似</strong>：\(\ell(\theta)=n\ln\theta-\theta\sum y_i=10\ln\theta-40\theta\)。</p>
+<p><strong>分數</strong>：\(U=10/\theta-40=0\)，\(\hat\theta=0.25\)。</p>
+<p><strong>資訊</strong>：\(-\ell&#x27;&#x27;=10/\theta^2\)，不含 \(y\)，所以期望資訊也是 \(10/\theta^2\)；在 \(\hat\theta\) 處 \(=10/0.0625=160\)。</p>
+<p><strong>變異數</strong>：\(1/160=0.00625\)。</p>
+<p>(E) 是資訊本身，忘了取倒數；(B) 是 \(\hat\theta/n\)（Poisson 的公式）；(C) 是 \(\hat\theta^2\)。</p></div></div></article><article class="exercise concept-q" id="qC11-4-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.4-3</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>The score equations of a generalized linear model generally cannot be solved in closed form.</p>
+<p>Determine the method typically used to solve them.</p>
+<div class="opts">
+<p>(A) Iterated weighted least squares</p>
+<p>(B) Ordinary least squares on \(\ln y\)</p>
+<p>(C) Method of moments on each predictor</p>
+<p>(D) Forward stepwise selection</p>
+<p>(E) K-fold cross-validation</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>GLM 的分數方程式通常沒有公式解。一般用什麼方法求解？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>反覆加權最小平方法（IWLS）：每一輪用目前的估計值算出權重和「工作反應變數」，做一次加權最小平方，更新估計值，直到收斂。它是 MLE 的數值解法。</p>
+<p>(B) 是「先轉換 \(y\) 再做線性迴歸」，不是 GLM，而且 \(y=0\) 時無法取 log；(D) 是選變數的方法；(E) 是評估模型的方法。</p></div></div></article></div></section><section class="unit" id="s5"><h2>11.5 過度離散</h2><h3>一、問題：資料的變異數比模型假設的大</h3>
+<p>選了分配，就等於選了變異數。Poisson 規定變異數等於平均數；但保險的次數資料常常是<strong>變異數大於平均數</strong>，例如每位駕駛人的風險不同（異質性）。這叫<strong>過度離散</strong>（overdispersion）。</p>
+<p>如果硬用 Poisson，係數的估計值通常還可以，但<strong>標準誤會被低估</strong>，檢定會太容易顯著。</p>
+<h3>二、做法：在變異數前面乘一個參數</h3>
+<p>GLM 的估計其實只需要平均數函數和變異數函數，不需要把分配完整寫出來。所以可以直接把變異數放大：
+\[\mathrm{Var}(y_i)=\sigma^2\phi_i\,b&#x27;&#x27;(\theta_i).\]
+多出來的 \(\sigma^2\) 就是過度離散參數（講義也常直接寫成 \(\phi\)）。Poisson 時就是 \(\mathrm{Var}(y_i)=\phi\mu_i\)，這種模型叫準 Poisson（quasi-Poisson）。常態分配不需要這個參數，因為它的 \(\phi\) 本來就是變異數。</p>
+<p><strong>估計</strong>：用 Pearson 卡方統計量除以自由度，
+\[\hat\phi=\frac{1}{N-p}\sum_{i=1}^N\frac{(y_i-\hat\mu_i)^2}{V(\hat\mu_i)},\tag{11.4}\]
+\(N\) 是獨立觀察（格子）的個數，\(p\) 是估計的參數個數（通常 \(p=k+1\)），分母 \(V(\hat\mu_i)\) 是模型下的理論變異數（Poisson 時就是 \(\hat\mu_i\)）。</p>
+<p><strong>直覺</strong>：每一項 \(\frac{(y_i-\hat\mu_i)^2}{V(\hat\mu_i)}\) 是「實際的平方誤差 ÷ 模型說的變異數」。模型對的話，平均起來大約是 1；明顯大於 1，就是過度離散。除以 \(N-p\) 而不是 \(N\)，和 \(s^2\) 除以 \(n-k-1\) 是同一個理由（<a href="ch03.html">第 3 章</a>）：估了 \(p\) 個參數，用掉 \(p\) 個自由度。</p>
+<div class="box ex">
+<div class="box-t">例題 11-7：估計過度離散參數</div>
+<p>Poisson GLM（2 個參數）配適 5 筆資料：</p>
+<table>
+<thead>
+<tr>
+<th>\(y_i\)</th>
+<th>2</th>
+<th>7</th>
+<th>1</th>
+<th>9</th>
+<th>6</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(\hat\mu_i\)</td>
+<td>3</td>
+<td>5</td>
+<td>2</td>
+<td>6</td>
+<td>9</td>
+</tr>
+</tbody>
+</table>
+<p>各項 \(\frac{(y_i-\hat\mu_i)^2}{\hat\mu_i}\)：\(\frac13=0.333\)、\(\frac45=0.8\)、\(\frac12=0.5\)、\(\frac96=1.5\)、\(\frac99=1\)，總和 4.133。</p>
+<p>\(\hat\phi=\frac{4.133}{5-2}=1.378\)。變異數大約是 Poisson 假設的 1.38 倍，係數的標準誤要乘上 \(\sqrt{1.378}=1.17\)。</p>
+</div>
+<figure><img src="assets/fig/ch11-overdisp.svg" alt="模擬 12 組各 60 筆次數資料，真正的變異數是平均數的 3 倍。每一組的樣本變異數（藍點）都在 Poisson 的「變異數＝平均」線（灰）上方；用 (11.4) 估計得 （N＝720，p＝12），紅色虛線  貼合資料。" loading="lazy"><figcaption>模擬 12 組各 60 筆次數資料，真正的變異數是平均數的 3 倍。每一組的樣本變異數（藍點）都在 Poisson 的「變異數＝平均」線（灰）上方；用 (11.4) 估計得 \(\hat\phi=2.93\)（N＝720，p＝12），紅色虛線 \(\hat\phi\mu\) 貼合資料。</figcaption></figure>
+
+<div class="box exam">
+<div class="box-t">考試怎麼考：過度離散</div>
+<ul>
+<li><strong>定義題</strong>：Poisson 模型下，資料的變異數大於平均數。</li>
+<li><strong>計算題</strong>：給觀察值與配適值，用 Pearson 卡方除以 \(N-p\)。注意分母是 \(V(\hat\mu)\)（Poisson 是 \(\hat\mu\)），自由度要扣掉參數個數。</li>
+<li><strong>後果</strong>：估計值不變、標準誤乘上 \(\sqrt{\hat\phi}\)。另一種做法是換成負二項分配（<a href="ch13.html">第 13 章</a>）。</li>
+</ul>
+</div>
+<div class="box key">
+<div class="box-t">本章總整理</div>
+<ul>
+<li>GLM＝線性指數族的分配＋線性預測式＋單調可微的連結函數 \(g(\mu)=\eta\)。線性迴歸是「常態＋恆等連結」。</li>
+<li>線性指數族 \(f=\exp\big[\frac{y\theta-b(\theta)}{\phi}+S(y,\phi)\big]\)：\(E(Y)=b&#x27;(\theta)\)，\(\mathrm{Var}(Y)=\phi b&#x27;&#x27;(\theta)=\phi V(\mu)\)。</li>
+<li>變異數冪次：常態 0、Poisson 1、Tweedie（複合 Poisson-gamma，0 有點質量）1～2、gamma 2、逆高斯 3。</li>
+<li>典型連結 \(g=(b&#x27;)^{-1}\)：恆等、log、logit、\(-1/\mu\)、\(-1/(2\mu^2)\)。典型連結讓配適值總和等於觀察值總和。gamma、逆高斯實務上改用 log。</li>
+<li>預測四步驟：基準類別不加 → 加總 \(\eta\) → \(\mu=g^{-1}(\eta)\) → 變異數 \(\phi V(\mu)\)。log 連結的係數是乘數 \(e^\beta\)。</li>
+<li>估計用 MLE：分數＝0；資訊矩陣的反矩陣是漸近共變異數矩陣；常態＋恆等時就是最小平方。</li>
+<li>過度離散：\(\hat\phi=\frac{1}{N-p}\sum\frac{(y_i-\hat\mu_i)^2}{V(\hat\mu_i)}\)。</li>
+</ul>
+</div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（3 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC11-5-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.5-1</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>A Poisson GLM with 2 parameters is fitted to 4 independent cells:</p>
+<table>
+<thead>
+<tr>
+<th>Observed \(y_i\)</th>
+<th>10</th>
+<th>4</th>
+<th>7</th>
+<th>15</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fitted \(\hat\mu_i\)</td>
+<td>8</td>
+<td>6</td>
+<td>5</td>
+<td>17</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the estimate of the overdispersion parameter \(\phi\) using the Pearson chi-square statistic.</p>
+<div class="opts">
+<p>(A) 0.5505</p>
+<p>(B) 0.7340</p>
+<p>(C) 1.1010</p>
+<p>(D) 2.2020</p>
+<p>(E) 4.0000</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>2 個參數的 Poisson GLM 配適 4 個獨立格子，觀察值與配適值如表。用 Pearson 卡方統計量估計過度離散參數 \(\phi\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>每一格的平方誤差都是 4：</p>
+<p>\(\frac48+\frac46+\frac45+\frac4{17}=0.5+0.6667+0.8+0.2353=2.2020\)。</p>
+<p>自由度 \(N-p=4-2=2\)，\(\hat\phi=2.2020/2=1.1010\)。</p>
+<p>(D) 沒有除以自由度；(A) 除以 \(N=4\)；(B) 除以 \(N-1=3\)；(E) 是把分母誤用成 1（平方誤差的平均）。</p></div></div></article><article class="exercise concept-q" id="qC11-5-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.5-2</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>A Poisson GLM is fitted to claim count data, and the Pearson-based estimate of the dispersion parameter is \(\hat\phi=2.4\). The analyst refits the model allowing \(\mathrm{Var}(y_i)=\phi\mu_i\).</p>
+<p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. The data exhibit overdispersion.</p>
+<p>II. The estimated regression coefficients change.</p>
+<p>III. The standard errors of the coefficients are multiplied by \(\sqrt{2.4}\).</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Poisson GLM 的 Pearson 離散參數估計 \(\hat\phi=2.4\)。改成允許 \(\mathrm{Var}(y_i)=\phi\mu_i\) 重新配適。下列哪些正確？</p>
+<div class="items">
+<p>I. 資料有過度離散。</p>
+<p>II. 係數估計值會改變。</p>
+<p>III. 係數的標準誤乘上 \(\sqrt{2.4}\)。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(\hat\phi&gt;1\)，變異數比 Poisson 假設的大。</p>
+<p>II 錯：\(\phi\) 是所有觀察共同的常數，乘在變異數前面不會改變分數方程式的解，係數估計值不變。</p>
+<p>III 對：變異數放大 \(\phi\) 倍，標準誤放大 \(\sqrt\phi\) 倍。</p></div></div></article><article class="exercise concept-q" id="qC11-5-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C11.5-3</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>In a Poisson GLM, a coefficient has standard error 0.08 when the Poisson variance assumption is used. The estimated overdispersion parameter is \(\hat\phi=2.25\).</p>
+<p>Calculate the standard error of this coefficient after adjusting for overdispersion.</p>
+<div class="opts">
+<p>(A) 0.0356</p>
+<p>(B) 0.0800</p>
+<p>(C) 0.1131</p>
+<p>(D) 0.1200</p>
+<p>(E) 0.1800</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>Poisson GLM 中某係數在 Poisson 變異數假設下的標準誤為 0.08，過度離散參數估計 \(\hat\phi=2.25\)。調整過度離散後，標準誤是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>標準誤乘上 \(\sqrt{\hat\phi}=\sqrt{2.25}=1.5\)：\(0.08\times1.5=0.12\)。</p>
+<p>(E) 乘的是 \(\hat\phi\) 本身；(A) 是除以 \(\hat\phi\)；(C) 是乘 \(\sqrt2\)。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（10 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q11-1"><div class="ex-head"><span class="ex-tag">練習</span><b>第 11.1 題</b><small>・講義 p.174・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F19:34] You are given the following statements comparing \(k\)-fold cross validation (with \(k&lt;n\)) and Leave-One-Out Cross Validation (LOOCV), used on a GLM with log link and gamma error.</p>
+<div class="items">
+<p>I. \(k\)-fold validation has a computational advantage over LOOCV</p>
+<p>II. \(k\)-fold validation has an advantage over LOOCV in bias reduction</p>
+<p>III. \(k\)-fold validation has an advantage over LOOCV in variance reduction</p>
+</div>
+<p>Determine which of the above statements are true.</p>
+<div class="opts">
+<p>(A) None are true</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2019 秋季 MAS-I 第 34 題）對一個 log 連結、gamma 誤差的 GLM，比較 \(k\) 折交叉驗證（\(k&lt;n\)）與留一交叉驗證（LOOCV）：</p>
+<div class="items">
+<p>I. \(k\) 折交叉驗證的計算量比 LOOCV 小。</p>
+<p>II. \(k\) 折交叉驗證的偏差比 LOOCV 小。</p>
+<p>III. \(k\) 折交叉驗證的變異數比 LOOCV 小。</p>
+</div>
+<p>哪些正確？</p>
+<div class="opts">
+<p>(A) 都不正確　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>這題其實是<a href="ch06.html">第 6 章</a>的內容，放在這裡是因為題目提到 GLM。</p>
+<p>I 對：LOOCV 就是 \(n\) 折，要配適 \(n\) 次；\(k\) 折只要 \(k\) 次。線性迴歸的 LOOCV 有捷徑公式（<a href="ch06.html">第 6 章</a>），只要配適一次，但這題是 GLM，沒有這個捷徑。</p>
+<p>II 錯、III 對：\(k\) 越大，每次訓練用的資料越多，偏差越小，但各次的訓練集幾乎相同、誤差高度相關，變異數越大。所以 LOOCV 偏差較小、\(k\) 折變異數較小。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>「GLM」這個字是在提醒你 LOOCV 沒有捷徑公式，所以 I 成立。</p></div></div></article><article class="exercise" id="q11-2"><div class="ex-head"><span class="ex-tag">練習</span><b>第 11.2 題</b><small>・講義 p.174・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>A geometric distribution is defined by
+\[f(y)=(1-p)p^y,\qquad y=0,1,2,\ldots\]
+It is a member of the linear exponential family.</p>
+<p>State a function of \(\theta\) that \(b(\theta)\) is a multiple of.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>幾何分配 \(f(y)=(1-p)p^y\)，\(y=0,1,2,\ldots\)，屬於線性指數族。\(b(\theta)\) 是 \(\theta\) 的哪個函數的倍數？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(-\ln(1-e^\theta)\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>寫成指數：\(f(y)=\exp\big(y\ln p+\ln(1-p)\big)\)。</p>
+<p>和 \(y\) 相乘的是 \(\ln p\)，令 \(\theta=\ln p\)，\(p=e^\theta\)：
+\[f(y)=\exp\big(y\theta+\ln(1-e^\theta)\big).\]
+\(\phi=1\)，\(-b(\theta)=\ln(1-e^\theta)\)，所以 \(b(\theta)=-\ln(1-e^\theta)\)。</p>
+<p><strong>檢查</strong>：\(b&#x27;(\theta)=\frac{e^\theta}{1-e^\theta}=\frac{p}{1-p}\)，正是幾何分配的平均數。</p></div></div></article><article class="exercise" id="q11-3"><div class="ex-head"><span class="ex-tag">練習</span><b>第 11.3 題</b><small>・講義 p.174・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>Consider a random variable \(Y\) with the following probability density function:
+\[f(y)=\frac{y^3e^{-y/\gamma}}{24\gamma^4}\qquad y&gt;0\]
+The random variable is in the linear exponential family.</p>
+<p>State a function of \(\theta\) that \(b(\theta)\) is a multiple of.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>隨機變數 \(Y\) 的密度為 \(f(y)=\dfrac{y^3e^{-y/\gamma}}{24\gamma^4}\)，\(y&gt;0\)，屬於線性指數族。\(b(\theta)\) 是 \(\theta\) 的哪個函數的倍數？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(-\ln(-\theta)\)（\(b(\theta)=-4\ln(-\theta)\)）</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>這是形狀 4、尺度 \(\gamma\) 的 gamma，但不需要知道也能做。</p>
+<p>\[f(y)=\exp\big(-y/\gamma+3\ln y-4\ln\gamma-\ln24\big).\]
+和 \(y\) 相乘的是 \(-1/\gamma\)，令 \(\theta=-1/\gamma\)，則 \(\gamma=-1/\theta\)，\(\ln\gamma=-\ln(-\theta)\)。</p>
+<p>\(-b(\theta)=-4\ln\gamma\)，所以 \(b(\theta)=4\ln\gamma=-4\ln(-\theta)\)，是 \(-\ln(-\theta)\) 的倍數。</p>
+<p><strong>檢查</strong>：\(b&#x27;(\theta)=-4/\theta=4\gamma\)，正是平均數。</p></div></div></article><article class="exercise" id="q11-11"><div class="ex-head"><span class="ex-tag">練習</span><b>第 11.11 題</b><small>・講義 p.177・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>For a generalized linear model for claim sizes, you are given</p>
+<p>Response variable: Claim sizes
+Response distribution: Normal</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Coefficient</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>22</td>
+</tr>
+<tr>
+<td>Age of driver 18–24</td>
+<td>15</td>
+</tr>
+<tr>
+<td>Age of driver 25–64</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Age of driver 65 and up</td>
+<td>13</td>
+</tr>
+<tr>
+<td>Income under 50,000</td>
+<td>12</td>
+</tr>
+<tr>
+<td>Income 50,000–100,000</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Income over 100,000</td>
+<td>−3</td>
+</tr>
+</tbody>
+</table>
+<p>The link function is \(g(\mu)=\mu^{1/2}\). The estimate of \(\sigma\) is 2.</p>
+<p>Calculate expected claim sizes for a 20-year old driver earning 40,000.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>理賠金額的 GLM：常態分配，連結 \(g(\mu)=\mu^{1/2}\)，\(\sigma\) 的估計值 2。</p>
+<p>求 20 歲、收入 40,000 的駕駛人的期望理賠金額。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>2401</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=22+15+12=49\)。連結是平方根，還原要平方：\(\mu=49^2=2401\)。</p>
+<p>\(\sigma=2\) 只影響變異數，和平均數無關。</p></div></div></article><article class="exercise" id="q11-12"><div class="ex-head"><span class="ex-tag">練習</span><b>第 11.12 題</b><small>・講義 p.177・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>For a generalized linear model for claim counts,</p>
+<div class="items">
+<p>(i) The Poisson distribution is selected.</p>
+<p>(ii) The log link is selected.</p>
+<p>(iii) The model output is:</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Estimated \(\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>−2.45</td>
+</tr>
+<tr>
+<td>Gender—female</td>
+<td>−0.85</td>
+</tr>
+<tr>
+<td>Income (000)</td>
+<td>−0.04</td>
+</tr>
+<tr>
+<td>Age</td>
+<td>0.10</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate expected number of claims for a 30-year old male with income of 100,000.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>理賠次數的 GLM：Poisson 分配、log 連結。係數：截距 −2.45、女性 −0.85、收入（千）−0.04、年齡 0.10。求 30 歲、收入 100,000 的男性的期望理賠次數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.03175</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>性別的基準是男性，不加。收入以千為單位，代 100：
+\[\eta=-2.45-0.04(100)+0.10(30)=-3.45,\qquad\mu=e^{-3.45}=0.03175 .\]
+（之後也可以用 Poisson 求機率，例如恰好 1 次理賠的機率是 \(0.03175e^{-0.03175}=0.0307\)。）</p></div></div></article><article class="exercise" id="q11-14"><div class="ex-head"><span class="ex-tag">練習</span><b>第 11.14 題</b><small>・講義 p.178・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[S-F16:32] You are given the following GLM output:</p>
+<p>Response variable: Pure Premium; Response distribution: Gamma; Link: log</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>df</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>4.78</td>
+</tr>
+<tr>
+<td>Risk Group 1</td>
+<td>0</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>Risk Group 2</td>
+<td>1</td>
+<td>−0.20</td>
+</tr>
+<tr>
+<td>Risk Group 3</td>
+<td>1</td>
+<td>−0.35</td>
+</tr>
+<tr>
+<td>Vehicle Symbol 1</td>
+<td>0</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>Vehicle Symbol 2</td>
+<td>1</td>
+<td>0.42</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the predicted pure premium for an insured in Risk Group 2 with Vehicle Symbol 2.</p>
+<div class="opts">
+<p>(A) Less than 135</p>
+<p>(B) At least 135, but less than 140</p>
+<p>(C) At least 140, but less than 145</p>
+<p>(D) At least 145, but less than 150</p>
+<p>(E) At least 150</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2016 秋季 S 第 32 題）GLM 輸出：反應變數為純保費、gamma 分配、log 連結。</p>
+<p>求風險組 2、車輛代號 2 的被保險人的預測純保費。</p>
+<div class="items">
+<p>(B) 至少 135，小於 140</p>
+<p>(C) 至少 140，小於 145</p>
+<p>(D) 至少 145，小於 150</p>
+<p>(E) 至少 150</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=4.78-0.20+0.42=5\)，\(\mu=e^5=148.41\)。</p></div></div></article><article class="exercise" id="q11-15"><div class="ex-head"><span class="ex-tag">練習</span><b>第 11.15 題</b><small>・講義 p.179・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[S-F17:31] You are given the following GLM output:</p>
+<p>Response variable: Pure Premium; Response distribution: Gamma; Link: Log</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>df</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>5.26</td>
+</tr>
+<tr>
+<td>Risk Group 1</td>
+<td>0</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>Risk Group 2</td>
+<td>1</td>
+<td>0.18</td>
+</tr>
+<tr>
+<td>Risk Group 3</td>
+<td>1</td>
+<td>0.37</td>
+</tr>
+<tr>
+<td>Territory Region 1</td>
+<td>0</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>Territory Region 2</td>
+<td>1</td>
+<td>0.12</td>
+</tr>
+<tr>
+<td>Territory Region 3</td>
+<td>1</td>
+<td>0.25</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the predicted pure premium for an insured in Risk Group 3 from Region 2.</p>
+<div class="opts">
+<p>(A) Less than 250</p>
+<p>(B) At least 250, but less than 275</p>
+<p>(C) At least 275, but less than 300</p>
+<p>(D) At least 300, but less than 325</p>
+<p>(E) At least 325</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2017 秋季 S 第 31 題）GLM 輸出：純保費、gamma、log 連結。</p>
+<p>求風險組 3、地區 2 的被保險人的預測純保費。</p>
+<div class="items">
+<p>(B) 至少 250，小於 275</p>
+<p>(C) 至少 275，小於 300</p>
+<p>(D) 至少 300，小於 325</p>
+<p>(E) 至少 325</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=5.26+0.37+0.12=5.75\)，\(\mu=e^{5.75}=314.19\)。</p></div></div></article><article class="exercise" id="q11-16"><div class="ex-head"><span class="ex-tag">練習</span><b>第 11.16 題</b><small>・講義 p.179・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You have estimated the following generalized linear model:
+\[g(\mu_i)=2+3x_{i1}+4x_{i2}\]
+You used a gamma distribution as the response distribution, and the link function you used is \(g(\mu)=1/\mu\).</p>
+<p>Determine the mean of the response when \(x_1=5\) and \(x_2=6\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>估計出的 GLM 為 \(g(\mu_i)=2+3x_{i1}+4x_{i2}\)，反應分配是 gamma，連結 \(g(\mu)=1/\mu\)。求 \(x_1=5\)、\(x_2=6\) 時的平均數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>1/41（約 0.02439）</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=2+3(5)+4(6)=41\)。倒數連結，還原取倒數：\(\mu=1/41=0.02439\)。</p></div></div></article><article class="exercise" id="q11-18"><div class="ex-head"><span class="ex-tag">練習</span><b>第 11.18 題</b><small>・講義 p.181・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[S-S16:31] You are given the following information for a fitted GLM:</p>
+<p>Response variable: Claim size; Response distribution: Gamma; Link: Log; Dispersion parameter: 1</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>df</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>2.100</td>
+</tr>
+<tr>
+<td>Zone 1 / 2 / 3 / 4 / 5</td>
+<td>4</td>
+<td>7.678 / 4.227 / 1.336 / 0.000 / 1.734</td>
+</tr>
+<tr>
+<td>Vehicle Class Convertible / Coupe / Sedan / Truck / Minivan / Stationwagon / Utility</td>
+<td>6</td>
+<td>1.200 / 1.300 / 0.000 / 1.406 / 1.875 / 2.000 / 2.500</td>
+</tr>
+<tr>
+<td>Driver Age Youth / Middle age / Old</td>
+<td>2</td>
+<td>2.000 / 0.000 / 1.800</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the predicted claim size for an observation from Zone 3, with Vehicle Class Truck and Driver Age Old.</p>
+<div class="opts">
+<p>(A) Less than 650</p>
+<p>(B) At least 650, but less than 700</p>
+<p>(C) At least 700, but less than 750</p>
+<p>(D) At least 750, but less than 800</p>
+<p>(E) At least 800</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2016 春季 S 第 31 題）配適好的 GLM：理賠金額、gamma、log 連結、離散參數 1。</p>
+<p>求地區 3、車種貨車、駕駛年齡年長的預測理賠金額。</p>
+<div class="items">
+<p>(B) 至少 650，小於 700</p>
+<p>(C) 至少 700，小於 750</p>
+<p>(D) 至少 750，小於 800</p>
+<p>(E) 至少 800</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=2.1+1.336+1.406+1.8=6.642\)，\(\mu=e^{6.642}=766.63\)。</p>
+<p>離散參數只影響變異數，這題用不到。</p></div></div></article><article class="exercise" id="q11-23"><div class="ex-head"><span class="ex-tag">練習</span><b>第 11.23 題</b><small>・講義 p.184・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[S-S16:32] You are given the following information for a fitted GLM:</p>
+<p>Response variable: Claim size; Response distribution: Gamma; Link: Log; Scale parameter (\(\phi\)): 1</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>df</th>
+<th>\(\hat\beta\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intercept</td>
+<td>1</td>
+<td>2.100</td>
+</tr>
+<tr>
+<td>Zone 1 / 2 / 3 / 4 / 5</td>
+<td>4</td>
+<td>7.678 / 4.227 / 1.336 / 0.000 / 1.734</td>
+</tr>
+<tr>
+<td>Vehicle Class Convertible / Coupe / Sedan / Truck / Minivan / Stationwagon / Utility</td>
+<td>6</td>
+<td>1.200 / 1.300 / 0.000 / 1.406 / 1.875 / 2.000 / 2.500</td>
+</tr>
+<tr>
+<td>Driver Age Youth / Middle age / Old</td>
+<td>2</td>
+<td>2.000 / 0.000 / 1.800</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the variance of a claim size for an observation from Zone 4, with Vehicle Class Sedan and Driver Age Middle age.</p>
+<div class="opts">
+<p>(A) Less than 55</p>
+<p>(B) At least 55, but less than 60</p>
+<p>(C) At least 60, but less than 65</p>
+<p>(D) At least 65, but less than 70</p>
+<p>(E) At least 70</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（2016 春季 S 第 32 題）同習題 <a href="ch11.html#q11-18">11.18</a> 的模型（gamma、log 連結、尺度參數 \(\phi=1\)）。求地區 4、車種轎車、駕駛年齡中年的理賠金額變異數。</p>
+<div class="items">
+<p>(B) 至少 55，小於 60</p>
+<p>(C) 至少 60，小於 65</p>
+<p>(D) 至少 65，小於 70</p>
+<p>(E) 至少 70</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>三個都是基準類別：\(\eta=2.100\)，\(\mu=e^{2.1}=8.1662\)。變異數 \(\phi\mu^2=8.1662^2=66.69\)。</p></div></div></article></section><button class="toggle-all float" type="button">顯示全部解答</button><div class="navfoot"><a href="ch10.html">← 第 10 章</a><a href="ch12.html">第 12 章 →</a></div></main></body></html>

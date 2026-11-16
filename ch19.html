@@ -1,7 +1,1168 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第 19 章　時間數列：從平穩性到預測誤差｜SRM 精算筆記</title><link rel="stylesheet" href="assets/site.css"><link rel="stylesheet" href="assets/katex/katex.min.css"><script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/site.js"></script></head><body><nav aria-label="課程導覽"><a class="brand" href="index.html">SRM 精算筆記</a><label for="chapter">章節</label><select id="chapter"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html" selected>第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題與參考解答</option></select><a href="practice.html">題庫</a></nav><main><header><div class="kicker">SRM · 第 19 章</div><h1>時間數列：從平穩性到預測誤差</h1><p>一條歷史路徑何時能代表穩定規律？先區分平穩、白噪音與隨機趨勢。</p><div class="chips"><a href="pdf/ch19.pdf">下載本章 PDF</a><a href="practice.html#chapter19">習題索引</a></div></header><section class="panel"><h2>本章閱讀順序</h2><ol><li><a href="#s1">19.1 時間相依、趨勢與季節</a></li><li><a href="#s2">19.2 平穩、樣本自共變異與相關圖</a></li><li><a href="#s3">19.3 白噪音：遠期不等於誤差一定更大</a></li><li><a href="#s4">19.4 隨機漫步、漂移與差分</a></li><li><a href="#s5">19.5 管制圖：何時應追查異常</a></li><li><a href="#s6">19.6 樣本外預測的五個誤差指標</a></li></ol><div class="minititle">優先練習 · 10 題</div><div class="chips"><a href="#q19-1">19.1</a><a href="#q19-7">19.7</a><a href="#q19-10">19.10</a><a href="#q19-11">19.11</a><a href="#q19-13">19.13</a><a href="#q19-15">19.15</a><a href="#q19-19">19.19</a><a href="#q19-21">19.21</a><a href="#q19-24">19.24</a><a href="#q19-26">19.26</a></div></section><article class="unit" id="s1"><div class="kicker">概念 01</div><h2>19.1 時間相依、趨勢與季節</h2><p>時間數列（time series）是在有順序的時點記錄同一個量。明天的理賠量可能受今天的天氣、近期疫情及季節影響；有意義的不是無條件平均，而是「已知今天以前的資訊，明天預期多少」。用 \(\mathcal F_T\) 表示截至 \(T\) 的資訊，在平方損失下最佳預測為 \(E(Y_{T+h}\mid\mathcal F_T)\)：將預測誤差分成條件平均的誤差與不可預見的偏差，後者對任何已知資訊的期望交叉項皆為零。先畫時間圖分辨水準、長期趨勢、固定週期季節、非固定長度的循環與隨機波動，再選模型。把時間順序打散，這些訊息就消失了。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><p class="minititle">相關講義練習（跨節）：<a href="ch19.html#q19-12">19.12 · 區分時間趨勢與隨機趨勢</a></p></article><article class="unit" id="s2"><div class="kicker">概念 02</div><h2>19.2 平穩、樣本自共變異與相關圖</h2><p>弱平穩要求每一期有同一有限平均 \(\mu\) 與變異數 \(\gamma(0)\)，而 \(\operatorname{Cov}(Y_t,Y_{t-k})=\gamma(k)\) 只看間隔 \(k\)。因此同一條長路徑中不同時段的相隔一年配對能一起估「一年連動」；再有遍歷性等適當條件，平均才可靠。平穩容許自相關，也不保證獨立。嚴格平穩要求任意一組時點的聯合分配在平移後不變，比只看前兩個動差更強（若無二階動差，就不能推弱平穩）。</p>
-<p>用 \(\bar y=\sum y_t/T\) 得樣本變異數 \(s_y^2=\sum(y_t-\bar y)^2/(T-1)\)。自相關（autocorrelation）為 \(\rho_k=\gamma(k)/\gamma(0)\)。估計時，分子只配對有前後觀察的項，但分母仍保留全部觀察：</p>
-<p>\[r_k=\frac{\sum_{t=k+1}^T(y_t-\bar y)(y_{t-k}-\bar y)}{\sum_{t=1}^T(y_t-\bar y)^2}.\]</p>
-<p>\(r_0=1\)，負值表示高低交替。相關圖畫出每個落後期的 \(r_k\)；白噪音假設下，單一非零 lag 的粗略 95% 參考帶為 \(\pm 1.96/\sqrt T\)。看很多 lag 時，偶然超界並不罕見；看圖也無法證明獨立。</p><p><strong>CA 複習例｜數值會動，規律仍可平穩。</strong> 比較 \(\operatorname{Cov}(Y_2,Y_5)\) 與 \(\operatorname{Cov}(Y_{10},Y_{13})\)，兩對都隔三期，弱平穩時兩個理論共變異相同。它沒有要求 \(Y_2=Y_{10}\)，也沒有要求三期共變異為零。如果每月理賠量的平均逐年提高，直接混算全部月份的平均就失去「同一個母體中心」的意義。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q19-1">19.1</a><a href="#q19-2">19.2</a><a href="#q19-3">19.3</a><a href="#q19-4">19.4</a><a href="#q19-5">19.5</a><a href="#q19-6">19.6</a><a href="#q19-7">19.7</a><a href="#q19-8">19.8</a><a href="#q19-9">19.9</a></div></article><article class="exercise" id="q19-1"><button class="toggle" aria-controls="a-q19-1" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 19.1 · 講義 p.358</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q19-1">題目連結</a></small><p>六期水準 8、5、12、18、7、10，求落後一期自相關。</p><div class="solution" id="a-q19-1"><strong class="label">參考解答</strong><p>\(-8/106=-0.07547\)。</p><strong class="label">解析</strong><p>平均 10，分母為各偏差平方和 106，分子把相鄰偏差配對相乘。</p></div></article><article class="exercise" id="q19-7"><button class="toggle" aria-controls="a-q19-7" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 19.7 · 講義 p.360</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q19-7">題目連結</a></small><p>季度雨量 25、19、10、32、26、38、22、20。相隔一年相關多少？</p><div class="solution" id="a-q19-7"><strong class="label">參考解答</strong><p>\(r_4=-72/506=-0.14229\)（A）。</p><strong class="label">解析</strong><p>平均 24；四對同季跨年的雨量偏差乘積為 2、−70、28、−32。</p></div></article><article class="unit" id="s3"><div class="kicker">概念 03</div><h2>19.3 白噪音：遠期不等於誤差一定更大</h2><p>白噪音（white noise）的弱定義是均值及變異數固定、不同期不相關；講義預測採獨立同分配版本，並容許非零均值。過去不能改善對下一期的平均預測，所以不知道 \(\mu\) 時，以 \(\widehat Y_{T+h}=\bar y\) 估計，所有 \(h&gt;0\) 相同。若誤差獨立常態，\(Y_{T+h}-\bar Y\) 的變異數是 \(\sigma^2+\sigma^2/T\)，未來的單筆觀察和估計平均各貢獻一項，因此預測區間為 \(\bar y\pm t_{T-1,1-\alpha/2}s_y\sqrt{1+1/T}\)。若只估平均，沒有單筆觀察那個「1」。即：白噪音不把今天的意外帶進明天，預測距離本身不增加變異數。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q19-15">19.15</a></div></article><article class="exercise" id="q19-15"><button class="toggle" aria-controls="a-q19-15" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 19.15 · 講義 p.362</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q19-15">題目連結</a></small><p>白噪音變異數 16，問三期後近似 95% 預測區間全寬。</p><div class="solution" id="a-q19-15"><strong class="label">參考解答</strong><p>16。</p><strong class="label">解析</strong><p>單一未來值標準差始終 4。近似 \(\pm2\) 個標準差，故寬 \(4\times4\)，不可乘 \(\sqrt3\)。</p></div></article><article class="unit" id="s4"><div class="kicker">概念 04</div><h2>19.4 隨機漫步、漂移與差分</h2><p>若 \(Y_t=Y_{t-1}+C_t\)，初始 \(Y_0\) 固定，增量 \(C_t\) 獨立同分配、均值 \(d\)、變異數 \(\sigma_C^2\)，則逐期代入有 \(Y_t=Y_0+\sum_{j=1}^tC_j\)。取期望得 \(Y_0+td\)，取變異得 \(t\sigma_C^2\)。即使 \(d=0\)，衝擊保留在後面每一期，變異隨時間增長，故水準不平穩。取一次差分正好回到 \(C_t\)。</p>
-<p>已知漂移時，點預測 \(Y_T+hd\)；誤差是未來 \(h\) 個中心化增量之和，故標準誤 \(\sigma_C\sqrt h\)。題庫以 \(\bar C,s_C\) 代入，近似 95% 預測區間為 \(Y_T+h\bar C\pm 2s_C\sqrt h\)，忽略估計漂移的不確定性。若另外計入獨立的 \(m\) 個歷史增量估計漂移，誤差變異增加 \(h^2\sigma_C^2/m\)。</p>
-<p>確定趨勢 \(Y_t=a+bt+\epsilon_t\) 看似上升，但去除趨勢後的白噪音不累積；隨機趨勢須處理增量。對數差分 \(\log Y_t-\log Y_{t-1}=\log(1+R_t)\approx R_t\) 只適用正值水準、小相對變動。只看原序列標準差較大並不足以判定單根。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q19-10">19.10</a><a href="#q19-11">19.11</a><a href="#q19-12">19.12</a><a href="#q19-13">19.13</a><a href="#q19-14">19.14</a><a href="#q19-16">19.16</a><a href="#q19-17">19.17</a><a href="#q19-18">19.18</a><a href="#q19-19">19.19</a><a href="#q19-20">19.20</a><a href="#q19-21">19.21</a></div></article><article class="exercise" id="q19-10"><button class="toggle" aria-controls="a-q19-10" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 19.10 · 講義 p.361</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-10">題目連結</a></small><p>隨機漫步前十個增量平均為 2，第 11 至 19 期增量合計 26。用第 10 期資訊預測第 19 期，求實際減預測。</p><div class="solution" id="a-q19-10"><strong class="label">參考解答</strong><p>8（D）。</p><strong class="label">解析</strong><p>九期預測增加 \(9\times2=18\)，實際增加 26，起始水準相消。</p></div></article><article class="exercise" id="q19-11"><button class="toggle" aria-controls="a-q19-11" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 19.11 · 講義 p.361</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-11">題目連結</a></small><p>判斷哪些現象提示隨機漫步：I 趨勢及離散增加；II 差分符合白噪音；III 水準的樣本標準差大於差分。</p><div class="solution" id="a-q19-11"><strong class="label">參考解答</strong><p>講義列三者皆是觀察線索（D）；II 最直接。</p><strong class="label">解析</strong><p>差分就是隨機漫步的增量；I、III 單獨均非充分條件，零漂移時也未必看到趨勢。</p></div></article><article class="exercise" id="q19-13"><button class="toggle" aria-controls="a-q19-13" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 19.13 · 講義 p.362</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-13">題目連結</a></small><p>初值 0，十個增量為 2、3、5、3、5、2、4、1、2、3；求九期預測標準誤。</p><div class="solution" id="a-q19-13"><strong class="label">參考解答</strong><p>4（B）。</p><strong class="label">解析</strong><p>增量平均 3，樣本變異數 \(16/9\)；\(\sqrt9\times4/3=4\)。</p></div></article><article class="exercise" id="q19-19"><button class="toggle" aria-controls="a-q19-19" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 19.19 · 講義 p.362</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-19">題目連結</a></small><p>現值 25，隨機漫步漂移 4、增量變異 5；求三期後近似 95% 下界。</p><div class="solution" id="a-q19-19"><strong class="label">參考解答</strong><p>\(25+12-2\sqrt{15}=29.25\)。</p><strong class="label">解析</strong><p>三期中心是 37，變異是三個獨立增量的變異總和。</p></div></article><article class="exercise" id="q19-21"><button class="toggle" aria-controls="a-q19-21" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 19.21 · 講義 p.363</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-21">題目連結</a></small><p>水準 15、18、23、25、24、28、31、32、37、40，以漫步模型求第 13 期約 95% 預測區間全寬。</p><div class="solution" id="a-q19-21"><strong class="label">參考解答</strong><p>\(4(1.9221)\sqrt3=13.32\)（D）。</p><strong class="label">解析</strong><p>先取九個增量算樣本標準差 1.9221，切勿用十個水準的標準差。</p></div></article><article class="unit" id="s5"><div class="kicker">概念 05</div><h2>19.5 管制圖：何時應追查異常</h2><p>管制圖（control chart）先用穩定基準期間建立中心與上下界，再判斷新觀察偏離是否異常。對單一值可用 \(\bar y\pm3s_y\) 作經驗界線；對每組 \(k\) 筆獨立觀察的平均，同一組內差異互相抵銷，標準差改為 \(\sigma/\sqrt k\)，不能拿單筆的界線代用。\(\bar X\) 圖追蹤各組平均；R 圖追蹤組內最大值減最小值，看離散是否改變。超界是追查訊號而非必然事故。若有序列相關，原本按獨立假設設的界線可能誤報；應先建模，再觀察殘差。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><p class="minititle">相關講義練習（跨節）：<a href="ch19.html#q19-1">19.1 · 先用觀察值估計波動尺度</a></p></article><article class="unit" id="s6"><div class="kicker">概念 06</div><h2>19.6 樣本外預測的五個誤差指標</h2><p>只有時間真的走到未來才看得到 \(Y_t\)；用先前時段估參數、在後段評估，才能模擬部署。定義誤差 \(e_t=y_t-\hat y_t\)：正值代表低估。在 \(m\) 個測試點上，\(ME=\sum e_t/m\) 看偏向；\(MAE=\sum|e_t|/m\) 看一般誤差；\(MSE=\sum e_t^2/m\) 懲罰大錯。\(MPE=100\sum(e_t/y_t)/m\) 與 \(MAPE=100\sum |e_t/y_t|/m\) 方便按規模比較，但 \(y_t=0\) 無定義、接近零會爆大。ME/MPE 應看離零多遠，不是越負越好。</p>
-<p>固定起點的多步預測只用一次起始資訊；滾動一步預測在每一步更新實際前一期水準。兩者回答不同任務，即使用同一模型也會得到不同誤差。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="以同一序列的過去值作為解釋變數，描述衝擊如何傳到未來。" data-target="第 20 章 · 自我迴歸" href="ch20.html#s1">自我迴歸</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q19-22">19.22</a><a href="#q19-23">19.23</a><a href="#q19-24">19.24</a><a href="#q19-25">19.25</a><a href="#q19-26">19.26</a></div></article><article class="exercise" id="q19-24"><button class="toggle" aria-controls="a-q19-24" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 19.24 · 講義 p.363</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q19-24">題目連結</a></small><p>水準 2、5、10、11、15、17、20、22、25、27；用前六期估漂移，從第六期固定起點預測後四期，求 MSE。</p><div class="solution" id="a-q19-24"><strong class="label">參考解答</strong><p>1.5。</p><strong class="label">解析</strong><p>漂移 \((17-2)/5=3\)；預測 20、23、26、29；平方誤差和 6 除以 4。</p></div></article><article class="exercise" id="q19-26"><button class="toggle" aria-controls="a-q19-26" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 19.26 · 講義 p.364</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q19-26">題目連結</a></small><p>漂移估計為 2.25；以前期真實值 12、15、21 逐次預測後三筆 15、21、22。求 ME 與 MSE 差的絕對值。</p><div class="solution" id="a-q19-26"><strong class="label">參考解答</strong><p>4.3125（B）。</p><strong class="label">解析</strong><p>一步誤差 0.75、3.75、−1.25，ME 1.08333，MSE 5.39583。</p></div></article><article class="unit" id="terms"><div class="kicker">TERMS</div><h2>本章中英術語</h2><table><thead><tr><th>中文</th><th>English</th><th>解題時的意思</th></tr></thead><tbody><tr><td>弱平穩</td><td>weak stationarity</td><td>均值及有限變異不變，共變異只依落後期。</td></tr><tr><td>隨機漫步</td><td>random walk</td><td>水準為過去增量的累積。</td></tr><tr><td>自相關</td><td>autocorrelation</td><td>同一序列不同時點的線性連動。</td></tr></tbody></table></article><section class="panel" id="remaining"><h2>章末其餘習題 · 16 題</h2><p>按講義題號排列。做題前可用各題自己的按鈕隱藏解答。</p></section><article class="exercise" id="q19-2"><button class="toggle" aria-controls="a-q19-2" aria-expanded="true">隱藏解答</button><h3>練習 · 19.2 · 講義 p.358</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q19-2">題目連結</a></small><p>依序為 1、1.5、1.6、1.4、1.5、1.7，求 \(r_2\)。</p><div class="solution" id="a-q19-2"><strong class="label">參考解答</strong><p>\(-0.075/0.295=-0.25424\)（C）。</p><strong class="label">解析</strong><p>全樣本平均 1.45；分子只有四對，分母有六項。</p></div></article><article class="exercise" id="q19-3"><button class="toggle" aria-controls="a-q19-3" aria-expanded="true">隱藏解答</button><h3>練習 · 19.3 · 講義 p.358</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q19-3">題目連結</a></small><p>水準 4、3.5、2.5、5.5、4.5、4，求 \(r_4\)。</p><div class="solution" id="a-q19-3"><strong class="label">參考解答</strong><p>0（C）。</p><strong class="label">解析</strong><p>平均 4；兩個乘積各有一個因子為零。</p></div></article><article class="exercise" id="q19-4"><button class="toggle" aria-controls="a-q19-4" aria-expanded="true">隱藏解答</button><h3>練習 · 19.4 · 講義 p.359</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q19-4">題目連結</a></small><p>序列 3、2.5、2、3.5、4、3，求 \(r_3\)。</p><div class="solution" id="a-q19-4"><strong class="label">參考解答</strong><p>\(-0.5/2.5=-0.2\)（B）。</p><strong class="label">解析</strong><p>平均 3；三個跨三期的乘積為 0、−0.5、0。</p></div></article><article class="exercise" id="q19-5"><button class="toggle" aria-controls="a-q19-5" aria-expanded="true">隱藏解答</button><h3>練習 · 19.5 · 講義 p.359</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q19-5">題目連結</a></small><p>五年報酬 7%、6%、7%、10%、−5%，求 \(r_2\)。</p><div class="solution" id="a-q19-5"><strong class="label">參考解答</strong><p>−0.08209（E）。</p><strong class="label">解析</strong><p>以小數算平均 0.05；分子 −0.0011、分母 0.0134。</p></div></article><article class="exercise" id="q19-6"><button class="toggle" aria-controls="a-q19-6" aria-expanded="true">隱藏解答</button><h3>練習 · 19.6 · 講義 p.359</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q19-6">題目連結</a></small><p>資料 1.2、1.1、0.9、1.3、1.5，求 \(r_2\)。</p><div class="solution" id="a-q19-6"><strong class="label">參考解答</strong><p>−0.50（A）。</p><strong class="label">解析</strong><p>中心化為 0、−0.1、−0.3、0.1、0.3，分子 −0.1，分母 0.2。</p></div></article><article class="exercise" id="q19-8"><button class="toggle" aria-controls="a-q19-8" aria-expanded="true">隱藏解答</button><h3>練習 · 19.8 · 講義 p.360</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q19-8">題目連結</a></small><p>年銷售額 400、375、410、420、410、525，求 \(r_2\)。</p><div class="solution" id="a-q19-8"><strong class="label">參考解答</strong><p>\(311.11/13583.33=0.0229\)（B）。</p><strong class="label">解析</strong><p>平均 423.33，將相隔兩年而非相鄰的四對偏差相乘。</p></div></article><article class="exercise" id="q19-9"><button class="toggle" aria-controls="a-q19-9" aria-expanded="true">隱藏解答</button><h3>練習 · 19.9 · 講義 p.360</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q19-9">題目連結</a></small><p>年股價 63.18、81.89、103.43、123.90、133.53，求 \(r_1\)。</p><div class="solution" id="a-q19-9"><strong class="label">參考解答</strong><p>0.4361（C）。</p><strong class="label">解析</strong><p>以 101.186 中心化，鄰期乘積和 1475.695，平方和 3383.887。</p></div></article><article class="exercise" id="q19-12"><button class="toggle" aria-controls="a-q19-12" aria-expanded="true">隱藏解答</button><h3>練習 · 19.12 · 講義 p.361</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-12">題目連結</a></small><p>比較 L（線性時間趨勢加白噪音）與 M（漂移加累積白噪音）。判斷 L 誤差不累積、M 誤差漫步、零漂移時兩者未必呈相同均值趨勢。</p><div class="solution" id="a-q19-12"><strong class="label">參考解答</strong><p>依題意三項皆成立（D）。</p><strong class="label">解析</strong><p>L 的偏差只有當期噪音；M 是整串噪音總和。比較時不能只憑圖形看起來是否上升。</p></div></article><article class="exercise" id="q19-14"><button class="toggle" aria-controls="a-q19-14" aria-expanded="true">隱藏解答</button><h3>練習 · 19.14 · 講義 p.362</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-14">題目連結</a></small><p>隨機漫步的漂移不為零是否造成均值非平穩？增量變異為零或正值時何者造成變異非平穩？</p><div class="solution" id="a-q19-14"><strong class="label">參考解答</strong><p>漂移非零、增量變異為正的敘述正確（C）。</p><strong class="label">解析</strong><p>分別來自 \(E Y_t=Y_0+td\)、\(\operatorname{Var}Y_t=t\sigma_C^2\)；零變異不會累積出變異。</p></div></article><article class="exercise" id="q19-16"><button class="toggle" aria-controls="a-q19-16" aria-expanded="true">隱藏解答</button><h3>練習 · 19.16 · 講義 p.362</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-16">題目連結</a></small><p>已知隨機漫步初值固定，第五期變異 35，第六期呢？</p><div class="solution" id="a-q19-16"><strong class="label">參考解答</strong><p>42。</p><strong class="label">解析</strong><p>每期增加相同變異 \(35/5=7\)。</p></div></article><article class="exercise" id="q19-17"><button class="toggle" aria-controls="a-q19-17" aria-expanded="true">隱藏解答</button><h3>練習 · 19.17 · 講義 p.362</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-17">題目連結</a></small><p>隨機漫步單期常態增量均值 2、變異 16；已知第一期為 3，第二期為正的機率？</p><div class="solution" id="a-q19-17"><strong class="label">參考解答</strong><p>\(\Phi(1.25)=0.8944\)。</p><strong class="label">解析</strong><p>條件平均 5、標準差 4；零比均值低 1.25 個標準差。</p></div></article><article class="exercise" id="q19-18"><button class="toggle" aria-controls="a-q19-18" aria-expanded="true">隱藏解答</button><h3>練習 · 19.18 · 講義 p.362</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-18">題目連結</a></small><p>隨機漫步增量變異 3，求三期後近似 95% 預測區間全寬。</p><div class="solution" id="a-q19-18"><strong class="label">參考解答</strong><p>12。</p><strong class="label">解析</strong><p>總預測變異 \(3\times3=9\)，寬度 \(2\times2\times3\)。</p></div></article><article class="exercise" id="q19-20"><button class="toggle" aria-controls="a-q19-20" aria-expanded="true">隱藏解答</button><h3>練習 · 19.20 · 講義 p.363</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q19-20">題目連結</a></small><p>比較增量變異相同的零漂移與正漂移模型：漂移是否使預測標準誤隨期限可能變小？</p><div class="solution" id="a-q19-20"><strong class="label">參考解答</strong><p>否；此主張錯誤（E）。</p><strong class="label">解析</strong><p>漂移決定點預測斜率，已知漂移下兩個模型的標準誤皆為 \(\sigma_C\sqrt h\)。</p></div></article><article class="exercise" id="q19-22"><button class="toggle" aria-controls="a-q19-22" aria-expanded="true">隱藏解答</button><h3>練習 · 19.22 · 講義 p.363</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q19-22">題目連結</a></small><p>白噪音序列 2、4、1、3、5、3、2、1、6、4；以前六筆估計，計算後四筆 MPE。</p><div class="solution" id="a-q19-22"><strong class="label">參考解答</strong><p>−43.75%。</p><strong class="label">解析</strong><p>預測皆為 3；百分誤差為 −50%、−200%、50%、25%，平均 −43.75%。</p></div></article><article class="exercise" id="q19-23"><button class="toggle" aria-controls="a-q19-23" aria-expanded="true">隱藏解答</button><h3>練習 · 19.23 · 講義 p.363</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q19-23">題目連結</a></small><p>同 19.22：求四個測試點的 MSE。</p><div class="solution" id="a-q19-23"><strong class="label">參考解答</strong><p>3.75。</p><strong class="label">解析</strong><p>實際減預測為 −1、−2、3、1，平方和 15 除以 4。</p></div></article><article class="exercise" id="q19-25"><button class="toggle" aria-controls="a-q19-25" aria-expanded="true">隱藏解答</button><h3>練習 · 19.25 · 講義 p.363</h3><div class="clearfix"></div><small><a href="#s6">回到對應概念</a> · <a href="#q19-25">題目連結</a></small><p>水準 2、5、10、11、17、22、25、28、35、40；前六期建漫步，固定起點預測後四期，求 MAE。</p><div class="solution" id="a-q19-25"><strong class="label">參考解答</strong><p>1.5。</p><strong class="label">解析</strong><p>漂移 4，預測 26、30、34、38，絕對誤差 1、2、1、2。</p></div></article><section class="panel"><h2>用模擬考複習本章</h2><div class="chips"><a href="exams.html#exam1">第 1 回 · 題 18</a><a href="exams.html#exam1">第 1 回 · 題 23</a><a href="exams.html#exam2">第 2 回 · 題 3</a><a href="exams.html#exam3">第 3 回 · 題 23</a><a href="exams.html#exam4">第 4 回 · 題 3</a><a href="exams.html#exam4">第 4 回 · 題 18</a><a href="exams.html#exam5">第 5 回 · 題 12</a><a href="exams.html#exam6">第 6 回 · 題 20</a><a href="exams.html#exam6">第 6 回 · 題 27</a></div></section><div class="navfoot"><a href="ch18.html">← 上一章</a><a href="ch20.html">下一章 →</a></div><footer>SRM 精算考試中文研讀筆記 · 依所附第四版教材章序編寫，中文解析為參考解答。</footer></main></body></html>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 19 章　時間數列：從平穩性到預測誤差｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
+<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html" selected>第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 19 章</div><h1>時間數列：從平穩性到預測誤差</h1><p class="ch-sub">時間數列的觀察依時間排列，前後彼此相關，所以不能直接套用前面各章「觀察獨立」的方法。本章建立整個時間數列單元的基本語言：趨勢與季節的分解、平穩性、樣本自相關的計算；再推導兩個最基本的模型：白噪音與隨機漫步，各自的預測值與預測區間為什麼長那樣；最後學會用管制圖與樣本外驗證（ME、MPE、MSE、MAE、MAPE）評估預測。</p><div class="chips"><a href="pdf/ch19.pdf">下載本章 PDF</a><a href="#exercises">章末習題（26 題）</a><span class="chip-note">觀念題 26 題（在各節後面）</span><button class="toggle-all" type="button">顯示全部解答</button></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">19.1 時間數列與迴歸模型</a></li><li><a href="#s2">19.2 平穩性與自相關</a></li><li><a href="#s3">19.3 白噪音</a></li><li><a href="#s4">19.4 隨機漫步</a></li><li><a href="#s5">19.5 管制圖與預測評估</a></li></ol><p>本章對應講義第 19 課，讀本是 Frees《Regression Modeling with Actuarial and Financial Applications》第 7 章與 8.1 節。會用到第 2、3 章的迴歸與第 6 章的驗證集概念。</p>
+<p><strong>記號。</strong> 時間數列 \(y_1,\ldots,y_T\)；\(\bar y\) 是樣本平均；\(r_k\) 是落後 \(k\) 期的樣本自相關、\(\rho_k\) 是真實自相關；\(c_t\) 是白噪音，平均 \(\mu_c\)、變異數 \(\sigma_c^2\)；\(l\) 是預測的期數（\(l\) 期後預測 \(\hat y_{T+l}\)）。</p>
+<div class="box map">
+<div class="box-t">考點地圖：這一章在考試裡的位置</div>
+<p><strong>對應考綱</strong>：主題 3「時間數列模型」（占 10～15%）：平穩性、自相關、白噪音、隨機漫步、預測與預測區間、管制圖、預測的樣本外評估。</p>
+<p><strong>SOA 官方樣題裡的樣子</strong>（2024 版）：</p>
+<table>
+<thead>
+<tr>
+<th>類型</th>
+<th>樣題</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>隨機漫步的預測誤差</td>
+<td>3</td>
+</tr>
+<tr>
+<td>隨機漫步預測的標準誤</td>
+<td>4</td>
+</tr>
+<tr>
+<td>隨機漫步的平穩性</td>
+<td>21</td>
+</tr>
+<tr>
+<td>如何辨認隨機漫步</td>
+<td>31</td>
+</tr>
+<tr>
+<td>線性趨勢與隨機漫步的比較</td>
+<td>38</td>
+</tr>
+<tr>
+<td>樣本外驗證：ME 與 MSE</td>
+<td>55</td>
+</tr>
+</tbody>
+</table>
+<p>CAS MAS-I 幾乎每次都有一題樣本自相關的計算（習題 <a href="ch19.html#q19-4">19.4</a>、<a href="ch19.html#q19-7">19.7</a>～<a href="ch19.html#q19-9">19.9</a>）。</p>
+<table>
+<thead>
+<tr>
+<th>會考的東西</th>
+<th>題目長什麼樣</th>
+<th>判斷或計算的依據</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>樣本自相關</td>
+<td>給一小段數列，求 \(r_k\)</td>
+<td>分子 \(T-k\) 項、分母 \(T\) 項，都減<strong>全體</strong>平均</td>
+</tr>
+<tr>
+<td>白噪音預測</td>
+<td>預測值與區間</td>
+<td>\(\bar y\)；\(\bar y\pm t\,s_y\sqrt{1+1/T}\)，寬度與 \(l\) 無關</td>
+</tr>
+<tr>
+<td>隨機漫步預測</td>
+<td>\(l\) 期後的預測、誤差、標準誤</td>
+<td>\(y_T+l\bar c\)；標準誤 \(s_c\sqrt l\)</td>
+</tr>
+<tr>
+<td>隨機漫步的性質</td>
+<td>平穩與否、怎麼辨認</td>
+<td>平均 \(y_0+t\mu_c\)、變異數 \(t\sigma_c^2\)；差分是白噪音</td>
+</tr>
+<tr>
+<td>趨勢 vs 隨機漫步</td>
+<td>兩個模型的誤差項</td>
+<td>線性趨勢的誤差是白噪音；隨機漫步的誤差是隨機漫步</td>
+</tr>
+<tr>
+<td>預測評估</td>
+<td>給測試期的預測，算 ME、MSE 等</td>
+<td>\(e_t=y_t-\hat y_t\)（實際減預測）；注意一步預測與多步預測</td>
+</tr>
+</tbody>
+</table>
+<p><strong>讀完這一章要會</strong>：</p>
+<ol>
+<li>說出平穩的意義，計算任何落後期數的樣本自相關。</li>
+<li>推導白噪音的預測區間，說明寬度為什麼不隨預測期數改變。</li>
+<li>推導隨機漫步的平均、變異數、預測值與標準誤，辨認隨機漫步並和線性趨勢區分。</li>
+<li>用樣本外驗證計算 ME、MPE、MSE、MAE、MAPE，並說出各自的限制。</li>
+</ol>
+</div></section><section class="unit" id="s1"><h2>19.1 時間數列與迴歸模型</h2><h3>一、時間數列是什麼</h3>
+<p><strong>時間數列</strong>是依時間順序排列的觀察 \(y_1,y_2,\ldots,y_T\)，例如每日股價、每月銷售額、每年人口。分析的目的是找出規律來預測未來的值：規律可能是 \(y_t\) 與它自己過去的值的關係，也可能是 \(y_t\) 與時間 \(t\) 的關係。</p>
+<ul>
+<li><strong>縱向資料</strong>（longitudinal）：隨時間變化的過程產生的資料；<strong>橫斷面資料</strong>（cross-sectional）：沒有時間順序的資料。</li>
+<li><strong>因果模型</strong>（causal model）：用時間以外的解釋變數預測 \(y\)。缺點：(1) 統計只能找出相關，幾個都隨時間成長的變數之間可能出現<strong>虛假關係</strong>（spurious relationship）；(2) 要預測 \(y\)，必須先預測解釋變數。</li>
+</ul>
+<h3>二、趨勢、季節與隨機</h3>
+<p>時間數列可分解成<strong>趨勢</strong> \(T_t\)（長期走向）、<strong>季節</strong> \(S_t\)（週期性的起伏）、<strong>隨機</strong>部分 \(\varepsilon_t\)：
+\[\text{加法模型：}\ y_t=T_t+S_t+\varepsilon_t,\qquad\text{乘法模型：}\ y_t=T_t\times S_t+\varepsilon_t .\]
+分析前通常先畫<strong>時間數列圖</strong>（對 \(t\) 的散布圖，相鄰點以線連接）。</p>
+<figure><img src="assets/fig/ch19-decomp.svg" alt="模擬的 60 個月資料，趨勢 、週期 12 的季節。加法模型的季節起伏大小固定；乘法模型的起伏隨水準成比例放大。右下：減去季節部分就是**季節調整**後的數列，只剩趨勢加隨機。" loading="lazy"><figcaption>模擬的 60 個月資料，趨勢 \(100+1.5t\)、週期 12 的季節。加法模型的季節起伏大小固定；乘法模型的起伏隨水準成比例放大。右下：減去季節部分就是**季節調整**後的數列，只剩趨勢加隨機。</figcaption></figure>
+
+<h3>三、用迴歸模型時間數列</h3>
+<ul>
+<li><strong>線性趨勢</strong>：\(y_t=\beta_0+\beta_1t+\varepsilon_t\)；也可以用多項式。</li>
+<li><strong>季節</strong>：用季節的虛擬變數，或三角函數（\(\sin\)、\(\cos\)）。</li>
+<li><strong>結構改變</strong>（regime change）：某個時點之後行為改變，用「該時點前為 0、之後為 1」的虛擬變數。</li>
+</ul>
+<p>迴歸的兩個缺點：</p>
+<ol>
+<li><strong>天真</strong>（naive）：只用被模型化的數列本身，忽略其他資訊。</li>
+<li><strong>權重放錯地方</strong>：最早與最晚的觀察權重最大。</li>
+</ol>
+<div class="box derive">
+<div class="box-t">推導：為什麼趨勢迴歸讓最早的觀察權重最大</div>
+<p>斜率的最小平方估計是
+\[\hat\beta_1=\frac{\sum_t(t-\bar t)y_t}{\sum_t(t-\bar t)^2},\]
+\(y_t\) 的權重與 \(t-\bar t\) 成正比：離時間中點最遠的兩端，也就是<strong>最早</strong>與<strong>最晚</strong>的觀察，權重的絕對值最大。</p>
+<p>\(l\) 期後的預測 \(\hat y_{T+l}=\bar y+\hat\beta_1(T+l-\bar t)\)，對 \(y_t\) 的權重是
+\[w_t=\frac1T+\frac{(T+l-\bar t)(t-\bar t)}{\sum_s(s-\bar s)^2}.\]
+最早的觀察（\(t=1\)）權重是很大的<strong>負數</strong>。但預測時直覺上應該讓最近的觀察權重最大、最早的最小（<a href="ch21.html">第 21 章</a>的指數平滑就是這樣做）。</p>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：基本概念</div>
+<ul>
+<li>名詞判斷：縱向／橫斷面、因果模型、加法／乘法、季節調整、結構改變。</li>
+<li>迴歸方法的缺點：天真、最早與最晚的觀察權重最大。</li>
+</ul>
+</div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（4 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC19-1-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.1-1</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A monthly sales series has a rising trend, and the size of the seasonal swings grows in proportion to the level of the series.</p>
+<p>Determine the most appropriate decomposition.</p>
+<div class="opts">
+<p>(A) Multiplicative: \(y_t=T_t\times S_t+\varepsilon_t\)</p>
+<p>(B) Additive: \(y_t=T_t+S_t+\varepsilon_t\)</p>
+<p>(C) White noise with constant mean</p>
+<p>(D) Random walk without drift</p>
+<p>(E) Linear trend with no seasonal component</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>月銷售額有上升趨勢，而且季節起伏的大小隨水準成比例放大。最適合的分解是？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>乘法模型中季節因子乘上趨勢，水準越高起伏越大；加法模型的起伏大小固定。</p></div></div></article><article class="exercise concept-q" id="qC19-1-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.1-2</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine a drawback of causal models (models with explanatory variables other than time) for forecasting a time series.</p>
+<div class="opts">
+<p>(A) They cannot include more than one explanatory variable</p>
+<p>(B) They always overweight the most recent observations</p>
+<p>(C) Forecasting requires forecasts of the explanatory variables, and trending variables may show spurious relationships</p>
+<p>(D) They cannot be estimated by least squares</p>
+<p>(E) They assume the series is a random walk</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>用時間以外的解釋變數建立的因果模型，用來預測時間數列有什麼缺點？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>要預測 \(y\) 必須先預測解釋變數；而且同樣隨時間成長的變數之間容易出現虛假關係。</p></div></div></article><article class="exercise concept-q" id="qC19-1-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.1-3</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Starting at a known time \(t_0\), a series changes its behavior permanently.</p>
+<p>Determine how a regression model can capture this regime change.</p>
+<div class="opts">
+<p>(A) Use the logarithm of the series</p>
+<p>(B) Add a seasonal dummy variable</p>
+<p>(C) Take first differences</p>
+<p>(D) Add a dummy variable equal to 0 before \(t_0\) and 1 from \(t_0\) on</p>
+<p>(E) Use a control chart</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>從已知時點 \(t_0\) 起數列的行為永久改變。迴歸模型如何處理這個結構改變？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>虛擬變數在 \(t_0\) 前為 0、之後為 1，讓截距（或與 \(t\) 交乘後的斜率）在 \(t_0\) 前後不同。</p></div></div></article><article class="exercise concept-q" id="qC19-1-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.1-4</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A linear trend \(y_t=\beta_0+\beta_1t+\varepsilon_t\) is fitted by least squares to \(y_1,\ldots,y_T\).</p>
+<p>Determine which observations receive the largest weight (in absolute value) in \(\hat\beta_1\).</p>
+<div class="opts">
+<p>(A) The observations near the middle of the time period</p>
+<p>(B) The earliest and the latest observations</p>
+<p>(C) Only the latest observation</p>
+<p>(D) All observations equally</p>
+<p>(E) Only the earliest observation</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>用最小平方法配適線性趨勢，哪些觀察在 \(\hat\beta_1\) 中的權重（絕對值）最大？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat\beta_1=\sum(t-\bar t)y_t/\sum(t-\bar t)^2\)，權重與 \(t-\bar t\) 成正比，兩端最大。這是讀本指出的迴歸缺點之一。</p></div></div></article></div></section><section class="unit" id="s2"><h2>19.2 平穩性與自相關</h2><h3>一、平穩</h3>
+<p>令 \(\mu(t)=\mathrm E[y_t]\)、\(\sigma^2(t)=\mathrm E[(y_t-\mu(t))^2]\)。</p>
+<ul>
+<li><strong>平均平穩</strong>：\(\mu(t)\) 不隨 \(t\) 變。這時可以用 \(\bar y\) 估計平均。</li>
+<li><strong>變異數平穩</strong>：\(\sigma^2(t)\) 不隨 \(t\) 變。這時用一般的樣本變異數
+\[s_y^2=\frac1{T-1}\sum_{t=1}^T(y_t-\bar y)^2 .\tag{19.1}\]</li>
+<li><strong>（弱）平穩</strong>：平均、變異數都平穩，而且 \(y_t\) 與 \(y_{t+k}\) 的相關只與<strong>落後期數</strong> \(k\) 有關，與 \(t\) 無關。更高階的動差仍可能隨時間變。</li>
+<li><strong>強平穩</strong>：所有動差（整個分配）都不隨時間變。</li>
+</ul>
+<div class="box derive">
+<div class="box-t">推導：相關的數列中，樣本變異數會低估</div>
+<p>由 \(\sum_t(y_t-\bar y)^2=\sum_t(y_t-\mu)^2-T(\bar y-\mu)^2\) 取期望值：
+\[\mathrm E\Big[\sum_t(y_t-\bar y)^2\Big]=T\sigma^2-T\,\mathrm{Var}(\bar y),\qquad\mathrm E[s_y^2]=\frac{T}{T-1}\big(\sigma^2-\mathrm{Var}(\bar y)\big).\]
+- 觀察獨立時 \(\mathrm{Var}(\bar y)=\sigma^2/T\)，代入得 \(\mathrm E[s_y^2]=\sigma^2\)，不偏。
+- 時間數列通常<strong>正相關</strong>，\(\mathrm{Var}(\bar y)=\frac{\sigma^2}{T}\big[1+2\sum_{k\geq1}(1-\tfrac kT)\rho_k\big]&gt;\sigma^2/T\)，所以 \(s_y^2\) <strong>低估</strong> \(\sigma^2\)。\(T\) 越大，偏差越小。</p>
+</div>
+<h3>二、樣本自相關</h3>
+<p>數列與自己的相關稱為<strong>自相關</strong>（autocorrelation，或 serial correlation）。落後 \(k\) 期的<strong>樣本自相關</strong>：
+\[r_k=\frac{\sum_{t=k+1}^T(y_{t-k}-\bar y)(y_t-\bar y)}{\sum_{t=1}^T(y_t-\bar y)^2}.\tag{19.2}\]</p>
+<ul>
+<li>分子有 \(T-k\) 項，分母有 \(T\) 項；兩者都減<strong>全部</strong> \(T\) 個觀察的平均 \(\bar y\)。</li>
+<li>\(r_0=1\)（真實的 \(\rho_0\) 也是 1）。</li>
+<li>為什麼不用一般相關係數（前 \(T-k\) 項與後 \(T-k\) 項各自的平均與變異數）？在平穩的假設下，所有項有共同的平均與變異數，用全體資料估計比較穩定；這也保證 \(|r_k|\le1\)，而且分子分母都是 \(1/T\) 的尺度，可以想成「共變異數 ÷ 變異數」。</li>
+</ul>
+<div class="box ex">
+<div class="box-t">例題 19-1：樣本自相關（講義例 19A、小測驗 19-1）</div>
+<p>數列 5、9、3、6、7，平均 6，離差 \(-1,3,-3,0,1\)，平方和 20。</p>
+<p><strong>落後 1 期</strong>：相鄰離差相乘：\((-1)(3)+(3)(-3)+(-3)(0)+(0)(1)=-12\)，\(r_1=-12/20=-0.6\)。</p>
+<p><strong>落後 3 期</strong>：\((-1)(0)+(3)(1)=3\)，\(r_3=3/20=0.15\)。</p>
+<p>計算機技巧：分母用全部 5 個離差的平方和；分子把「前 \(T-k\) 個離差」當 \(X\)、「後 \(T-k\) 個離差」當 \(Y\)，用 \(\sum XY\)。</p>
+</div>
+<figure><img src="assets/fig/ch19-acf.svg" alt="三種 120 期的數列與它們的樣本自相關（相關圖，correlogram）。白噪音：除了 ，都落在  的虛線內。平穩但相鄰項正相關： 隨  慢慢衰減到 0。隨機漫步： 幾乎都接近 1、衰減極慢，這是**不平穩**的典型訊號。" loading="lazy"><figcaption>三種 120 期的數列與它們的樣本自相關（相關圖，correlogram）。白噪音：除了 \(r_0=1\)，都落在 \(\pm2/\sqrt T\) 的虛線內。平穩但相鄰項正相關：\(r_k\) 隨 \(k\) 慢慢衰減到 0。隨機漫步：\(r_k\) 幾乎都接近 1、衰減極慢，這是**不平穩**的典型訊號。</figcaption></figure>
+
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li>分母是<strong>全部</strong> \(T\) 項的平方和，不是 \(T-k\) 項；分子只有 \(T-k\) 項。</li>
+<li>減的是全體平均 \(\bar y\)，不是前段或後段各自的平均。</li>
+<li>題目給的平均如果和你算的不同，以資料重算（習題 <a href="ch19.html#q19-3">19.3</a>、<a href="ch19.html#q19-4">19.4</a> 的表中給了平均，可以直接用）。</li>
+<li>小樣本的 \(r_k\) 有偏差：即使是白噪音，\(r_k\) 的期望值也約為 \(-1/T\)，偏向負值。</li>
+</ul>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：自相關</div>
+<ul>
+<li>計算 \(r_k\)（MAS-I-S18:41、MAS-I-F18:45、MAS-I-F19:44、MAS-I-S19:42、習題 <a href="ch19.html#q19-1">19.1</a>～<a href="ch19.html#q19-9">19.9</a>）：資料 5～8 筆，選項是區間。</li>
+<li>平穩的定義：弱平穩要求平均、變異數固定，自相關只與落後期數有關。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q19-1"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.1 題</b><small>・講義 p.358・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>You are given the following time series:</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y_t\)</td>
+<td>8</td>
+<td>5</td>
+<td>12</td>
+<td>18</td>
+<td>7</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the sample autocorrelation at lag 1.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>時間數列：</p>
+<p>求落後 1 期的樣本自相關。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>−0.0755</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar y=10\)，離差 \(-2,-5,2,8,-3,0\)，平方和 \(4+25+4+64+9+0=106\)。</p>
+<p>分子（相鄰離差相乘）：\((-2)(-5)+(-5)(2)+(2)(8)+(8)(-3)+(-3)(0)=10-10+16-24+0=-8\)。</p>
+<p>\(r_1=-8/106=-0.0755\)。</p></div></div></article><article class="exercise" id="q19-2"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.2 題</b><small>・講義 p.358・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[S-F16:42] You are given the following ordered sample of size 6 from a time series:</p>
+<p>1　1.5　1.6　1.4　1.5　1.7</p>
+<p>Calculate the sample lag 2 autocorrelation.</p>
+<div class="opts">
+<p>(A) Less than −0.6</p>
+<p>(B) At least −0.6, but less than −0.3</p>
+<p>(C) At least −0.3, but less than 0.0</p>
+<p>(D) At least 0.0, but less than 0.3</p>
+<p>(E) At least 0.3</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（S-F16:42）時間數列的 6 個依序觀察值：</p>
+<p>1　1.5　1.6　1.4　1.5　1.7</p>
+<p>求落後 2 期的樣本自相關。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar y=1.45\)，離差 \(-0.45,0.05,0.15,-0.05,0.05,0.25\)，平方和 0.295。</p>
+<p>分子（相隔 2 期）：\((-0.45)(0.15)+(0.05)(-0.05)+(0.15)(0.05)+(-0.05)(0.25)=-0.075\)。</p>
+<p>\(r_2=-0.075/0.295=-0.2542\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>分子只有 \(6-2=4\) 項；分母仍是 6 項。</p></div></div></article><article class="exercise" id="q19-4"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.4 題</b><small>・講義 p.359・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:41] You are given the following information from a time series:</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>\(\bar y\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y_t\)</td>
+<td>3.0</td>
+<td>2.5</td>
+<td>2.0</td>
+<td>3.5</td>
+<td>4.0</td>
+<td>3.0</td>
+<td>3.0</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the lag 3 autocorrelation.</p>
+<div class="opts">
+<p>(A) Less than −0.30</p>
+<p>(B) At least −0.30, but less than −0.10</p>
+<p>(C) At least −0.10, but less than 0.10</p>
+<p>(D) At least 0.10, but less than 0.30</p>
+<p>(E) At least 0.30</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I-S18:41）時間數列：</p>
+<p>求落後 3 期的自相關。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>離差 \(0,-0.5,-1,0.5,1,0\)，平方和 2.5。</p>
+<p>分子：\((y_1-3)(y_4-3)+(y_2-3)(y_5-3)+(y_3-3)(y_6-3)=(0)(0.5)+(-0.5)(1)+(-1)(0)=-0.5\)。</p>
+<p>\(r_3=-0.5/2.5=-0.2\)。</p></div></div></article><article class="exercise" id="q19-7"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.7 題</b><small>・講義 p.360・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F18:45] You are given the following quarterly rainfall totals over a two-year span:</p>
+<table>
+<thead>
+<tr>
+<th>Quarter</th>
+<th>2016q1</th>
+<th>2016q2</th>
+<th>2016q3</th>
+<th>2016q4</th>
+<th>2017q1</th>
+<th>2017q2</th>
+<th>2017q3</th>
+<th>2017q4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rainfall</td>
+<td>25</td>
+<td>19</td>
+<td>10</td>
+<td>32</td>
+<td>26</td>
+<td>38</td>
+<td>22</td>
+<td>20</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the sample lag 4 autocorrelation.</p>
+<div class="opts">
+<p>(A) Less than 0.0</p>
+<p>(B) At least 0.0, but less than 0.3</p>
+<p>(C) At least 0.3, but less than 0.6</p>
+<p>(D) At least 0.6, but less than 0.9</p>
+<p>(E) At least 0.9</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I-F18:45）兩年的每季雨量：</p>
+<p>求落後 4 期的樣本自相關。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平均 24，離差 \(1,-5,-14,8,2,14,-2,-4\)，平方和 506。</p>
+<p>分子（同一季的兩年相乘）：\((1)(2)+(-5)(14)+(-14)(-2)+(8)(-4)=2-70+28-32=-72\)。</p>
+<p>\(r_4=-72/506=-0.1423\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>落後 4 期在季資料裡就是「去年同一季」。直覺上季節性會讓 \(r_4\) 為正，但這組資料沒有明顯的季節型態。</p></div></div></article><article class="exercise" id="q19-9"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.9 題</b><small>・講義 p.360・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S19:42] Consider the following time-series data for price of a stock on January 1 for the last 5 years:</p>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Jan. 1, 2013</th>
+<th>Jan. 1, 2014</th>
+<th>Jan. 1, 2015</th>
+<th>Jan. 1, 2016</th>
+<th>Jan. 1, 2017</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Price</td>
+<td>63.18</td>
+<td>81.89</td>
+<td>103.43</td>
+<td>123.90</td>
+<td>133.53</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the sample autocorrelation at lag 1 for this data.</p>
+<div class="opts">
+<p>(A) Less than 0.2</p>
+<p>(B) At least 0.2, but less than 0.4</p>
+<p>(C) At least 0.4, but less than 0.6</p>
+<p>(D) At least 0.6, but less than 0.8</p>
+<p>(E) At least 0.8</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I-S19:42）某股票過去 5 年 1 月 1 日的價格：</p>
+<p>求落後 1 期的樣本自相關。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平均 101.186。分母 \(\sum(y_t-\bar y)^2=3383.887\)（等於不偏樣本變異數乘 4）。</p>
+<p>分子 \(\sum_{t=1}^4(y_t-\bar y)(y_{t+1}-\bar y)=1475.695\)。</p>
+<p>\(r_1=1475.695/3383.887=0.4361\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>價格一路上升，直覺上 \(r_1\) 應該接近 1，但只有 5 個點時，分子少了一項、兩端的離差又分屬正負，\(r_1\) 會被大幅壓低。這正是小樣本 \(r_k\) 偏差大的例子。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（6 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC19-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.2-1</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A time series is 2, 6, 4, 8.</p>
+<p>Calculate the sample autocorrelation at lag 2.</p>
+<div class="opts">
+<p>(A) 0.30</p>
+<p>(B) −0.35</p>
+<p>(C) 0.60</p>
+<p>(D) 0.15</p>
+<p>(E) 0.35</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>數列 2、6、4、8，求落後 2 期的樣本自相關。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平均 5，離差 \(-3,1,-1,3\)，平方和 20。分子 \((-3)(-1)+(1)(3)=6\)，\(r_2=6/20=0.30\)。(C) 是分母只用了 2 項的平方和（10）；(B) 是 \(r_1\)。</p></div></div></article><article class="exercise concept-q" id="qC19-2-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.2-2</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine the value of the sample autocorrelation at lag 0, \(r_0\), for any time series that is not constant.</p>
+<div class="opts">
+<p>(A) 0</p>
+<p>(B) 1</p>
+<p>(C) −1</p>
+<p>(D) \(1/T\)</p>
+<p>(E) It depends on the series</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>任何非常數的時間數列，落後 0 期的樣本自相關 \(r_0\) 是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(k=0\) 時分子與分母相同。</p></div></div></article><article class="exercise concept-q" id="qC19-2-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.2-3</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following are required for a time series to be weakly stationary.</p>
+<div class="items">
+<p>I. The mean does not vary with time.</p>
+<p>II. The correlation between \(y_t\) and \(y_{t+k}\) depends only on \(k\).</p>
+<p>III. The entire distribution of \(y_t\) does not vary with time.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and II only</p>
+<p>(D) I and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>弱平穩需要哪些條件？</p>
+<div class="items">
+<p>I. 平均不隨時間變。</p>
+<p>II. \(y_t\) 與 \(y_{t+k}\) 的相關只與 \(k\) 有關。</p>
+<p>III. \(y_t\) 的整個分配不隨時間變。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>弱平穩要求平均、變異數固定，自相關只與落後期數有關。III 是強平穩的條件。</p></div></div></article><article class="exercise concept-q" id="qC19-2-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.2-4</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>The terms of a stationary time series are positively autocorrelated.</p>
+<p>Determine the behavior of the usual sample variance \(s_y^2=\frac1{T-1}\sum(y_t-\bar y)^2\) as an estimator of the variance.</p>
+<div class="opts">
+<p>(A) It is unbiased</p>
+<p>(B) It overestimates the variance</p>
+<p>(C) It is unbiased only for large \(T\)</p>
+<p>(D) It cannot be computed</p>
+<p>(E) It tends to underestimate the variance, with the bias shrinking as \(T\) grows</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>平穩數列的各項正相關。一般的樣本變異數 \(s_y^2\) 作為變異數的估計量有什麼性質？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\mathrm E[s_y^2]=\frac{T}{T-1}(\sigma^2-\mathrm{Var}(\bar y))\)；正相關使 \(\mathrm{Var}(\bar y)&gt;\sigma^2/T\)，所以低估。\(T\) 大時偏差變小。</p></div></div></article><article class="exercise concept-q" id="qC19-2-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.2-5</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which statement about the sample autocorrelation formula \(r_k\) is correct.</p>
+<div class="opts">
+<p>(A) The numerator and denominator each have \(T-k\) terms</p>
+<p>(B) Each segment is centered at its own mean</p>
+<p>(C) The numerator has \(T-k\) terms, the denominator has \(T\) terms, and both use the overall mean \(\bar y\)</p>
+<p>(D) The denominator is the product of the standard deviations of the two segments</p>
+<p>(E) The numerator has \(T\) terms and the denominator has \(T-k\) terms</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於樣本自相關 \(r_k\) 的公式，哪一句正確？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>分子 \(\sum_{t=k+1}^T(y_{t-k}-\bar y)(y_t-\bar y)\) 有 \(T-k\) 項，分母 \(\sum_{t=1}^T(y_t-\bar y)^2\) 有 \(T\) 項，都用全體平均。</p></div></div></article><article class="exercise concept-q" id="qC19-2-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.2-6</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>The sample autocorrelations of a series are close to 1 at lag 1 and decline only very slowly as the lag increases.</p>
+<p>Determine the most reasonable conclusion.</p>
+<div class="opts">
+<p>(A) The series is likely nonstationary, for example a random walk</p>
+<p>(B) The series is white noise</p>
+<p>(C) The series has no trend</p>
+<p>(D) The series has constant variance</p>
+<p>(E) The series is strongly stationary</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>樣本自相關在落後 1 期接近 1，隨落後期數增加衰減得非常慢。最合理的結論是？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>這是不平穩數列（如隨機漫步）的典型相關圖；白噪音的 \(r_k\) 應接近 0，平穩數列的 \(r_k\) 會較快衰減。</p></div></div></article></div></section><section class="unit" id="s3"><h2>19.3 白噪音</h2><p><strong>白噪音</strong>：平穩的數列，每一項<strong>獨立</strong>、平均 \(\mu\) 固定、變異數 \(\sigma^2\) 固定；通常假設常態。（很多作者假設 \(\mu=0\)，讀本沒有。）因為獨立，所有 \(k\geq1\) 的自相關都是 0。</p>
+<p><strong>預測</strong>：未來每一期都無法從過去得到資訊，最好的預測就是平均：\(\hat y_{T+l}=\bar y\)，對所有 \(l\)。</p>
+<div class="box derive">
+<div class="box-t">推導：白噪音的預測區間</div>
+<p>預測誤差 \(y_{T+l}-\bar y\)：\(y_{T+l}\) 與 \(\bar y\) 獨立，
+\[\mathrm{Var}(y_{T+l}-\bar y)=\sigma^2+\frac{\sigma^2}T=\sigma^2\Big(1+\frac1T\Big).\]
+用 \(s_y\) 估計 \(\sigma\)，標準化後服從自由度 \(T-1\) 的 \(t\) 分配，所以預測區間是
+\[\bar y\pm t_{T-1,1-\alpha/2}\,s_y\sqrt{1+\frac1T}.\tag{19.3}\]
+\(l\) 沒有出現在公式裡：<strong>區間寬度與預測期數無關</strong>。\(T\) 大時常用近似 95% 區間 \(\bar y\pm2s_y\)。</p>
+</div>
+<div class="box ex">
+<div class="box-t">例題 19-2：白噪音的預測區間（講義小測驗 19-2）</div>
+<p>白噪音 1、−1、2、0、3。\(\bar y=1\)，\(s_y^2=(0+4+1+1+4)/4=2.5\)。</p>
+<p>90% 區間用 \(t_{4,0.95}=2.1318\)：上限 \(1+2.1318\sqrt{2.5}\sqrt{1+1/5}=1+2.1318(1.7321)=4.692\)。預測 \(y_7\) 或 \(y_{100}\) 都一樣。</p>
+</div>
+<figure><img src="assets/fig/ch19-wn.svg" alt="30 期的白噪音（、）。預測是一條水平線，95% 預測區間 ，往後每一期都一樣寬。" loading="lazy"><figcaption>30 期的白噪音（\(\bar y=10.12\)、\(s_y=2.31\)）。預測是一條水平線，95% 預測區間 \(\pm2.045\times2.31\times\sqrt{31/30}=\pm4.80\)，往後每一期都一樣寬。</figcaption></figure>
+
+<p><strong>濾波</strong>：時間數列分析的目標是找出所有規律，剩下的部分就是白噪音。把數列化為白噪音的程序稱為<strong>濾波器</strong>（filter），剩下無法解釋的不確定性稱為<strong>不可化約的</strong>（irreducible）。</p>
+<div class="box exam">
+<div class="box-t">考試怎麼考：白噪音</div>
+<ul>
+<li>預測值是 \(\bar y\)；區間用 (19.3)，或近似 \(\pm2s_y\)（習題 <a href="ch19.html#q19-15">19.15</a>：寬度 \(4s\)，與幾期後無關）。</li>
+<li>概念：自相關為 0、平穩、預測區間不隨 \(l\) 變寬。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q19-15"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.15 題</b><small>・講義 p.362・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You are given that \(c_t\) is white noise with variance 16.</p>
+<p>Determine the width of an approximate 95% confidence interval for a three step ahead forecast.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(c_t\) 是變異數 16 的白噪音。求 3 期後預測的近似 95% 信賴區間的寬度。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>16</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>白噪音的預測區間不隨期數改變：\(\bar c\pm2\sqrt{16}\)，寬度 \(2\times2\times4=16\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不要乘 \(\sqrt3\)：那是隨機漫步。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（4 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC19-3-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.3-1</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A series of \(T\) observations is modeled as white noise.</p>
+<p>Determine the forecast of \(y_{T+l}\).</p>
+<div class="opts">
+<p>(A) \(y_T\)</p>
+<p>(B) \(y_T+l\bar y\)</p>
+<p>(C) 0</p>
+<p>(D) \(\bar y\), for every \(l\)</p>
+<p>(E) \(\bar y\sqrt l\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(T\) 筆觀察以白噪音模型化。\(y_{T+l}\) 的預測是什麼？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>各項獨立，過去不提供未來的資訊，最好的預測就是平均，與 \(l\) 無關。(A) 是無漂移隨機漫步的預測。</p></div></div></article><article class="exercise concept-q" id="qC19-3-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.3-2</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A white noise series has \(T=24\) observations with \(\bar y=10\) and \(s_y=2\).</p>
+<p>Calculate the upper bound of the approximate 95% forecast interval \(\bar y\pm2s_y\sqrt{1+1/T}\) for \(y_{T+5}\).</p>
+<div class="opts">
+<p>(A) 14.08</p>
+<p>(B) 14.00</p>
+<p>(C) 18.94</p>
+<p>(D) 12.04</p>
+<p>(E) 18.00</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>白噪音 \(T=24\)、\(\bar y=10\)、\(s_y=2\)。求 \(y_{T+5}\) 的近似 95% 預測區間 \(\bar y\pm2s_y\sqrt{1+1/T}\) 的上限。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(10+2(2)\sqrt{25/24}=10+4(1.0206)=14.08\)。期數 5 不出現在公式中。(C) 錯乘了 \(\sqrt5\)。</p></div></div></article><article class="exercise concept-q" id="qC19-3-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.3-3</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine how the width of a white noise forecast interval changes as the forecast horizon \(l\) increases.</p>
+<div class="opts">
+<p>(A) It increases in proportion to \(\sqrt l\)</p>
+<p>(B) It does not change</p>
+<p>(C) It increases in proportion to \(l\)</p>
+<p>(D) It decreases</p>
+<p>(E) It depends on the drift</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>白噪音預測區間的寬度隨預測期數 \(l\) 如何變化？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>誤差變異數 \(\sigma^2(1+1/T)\) 與 \(l\) 無關。(A) 是隨機漫步。</p></div></div></article><article class="exercise concept-q" id="qC19-3-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.3-4</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine the true autocorrelation \(\rho_k\) of a white noise series for \(k\geq1\).</p>
+<div class="opts">
+<p>(A) 1</p>
+<p>(B) \(1/k\)</p>
+<p>(C) \(-1/T\)</p>
+<p>(D) It decreases geometrically</p>
+<p>(E) 0</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>白噪音在 \(k\geq1\) 時的真實自相關 \(\rho_k\) 是多少？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>各項獨立，所以相關為 0。（樣本自相關 \(r_k\) 會在 0 附近隨機波動，期望值約 \(-1/T\)。）</p></div></div></article></div></section><section class="unit" id="s4"><h2>19.4 隨機漫步</h2><h3>一、定義與動差</h3>
+<p><strong>隨機漫步</strong>：初始值 \(y_0\) 加上白噪音的累積，
+\[y_t=y_{t-1}+c_t=y_0+c_1+c_2+\cdots+c_t .\]</p>
+<div class="box derive">
+<div class="box-t">推導：隨機漫步的平均與變異數</div>
+<p>\(c_j\) 獨立，平均 \(\mu_c\)、變異數 \(\sigma_c^2\)：
+\[\mathrm E[y_t]=y_0+t\mu_c,\qquad\mathrm{Var}(y_t)=t\sigma_c^2 .\]
+- \(\mu_c\neq0\) 時平均隨 \(t\) 線性變化：<strong>平均不平穩</strong>。
+- \(\sigma_c^2&gt;0\) 時變異數隨 \(t\) 線性增加：<strong>變異數不平穩</strong>。所以即使 \(\mu_c=0\)，隨機漫步仍然不平穩。
+- 很多作者把 \(\mu_c=0\) 當作隨機漫步定義的一部分，\(\mu_c\neq0\) 時稱為<strong>有漂移的隨機漫步</strong>，\(\mu_c\) 是<strong>漂移</strong>（drift）。讀本不這樣區分。</p>
+</div>
+<h3>二、預測</h3>
+<div class="box derive">
+<div class="box-t">推導：預測值與標準誤</div>
+<p>從時間 \(T\) 往後 \(l\) 期：\(y_{T+l}=y_T+c_{T+1}+\cdots+c_{T+l}\)。已知 \(y_T\)，未來的 \(l\) 個 \(c\) 的期望值都是 \(\mu_c\)，用過去差分的平均 \(\bar c\) 估計：
+\[\hat y_{T+l}=y_T+l\,\bar c .\tag{19.4}\]
+預測誤差 \(y_{T+l}-\hat y_{T+l}=\sum_{j=1}^l(c_{T+j}-\bar c)\)。忽略 \(\bar c\) 本身的估計誤差，它是 \(l\) 個獨立項的和，變異數 \(l\sigma_c^2\)，所以<strong>標準誤</strong> \(=s_c\sqrt l\)，近似 95% 預測區間：
+\[y_T+l\bar c\pm2s_c\sqrt l .\tag{19.5}\]
+\(s_c\) 是差分 \(c_t=y_t-y_{t-1}\) 的樣本標準差（除以 \(n-1\)）。區間寬度與 \(\sqrt l\) 成正比，預測越遠越不確定。</p>
+</div>
+<figure><img src="assets/fig/ch19-rw.svg" alt="左：40 期的隨機漫步與往後 20 期的預測。預測是斜率  的直線，區間  像喇叭一樣張開；灰線是從估計的分配模擬出的可能路徑。右：2000 條  的隨機漫步，各時點的變異數幾乎正好是 。" loading="lazy"><figcaption>左：40 期的隨機漫步與往後 20 期的預測。預測是斜率 \(\bar c\) 的直線，區間 \(\pm2s_c\sqrt l\) 像喇叭一樣張開；灰線是從估計的分配模擬出的可能路徑。右：2000 條 \(\sigma_c=2\) 的隨機漫步，各時點的變異數幾乎正好是 \(4t\)。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 19-3：預測的誤差與標準誤（樣題 3、4）</div>
+<p><strong>樣題 3</strong>：\(c_1,\ldots,c_{10}\) 的平均是 2，\(c_{11},\ldots,c_{19}\) 依序是 2、3、5、3、4、2、4、1、2。根據 \(y_{10}\) 預測 \(y_{19}\)：\(\hat y_{19}=y_{10}+9(2)=y_{10}+18\)。實際 \(y_{19}=y_{10}+(2+3+5+3+4+2+4+1+2)=y_{10}+26\)。預測誤差 \(26-18=8\)。\(y_{10}\) 本身不需要知道。</p>
+<p><strong>樣題 4</strong>：\(y_0=0\)，\(y_1,\ldots,y_{10}\) 是 2、5、10、13、18、20、24、25、27、30。差分 2、3、5、3、5、2、4、1、2、3，平均 3、樣本變異數 \(16/9\)，\(s_c=4/3\)。9 期後預測的標準誤 \(=\frac43\sqrt9=4\)。</p>
+</div>
+<h3>三、怎麼辨認隨機漫步</h3>
+<ol>
+<li>數列以大致固定的速度變化，變異數隨時間線性增加。</li>
+<li><strong>差分</strong>後的數列是白噪音：平均與變異數固定。</li>
+<li>差分數列的標準差明顯<strong>小於</strong>原數列的標準差。</li>
+</ol>
+<p>（樣題 31：三個都是。）</p>
+<figure><img src="assets/fig/ch19-diff.svg" alt="80 期的隨機漫步（、）。原數列有明顯的走勢，標準差 25.1；一階差分是平均約 1 的白噪音，標準差只有 2.7。" loading="lazy"><figcaption>80 期的隨機漫步（\(\mu_c=1\)、\(\sigma_c=3\)）。原數列有明顯的走勢，標準差 25.1；一階差分是平均約 1 的白噪音，標準差只有 2.7。</figcaption></figure>
+
+<h3>四、線性趨勢與隨機漫步</h3>
+<p>兩個模型的平均都可以是直線，差別在<strong>誤差</strong>：
+\[\text{線性趨勢：}\ y_t=y_0+kt+\varepsilon_t,\qquad\text{隨機漫步：}\ y_t=y_0+\mu_ct+u_t,\ \ u_t=\sum_{j=1}^t\varepsilon_j .\]</p>
+<ul>
+<li>\(k=\mu_c\) 時平均相同。</li>
+<li>線性趨勢的誤差 \(\varepsilon_t\) 是白噪音，變異數固定；隨機漫步的誤差 \(u_t\) 本身是隨機漫步，變異數 \(t\sigma^2\) 隨時間增加。</li>
+<li>\(\mu_c=0\) 時隨機漫步的平均不隨時間變，和線性趨勢的比較就不那麼明確（樣題 38 的 III）。</li>
+</ul>
+<figure><img src="assets/fig/ch19-trendrw.svg" alt="各 8 條模擬路徑，平均都是 、誤差標準差都是 4。線性趨勢的路徑始終貼著平均線；隨機漫步越往後分得越開，因為誤差一直累積。" loading="lazy"><figcaption>各 8 條模擬路徑，平均都是 \(t\)、誤差標準差都是 4。線性趨勢的路徑始終貼著平均線；隨機漫步越往後分得越開，因為誤差一直累積。</figcaption></figure>
+
+<h3>五、其他濾波：對數與對數差分</h3>
+<p>差分是一種濾波。如果變異數隨水準放大，先取<strong>對數</strong>可以穩定變異數；再不行就取<strong>對數差分</strong>，它近似<strong>成長率</strong>：
+\[\ln y_t-\ln y_{t-1}=\ln\Big(1+\frac{y_t-y_{t-1}}{y_{t-1}}\Big)\approx\frac{y_t-y_{t-1}}{y_{t-1}}.\]</p>
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li>隨機漫步的預測標準誤是 \(s_c\sqrt l\)，不是 \(s_c\,l\)，也不是 \(s_y\sqrt l\)（\(s_y\) 是原數列的標準差）。</li>
+<li>\(s_c\) 用差分算；題目給了 \(y_0\) 時，\(y_1-y_0\) 也是一個差分（樣題 4 共 10 個差分）。</li>
+<li>漂移 \(\mu_c\) 是常數，不影響標準誤（4-F00:40 的 (E) 是錯的）。</li>
+<li>近似 95% 區間的<strong>寬度</strong>是 \(4s_c\sqrt l\)（上下各 \(2s_c\sqrt l\)）。</li>
+</ul>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：隨機漫步</div>
+<ul>
+<li>預測誤差、標準誤、預測區間（樣題 3、4、習題 <a href="ch19.html#q19-17">19.17</a>～<a href="ch19.html#q19-21">19.21</a>）。</li>
+<li>平穩性（樣題 21）：\(\mu_c\neq0\) 平均不平穩；\(\sigma_c^2&gt;0\) 變異數不平穩；\(\sigma_c^2=0\) 時變異數為 0，是平穩的。</li>
+<li>辨認（樣題 31）：三個特徵都對。</li>
+<li>與線性趨勢比較（樣題 38）：三個敘述都對。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q19-10"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.10 題</b><small>・講義 p.361・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #3] You are given:</p>
+<div class="items">
+<p>(i) The random walk model \(y_t=y_0+c_1+c_2+\cdots+c_t\), where \(c_t\), \(t=0,1,2,\ldots,T\) denote observations from a white noise process.</p>
+<p>(ii) The following nine observed values of \(c_t\):</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>11</th>
+<th>12</th>
+<th>13</th>
+<th>14</th>
+<th>15</th>
+<th>16</th>
+<th>17</th>
+<th>18</th>
+<th>19</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(c_t\)</td>
+<td>2</td>
+<td>3</td>
+<td>5</td>
+<td>3</td>
+<td>4</td>
+<td>2</td>
+<td>4</td>
+<td>1</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<div class="items">
+<p>(iii) The average value of \(c_1,c_2,\ldots,c_{10}\) is 2.</p>
+<p>(iv) The 9 step ahead forecast of \(y_{19}\), \(\hat y_{19}\), is estimated based on the observed value of \(y_{10}\).</p>
+</div>
+<p>Calculate the forecast error, \(y_{19}-\hat y_{19}\).</p>
+<div class="opts">
+<p>(A) 1</p>
+<p>(B) 2</p>
+<p>(C) 3</p>
+<p>(D) 8</p>
+<p>(E) 18</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 3 題）已知：</p>
+<div class="items">
+<p>(i) 隨機漫步 \(y_t=y_0+c_1+c_2+\cdots+c_t\)，\(c_t\) 是白噪音。</p>
+<p>(ii) \(c_t\) 的九個觀察值：</p>
+</div>
+<div class="items">
+<p>(iii) \(c_1,\ldots,c_{10}\) 的平均是 2。</p>
+<p>(iv) \(y_{19}\) 的 9 期後預測 \(\hat y_{19}\)，以觀察到的 \(y_{10}\) 為基礎估計。</p>
+</div>
+<p>求預測誤差 \(y_{19}-\hat y_{19}\)。</p>
+<div class="opts">
+<p>(A) 1　(B) 2　(C) 3　(D) 8　(E) 18</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\hat y_{19}=y_{10}+9\bar c=y_{10}+18\)（\(\bar c\) 用預測時已知的 \(c_1,\ldots,c_{10}\)）。</p>
+<p>\(y_{19}=y_{10}+(2+3+5+3+4+2+4+1+2)=y_{10}+26\)。</p>
+<p>預測誤差 \(=26-18=8\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>(E) 18 是預測的增量。\(c_{11},\ldots,c_{19}\) 在預測時還沒觀察到，不能用來估計漂移。</p></div></div></article><article class="exercise" id="q19-11"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.11 題</b><small>・講義 p.361・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #31] Determine which of the following indicates that a nonstationary time series can be represented as a random walk.</p>
+<div class="items">
+<p>I. A control chart of the series detects a linear trend in time and increasing variability.</p>
+<p>II. The differenced series follows a white noise model.</p>
+<p>III. The standard deviation of the original series is greater than the standard deviation of the differenced series.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 31 題）下列哪些顯示一個不平穩的時間數列可以用隨機漫步表示？</p>
+<div class="items">
+<p>I. 數列的管制圖顯示線性的時間趨勢與增加的變異。</p>
+<p>II. 差分後的數列服從白噪音模型。</p>
+<p>III. 原數列的標準差大於差分數列的標準差。</p>
+</div>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>三個都是讀本列出的辨認方法：線性走勢且變異數隨時間增加；差分是白噪音；差分的標準差明顯較小。</p></div></div></article><article class="exercise" id="q19-12"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.12 題</b><small>・講義 p.361・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #38] You are given two models:</p>
+<p>Model L: \(y_t=\beta_0+\beta_1t+\varepsilon_t\), where \(\{\varepsilon_t\}\) is a white noise process, for \(t=0,1,2,\ldots\)</p>
+<p>Model M: \(y_t=y_0+\mu_ct+u_t\), \(c_t=y_t-y_{t-1}\), \(u_t=\sum_{j=1}^t\varepsilon_j\), where \(\{\varepsilon_t\}\) is a white noise process, for \(t=0,1,2,\ldots\)</p>
+<p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. Model L is a linear trend in time model where the error component is not a random walk.</p>
+<p>II. Model M is a random walk model where the error component of the model is also a random walk.</p>
+<p>III. The comparison between Model L and Model M is not clear when the parameter \(\mu_c=0\).</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 38 題）兩個模型：</p>
+<p>模型 L：\(y_t=\beta_0+\beta_1t+\varepsilon_t\)，\(\{\varepsilon_t\}\) 是白噪音。
+模型 M：\(y_t=y_0+\mu_ct+u_t\)，\(c_t=y_t-y_{t-1}\)，\(u_t=\sum_{j=1}^t\varepsilon_j\)，\(\{\varepsilon_t\}\) 是白噪音。</p>
+<p>下列哪些正確？</p>
+<div class="items">
+<p>I. 模型 L 是線性時間趨勢模型，其誤差項不是隨機漫步。</p>
+<p>II. 模型 M 是隨機漫步模型，其誤差項也是隨機漫步。</p>
+<p>III. 參數 \(\mu_c=0\) 時，模型 L 與模型 M 的比較就不明確。</p>
+</div>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(\varepsilon_t\) 是白噪音。II 對：\(u_t\) 是白噪音的累積。III 對：\(\mu_c=0\) 時 M 的平均不隨時間變，而 L 有趨勢，兩者的比較就不那麼自然。</p></div></div></article><article class="exercise" id="q19-13"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.13 題</b><small>・講義 p.362・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #4] You are given:</p>
+<div class="items">
+<p>(i) The random walk model \(y_t=y_0+c_1+c_2+\cdots+c_t\), where \(c_t\), \(t=0,1,2,\ldots,T\) denote observations from a white noise process.</p>
+<p>(ii) The following ten observed values of \(y_t\):</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y_t\)</td>
+<td>2</td>
+<td>5</td>
+<td>10</td>
+<td>13</td>
+<td>18</td>
+<td>20</td>
+<td>24</td>
+<td>25</td>
+<td>27</td>
+<td>30</td>
+</tr>
+</tbody>
+</table>
+<div class="items">
+<p>(iii) \(y_0=0\)</p>
+</div>
+<p>Calculate the standard error of the 9 step-ahead forecast, \(\hat y_{19}\).</p>
+<div class="opts">
+<p>(A) 4/3</p>
+<p>(B) 4</p>
+<p>(C) 9</p>
+<p>(D) 12</p>
+<p>(E) 16</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 4 題）已知：</p>
+<div class="items">
+<p>(i) 隨機漫步 \(y_t=y_0+c_1+c_2+\cdots+c_t\)，\(c_t\) 是白噪音。</p>
+<p>(ii) \(y_t\) 的十個觀察值：</p>
+</div>
+<div class="items">
+<p>(iii) \(y_0=0\)。</p>
+</div>
+<p>求 9 期後預測 \(\hat y_{19}\) 的標準誤。</p>
+<div class="opts">
+<p>(A) 4/3　(B) 4　(C) 9　(D) 12　(E) 16</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>差分（含 \(y_1-y_0\)）：2、3、5、3、5、2、4、1、2、3，平均 3。離差平方和 \(1+0+4+0+4+1+1+4+1+0=16\)，樣本變異數 \(16/9\)，\(s_c=4/3\)。</p>
+<p>9 期後的標準誤 \(=s_c\sqrt9=4\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>(A) 是 \(s_c\) 本身；(D) 是乘 9 而不是 \(\sqrt9\)；(E) 是變異數 \(9\times16/9\)。</p></div></div></article><article class="exercise" id="q19-14"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.14 題</b><small>・講義 p.362・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #21] A random walk is expressed as \(y_t=y_{t-1}+c_t\) for \(t=1,2,\ldots\), where \(\mathrm E[c_t]=\mu_c\) and \(\mathrm{Var}(c_t)=\sigma_c^2\), \(t=1,2,\ldots\)</p>
+<p>Determine which statements is/are true with respect to a random walk model.</p>
+<div class="items">
+<p>I. If \(\mu_c\neq0\), then the random walk is nonstationary in the mean.</p>
+<p>II. If \(\sigma_c^2=0\), then the random walk is nonstationary in the variance.</p>
+<p>III. If \(\sigma_c^2&gt;0\), then the random walk is nonstationary in the variance.</p>
+</div>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 21 題）隨機漫步 \(y_t=y_{t-1}+c_t\)，\(\mathrm E[c_t]=\mu_c\)，\(\mathrm{Var}(c_t)=\sigma_c^2\)。下列哪些正確？</p>
+<div class="items">
+<p>I. 若 \(\mu_c\neq0\)，隨機漫步的平均不平穩。</p>
+<p>II. 若 \(\sigma_c^2=0\)，隨機漫步的變異數不平穩。</p>
+<p>III. 若 \(\sigma_c^2&gt;0\)，隨機漫步的變異數不平穩。</p>
+</div>
+<div class="opts">
+<p>(A) 都不對　(B) 只有 I、II　(C) 只有 I、III　(D) 只有 II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平均 \(y_0+t\mu_c\)：\(\mu_c\neq0\) 時隨 \(t\) 變，I 對。變異數 \(t\sigma_c^2\)：\(\sigma_c^2=0\) 時恆為 0，是平穩的，II 錯；\(\sigma_c^2&gt;0\) 時隨 \(t\) 增加，III 對。</p></div></div></article><article class="exercise" id="q19-19"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.19 題</b><small>・講義 p.362・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>You are given that \(y_t\) is a time series satisfying the following equation:
+\[y_t=y_{t-1}+4+c_t\]
+where \(c_t\) is a normally distributed error term. The variance of the error term is estimated to be 5. You are also given that \(y_T=25\).</p>
+<p>Determine the lower bound of a 95% confidence interval for a three step ahead forecast of \(y_t\), \(\hat y_{T+3}\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>時間數列滿足 \(y_t=y_{t-1}+4+c_t\)，\(c_t\) 是常態誤差，變異數估計為 5。已知 \(y_T=25\)。求 \(y_{T+3}\) 的 3 期後預測的 95% 信賴區間下限。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>29.25</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>這是漂移 4 的隨機漫步。預測 \(25+3(4)=37\)，變異數 \(3\times5=15\)。用近似公式 (19.5)：下限 \(37-2\sqrt{15}=29.25\)。</p></div></div></article><article class="exercise" id="q19-21"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.21 題</b><small>・講義 p.363・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>You are given the first ten observations of a random walk, \(y_1,\ldots,y_{10}\):</p>
+<p>15　18　23　25　24　28　31　32　37　40</p>
+<p>Calculate the width of an approximate 95% prediction interval for \(y_{13}\).</p>
+<div class="opts">
+<p>(A) 7.7</p>
+<p>(B) 9.9</p>
+<p>(C) 11.1</p>
+<p>(D) 13.3</p>
+<p>(E) 15.5</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>隨機漫步的前十個觀察值 \(y_1,\ldots,y_{10}\)：</p>
+<p>15　18　23　25　24　28　31　32　37　40</p>
+<p>求 \(y_{13}\) 的近似 95% 預測區間的寬度。</p>
+<div class="opts">
+<p>(A) 7.7　(B) 9.9　(C) 11.1　(D) 13.3　(E) 15.5</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>差分 3、5、2、−1、4、3、1、5、3（9 個），平均 \(25/9=2.778\)。\(\sum c^2=99\)，\(s_c^2=\frac{99-9(2.778)^2}{8}=3.694\)，\(s_c=1.922\)。</p>
+<p>\(y_{13}\) 是 3 期後：寬度 \(4s_c\sqrt3=4(1.922)(1.732)=13.32\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(y_{10}\) 到 \(y_{13}\) 是 3 期，不是 13 期。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（7 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC19-4-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.4-1</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>A random walk has \(y_0=5\) (fixed) and white noise increments with variance 4.</p>
+<p>Calculate \(\mathrm{Var}(y_9)\).</p>
+<div class="opts">
+<p>(A) 4</p>
+<p>(B) 12</p>
+<p>(C) 36</p>
+<p>(D) 324</p>
+<p>(E) 41</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>隨機漫步 \(y_0=5\)（固定），白噪音增量的變異數 4。求 \(\mathrm{Var}(y_9)\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\mathrm{Var}(y_t)=t\sigma_c^2=9\times4=36\)。\(y_0\) 是常數，不影響變異數。(D) 是 \((9\times2)^2\)。</p></div></div></article><article class="exercise concept-q" id="qC19-4-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.4-2</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>A random walk has \(y_T=50\), and the mean of the observed differences is \(\bar c=1.5\).</p>
+<p>Calculate the forecast \(\hat y_{T+4}\).</p>
+<div class="opts">
+<p>(A) 56</p>
+<p>(B) 51.5</p>
+<p>(C) 50</p>
+<p>(D) 53</p>
+<p>(E) 56.5</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>隨機漫步 \(y_T=50\)，差分平均 \(\bar c=1.5\)。求 \(\hat y_{T+4}\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(y_T+l\bar c=50+4(1.5)=56\)。</p></div></div></article><article class="exercise concept-q" id="qC19-4-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.4-3</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>For a random walk, the sample standard deviation of the differences is \(s_c=3\).</p>
+<p>Calculate the standard error of the 4-step-ahead forecast.</p>
+<div class="opts">
+<p>(A) 3</p>
+<p>(B) 6</p>
+<p>(C) 12</p>
+<p>(D) 36</p>
+<p>(E) 0.75</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>隨機漫步差分的樣本標準差 \(s_c=3\)。求 4 期後預測的標準誤。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(s_c\sqrt l=3\times2=6\)。(C) 乘了 \(l\)；(D) 是變異數。</p></div></div></article><article class="exercise concept-q" id="qC19-4-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.4-4</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following support modeling a series as a random walk.</p>
+<div class="items">
+<p>I. The differenced series looks like white noise.</p>
+<p>II. The standard deviation of the differenced series is much larger than that of the original series.</p>
+<p>III. The variability of the series grows roughly linearly with time.</p>
+</div>
+<div class="opts">
+<p>(A) II only</p>
+<p>(B) III only</p>
+<p>(C) I and II only</p>
+<p>(D) I and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪些支持把數列模型化為隨機漫步？</p>
+<div class="items">
+<p>I. 差分後像白噪音。</p>
+<p>II. 差分的標準差遠大於原數列。</p>
+<p>III. 變異隨時間大致線性增加。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>II 方向相反：差分的標準差應該明顯<strong>小於</strong>原數列。</p></div></div></article><article class="exercise concept-q" id="qC19-4-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.4-5</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Model L is \(y_t=\beta_0+\beta_1t+\varepsilon_t\) and Model M is \(y_t=y_0+\mu_ct+\sum_{j=1}^t\varepsilon_j\), where \(\varepsilon_t\) is white noise with variance \(\sigma^2\) and \(\beta_1=\mu_c\).</p>
+<p>Determine which statement is correct.</p>
+<div class="opts">
+<p>(A) The two models have different means</p>
+<p>(B) Both models have constant variance</p>
+<p>(C) Model L's variance increases with time</p>
+<p>(D) The means are equal, but Model M's variance \(t\sigma^2\) increases with time while Model L's is constant</p>
+<p>(E) Both models are stationary</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>模型 L 是線性趨勢，模型 M 是有漂移的隨機漫步，\(\beta_1=\mu_c\)。哪一句正確？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平均都是線性的；L 的誤差是白噪音（變異數固定），M 的誤差是隨機漫步（變異數 \(t\sigma^2\)）。兩者都因為平均隨時間變而不平穩，(E) 錯。</p></div></div></article><article class="exercise concept-q" id="qC19-4-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.4-6</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>A series increases from \(y_{t-1}=200\) to \(y_t=210\).</p>
+<p>Calculate \(\ln y_t-\ln y_{t-1}\) and compare it with the proportional change.</p>
+<div class="opts">
+<p>(A) 0.0488, close to the proportional change 0.05</p>
+<p>(B) 0.0500, exactly the proportional change</p>
+<p>(C) 10, the difference</p>
+<p>(D) 0.0476, the change divided by 210</p>
+<p>(E) 1.05, the ratio</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>數列從 200 增加到 210。求 \(\ln y_t-\ln y_{t-1}\) 並與成長率比較。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\ln(1.05)=0.0488\approx0.05\)。對數差分近似成長率，變動越小越接近。</p></div></div></article><article class="exercise concept-q" id="qC19-4-7"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.4-7</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>A random walk has \(\mu_c=0\) and \(\sigma_c^2&gt;0\).</p>
+<p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. Its mean does not change with time.</p>
+<p>II. Its variance does not change with time.</p>
+<p>III. It is nonstationary.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>隨機漫步 \(\mu_c=0\)、\(\sigma_c^2&gt;0\)。下列哪些正確？</p>
+<div class="items">
+<p>I. 平均不隨時間變。</p>
+<p>II. 變異數不隨時間變。</p>
+<p>III. 它不平穩。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平均 \(y_0\) 固定；變異數 \(t\sigma_c^2\) 隨時間增加，所以仍不平穩。</p></div></div></article></div></section><section class="unit" id="s5"><h2>19.5 管制圖與預測評估</h2><h3>一、管制圖</h3>
+<p><strong>管制圖</strong>（control chart）在時間數列圖上加上<strong>管制界限</strong>，通常是 \(\text{UCL}=\bar y+3s_y\)、\(\text{LCL}=\bar y-3s_y\)。超出界限或出現系統性的型態，表示過程可能改變了。</p>
+<ul>
+<li><strong>\(\bar X\) 圖</strong>：每 \(k\) 期取平均（第 1～5 期、第 6～10 期……）。平均的變異數較小，異常的型態比較顯眼。</li>
+<li><strong>R 圖</strong>：每 \(k\) 期的<strong>全距</strong>（最大減最小），簡單的變異程度指標。</li>
+</ul>
+<figure><img src="assets/fig/ch19-control.svg" alt="60 期的資料，第 46 期起平均上移 9（約 1.8 個標準差）。原始管制圖上只有兩個點超出 UCL；每 5 期平均的  圖（界限 ）中，最後三組都超出上限。R 圖在上移前後沒有系統性的差異，因為上移只改變平均、不改變變異。" loading="lazy"><figcaption>60 期的資料，第 46 期起平均上移 9（約 1.8 個標準差）。原始管制圖上只有兩個點超出 UCL；每 5 期平均的 \(\bar X\) 圖（界限 \(\bar y\pm3s_y/\sqrt5\)）中，最後三組都超出上限。R 圖在上移前後沒有系統性的差異，因為上移只改變平均、不改變變異。</figcaption></figure>
+
+<h3>二、樣本外驗證</h3>
+<p>和<a href="ch06.html">第 6 章</a>一樣：把資料在 \(T_1&lt;T\) 切開，用 \(1,\ldots,T_1\) 配適模型（<strong>訓練</strong>），預測 \(T_1+1,\ldots,T\)（<strong>測試</strong>），殘差 \(e_t=y_t-\hat y_t\)（<strong>實際減預測</strong>）。以下各量都是越小越好：</p>
+<table>
+<thead>
+<tr>
+<th>指標</th>
+<th>公式</th>
+<th>說明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>平均誤差 ME</td>
+<td>\(\frac1{T-T_1}\sum e_t\)</td>
+<td>看系統性偏差（趨勢）</td>
+</tr>
+<tr>
+<td>平均百分比誤差 MPE</td>
+<td>\(\frac{100}{T-T_1}\sum\frac{e_t}{y_t}\)</td>
+<td>同上，相對尺度</td>
+</tr>
+<tr>
+<td>均方誤差 MSE</td>
+<td>\(\frac1{T-T_1}\sum e_t^2\)</td>
+<td>正負不會抵銷</td>
+</tr>
+<tr>
+<td>平均絕對誤差 MAE</td>
+<td>\(\frac1{T-T_1}\sum\lvert e_t\rvert\)</td>
+<td>正負不會抵銷</td>
+</tr>
+<tr>
+<td>平均絕對百分比誤差 MAPE</td>
+<td>\(\frac{100}{T-T_1}\sum\left\lvert\frac{e_t}{y_t}\right\rvert\)</td>
+<td>相對尺度</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>ME、MPE 能看出趨勢型的偏差，但殘差正負交錯、平均很小時看不出問題；後三者可以。</li>
+<li>MPE、MAPE 在數列有 0 時無法計算，有負值時也可能不合理。</li>
+</ul>
+<p><strong>一步預測與多步預測</strong>：測試期的每一個預測，可以用「上一期的實際值」（一步預測，樣題 55），也可以全部從訓練期最後一點往前推（多步預測，習題 <a href="ch19.html#q19-24">19.24</a>）。題目會說明，兩者答案不同。</p>
+<div class="box ex">
+<div class="box-t">例題 19-4：ME 與 MSE（樣題 55）</div>
+<p>隨機漫步，觀察 \(y_0,\ldots,y_7\)：3、5、7、8、12、15、21、22。用前五個（\(t=0\sim4\)）配適，\(\bar c=2.25\)；用一步預測評估後三個。</p>
+<p>\(\hat y_5=12+2.25=14.25\)，\(\hat y_6=15+2.25=17.25\)，\(\hat y_7=21+2.25=23.25\)。殘差 \(0.75\)、\(3.75\)、\(-1.25\)。</p>
+<p>\(F=\text{ME}=3.25/3=1.0833\)，\(G=\text{MSE}=(0.5625+14.0625+1.5625)/3=5.3958\)，\(|F-G|=4.3125\)。</p>
+</div>
+<figure><img src="assets/fig/ch19-validate.svg" alt="樣題 55。藍色背景是訓練期，紅色是測試期；每個方塊是用前一期實際值加 2.25 的一步預測，紅線長度是殘差。" loading="lazy"><figcaption>樣題 55。藍色背景是訓練期，紅色是測試期；每個方塊是用前一期實際值加 2.25 的一步預測，紅線長度是殘差。</figcaption></figure>
+
+<div class="box warn">
+<div class="box-t">易錯提醒</div>
+<ul>
+<li>殘差是<strong>實際減預測</strong>；符號反了，ME 與 MPE 會變號。</li>
+<li>MPE、MAPE 除以的是<strong>實際值</strong> \(y_t\)，不是預測值。</li>
+<li>白噪音的預測是訓練期的平均（習題 <a href="ch19.html#q19-22">19.22</a>）；隨機漫步的漂移用訓練期的差分平均，等於 \((y_{T_1}-y_1)/(T_1-1)\)（習題 <a href="ch19.html#q19-24">19.24</a>）。</li>
+</ul>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：預測評估</div>
+<ul>
+<li>計算 ME、MSE、MAE、MPE（樣題 55、習題 <a href="ch19.html#q19-22">19.22</a>～<a href="ch19.html#q19-26">19.26</a>）。</li>
+<li>管制圖的定義：\(\bar y\pm3s_y\)；\(\bar X\) 圖、R 圖。</li>
+</ul>
+</div>
+<div class="box key">
+<div class="box-t">本章總整理</div>
+<ul>
+<li>弱平穩：平均、變異數固定，自相關只與落後期數有關；正相關時 \(s_y^2\) 低估變異數。</li>
+<li>\(r_k=\sum_{t&gt;k}(y_{t-k}-\bar y)(y_t-\bar y)/\sum_t(y_t-\bar y)^2\)：分子 \(T-k\) 項、分母 \(T\) 項、都減全體平均；\(r_0=1\)。</li>
+<li>白噪音：獨立、自相關 0；預測 \(\bar y\)，區間 \(\bar y\pm t\,s_y\sqrt{1+1/T}\)，寬度與 \(l\) 無關。</li>
+<li>隨機漫步 \(y_t=y_{t-1}+c_t\)：平均 \(y_0+t\mu_c\)、變異數 \(t\sigma_c^2\)（不平穩）；預測 \(y_T+l\bar c\)，標準誤 \(s_c\sqrt l\)，近似 95% 區間 \(\pm2s_c\sqrt l\)。</li>
+<li>辨認隨機漫步：穩定的走勢與增加的變異、差分是白噪音、差分的標準差較小。</li>
+<li>線性趨勢的誤差是白噪音；隨機漫步的誤差是隨機漫步。</li>
+<li>對數差分 ≈ 成長率。</li>
+<li>管制圖 \(\bar y\pm3s_y\)；樣本外驗證用 ME、MPE、MSE、MAE、MAPE，殘差＝實際－預測。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q19-22"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.22 題</b><small>・講義 p.363・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>You are given the following time series:</p>
+<p>2, 4, 1, 3, 5, 3, 2, 1, 6, 4</p>
+<p>It is modeled as a white noise series. To test this model, out-of-sample validation is done, with the first 6 terms used for the model development subsample.</p>
+<p>Calculate the mean percentage error.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>時間數列：2，4，1，3，5，3，2，1，6，4。以白噪音模型化。用前 6 項當訓練資料做樣本外驗證。求平均百分比誤差（MPE）。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>−43.75</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>前 6 項平均 3，所有未來的預測都是 3。測試期 2、1、6、4，殘差（實際－預測）\(-1,-2,3,1\)。</p>
+<p>\(\text{MPE}=\frac{100}4\Big(\frac{-1}2+\frac{-2}1+\frac36+\frac14\Big)=25(-1.75)=-43.75\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>百分比除以<strong>實際值</strong>。答案以百分比表示：−43.75（%）。</p></div></div></article><article class="exercise" id="q19-24"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.24 題</b><small>・講義 p.363・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>You are given the following time series:</p>
+<p>2, 5, 10, 11, 15, 17, 20, 22, 25, 27</p>
+<p>It is modeled as a random walk. To test this model, out-of-sample validation is done, with the first 6 terms used for the model development subsample.</p>
+<p>Calculate the mean square error.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>時間數列：2，5，10，11，15，17，20，22，25，27。以隨機漫步模型化。用前 6 項當訓練資料做樣本外驗證。求均方誤差。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>1.5</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>漂移估計 \(\bar c=(17-2)/5=3\)。從 \(y_6=17\) 往前預測：20、23、26、29。實際 20、22、25、27，殘差 \(0,-1,-1,-2\)。MSE \(=\frac{0+1+1+4}4=1.5\)。</p>
+<p><strong>注意</strong>：這裡用的是從訓練期最後一點出發的多步預測（講義的做法）。如果改用一步預測（\(y_{t-1}+3\)：20、23、25、28），殘差 \(0,-1,0,-1\)，MSE 0.5。考題會說明是哪一種；樣題 55 明確指定一步預測。</p></div></div></article><article class="exercise" id="q19-26"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 19.26 題</b><small>・講義 p.364・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #55] You are given the following eight observations from a time series that follows a random walk model:</p>
+<table>
+<thead>
+<tr>
+<th>Time (\(t\))</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Observation (\(y_t\))</td>
+<td>3</td>
+<td>5</td>
+<td>7</td>
+<td>8</td>
+<td>12</td>
+<td>15</td>
+<td>21</td>
+<td>22</td>
+</tr>
+</tbody>
+</table>
+<p>You plan to fit this model to the first five observations and then evaluate it against the last three observations using one-step forecast residuals. The estimated mean of the white noise process is 2.25.</p>
+<p>Let \(F\) be the mean error (ME) of the three predicted observations.</p>
+<p>Let \(G\) be the mean square error (MSE) of the three predicted observations.</p>
+<p>Calculate the absolute difference between \(F\) and \(G\), \(|F-G|\).</p>
+<div class="opts">
+<p>(A) 3.48</p>
+<p>(B) 4.31</p>
+<p>(C) 5.54</p>
+<p>(D) 6.47</p>
+<p>(E) 7.63</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SOA 樣題第 55 題）服從隨機漫步的時間數列的八個觀察值：</p>
+<p>用前五個觀察配適模型，再用一步預測殘差評估後三個。白噪音平均的估計值是 2.25。</p>
+<p>令 \(F\) 是三個預測的平均誤差（ME），\(G\) 是均方誤差（MSE）。求 \(|F-G|\)。</p>
+<div class="opts">
+<p>(A) 3.48　(B) 4.31　(C) 5.54　(D) 6.47　(E) 7.63</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>一步預測 \(\hat y_t=y_{t-1}+2.25\)：14.25、17.25、23.25。殘差 0.75、3.75、−1.25。</p>
+<p>\(F=3.25/3=1.0833\)，\(G=(0.5625+14.0625+1.5625)/3=5.3958\)，\(|F-G|=4.3125\)。</p>
+<p>（\(2.25=(12-3)/4\)，就是訓練期的差分平均。）</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC19-5-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.5-1</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Determine a weakness of the mean error (ME) as a measure of forecast accuracy.</p>
+<div class="opts">
+<p>(A) It cannot be computed when the series has zeros</p>
+<p>(B) It overweights large errors</p>
+<p>(C) Positive and negative errors can cancel, so a poor forecast may have ME near 0</p>
+<p>(D) It is always positive</p>
+<p>(E) It requires a training set</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>平均誤差（ME）作為預測準確度指標有什麼弱點？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>ME 可以看出系統性偏差，但正負誤差會互相抵銷。(A) 是 MPE、MAPE 的問題；(B) 是 MSE 的性質。</p></div></div></article><article class="exercise concept-q" id="qC19-5-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.5-2</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Two test-period observations are 10 and 20, and their forecasts are 12 and 18.</p>
+<p>Calculate the mean absolute percentage error (MAPE).</p>
+<div class="opts">
+<p>(A) 15</p>
+<p>(B) 0</p>
+<p>(C) 2</p>
+<p>(D) 4</p>
+<p>(E) 16.7</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>測試期兩個觀察 10、20，預測 12、18。求 MAPE。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>殘差 \(-2\)、\(2\)。\(\text{MAPE}=\frac{100}2\big(\frac2{10}+\frac2{20}\big)=15\)。(B) 是 ME；(C) 是 MAE；(D) 是 MSE；(E) 是除以預測值。</p></div></div></article><article class="exercise concept-q" id="qC19-5-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.5-3</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Determine which forecast evaluation measure cannot be used when some observed values in the test period equal 0.</p>
+<div class="opts">
+<p>(A) Mean error</p>
+<p>(B) Mean square error</p>
+<p>(C) Mean absolute error</p>
+<p>(D) Mean percentage error</p>
+<p>(E) None of the above</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>測試期中有觀察值為 0 時，哪一個指標無法使用？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>MPE（與 MAPE）要除以實際值 \(y_t\)。</p></div></div></article><article class="exercise concept-q" id="qC19-5-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.5-4</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>A control chart is built from a series with \(\bar y=50\) and \(s_y=4\).</p>
+<p>Calculate the upper control limit.</p>
+<div class="opts">
+<p>(A) 54</p>
+<p>(B) 58</p>
+<p>(C) 66</p>
+<p>(D) 50</p>
+<p>(E) 62</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>管制圖：\(\bar y=50\)、\(s_y=4\)。求管制上限。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\text{UCL}=\bar y+3s_y=62\)。</p></div></div></article><article class="exercise concept-q" id="qC19-5-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C19.5-5</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>A random walk is fitted to a training period and evaluated on a test period using one-step forecasts.</p>
+<p>Determine how the forecast of \(y_t\) in the test period is computed.</p>
+<div class="opts">
+<p>(A) From the last training value, \(y_{T_1}+(t-T_1)\bar c\)</p>
+<p>(B) From the previous actual value, \(y_{t-1}+\bar c\)</p>
+<p>(C) As the training-period mean</p>
+<p>(D) From the previous forecast, \(\hat y_{t-1}+\bar c\)</p>
+<p>(E) As the test-period mean</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>訓練期配適隨機漫步，測試期用一步預測評估。測試期 \(y_t\) 的預測如何計算？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>一步預測每次都用上一期的<strong>實際值</strong>（樣題 55）。(A) 與 (D) 是從訓練期最後一點出發的多步預測，兩者相同。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（10 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q19-3"><div class="ex-head"><span class="ex-tag">練習</span><b>第 19.3 題</b><small>・講義 p.358・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[S-F17:43] You are given the following information from a time series:</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>\(\bar x\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(x_t\)</td>
+<td>4.0</td>
+<td>3.5</td>
+<td>2.5</td>
+<td>5.5</td>
+<td>4.5</td>
+<td>4.0</td>
+<td>4.0</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the sample lag 4 autocorrelation.</p>
+<div class="opts">
+<p>(A) Less than −0.30</p>
+<p>(B) At least −0.30, but less than −0.10</p>
+<p>(C) At least −0.10, but less than 0.10</p>
+<p>(D) At least 0.10, but less than 0.30</p>
+<p>(E) At least 0.30</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（S-F17:43）時間數列：</p>
+<p>求落後 4 期的樣本自相關。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>分子只有兩項：\((x_1-4)(x_5-4)+(x_2-4)(x_6-4)=(0)(0.5)+(-0.5)(0)=0\)。\(r_4=0\)。</p></div></div></article><article class="exercise" id="q19-5"><div class="ex-head"><span class="ex-tag">練習</span><b>第 19.5 題</b><small>・講義 p.359・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[120-F90:16] A mutual fund has provided investment yield rates for five consecutive years as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Yield</td>
+<td>0.07</td>
+<td>0.06</td>
+<td>0.07</td>
+<td>0.10</td>
+<td>−0.05</td>
+</tr>
+</tbody>
+</table>
+<p>Determine \(r_2\), the sample autocorrelation coefficient at lag 2.</p>
+<div class="opts">
+<p>(A) −0.5</p>
+<p>(B) −0.4</p>
+<p>(C) −0.3</p>
+<p>(D) −0.2</p>
+<p>(E) −0.1</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（120-F90:16）某共同基金連續五年的收益率：</p>
+<p>求落後 2 期的樣本自相關 \(r_2\)。</p>
+<div class="opts">
+<p>(A) −0.5　(B) −0.4　(C) −0.3　(D) −0.2　(E) −0.1</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平均 0.05，離差 \(0.02,0.01,0.02,0.05,-0.10\)，平方和 0.0134。</p>
+<p>分子：\((0.02)(0.02)+(0.01)(0.05)+(0.02)(-0.10)=-0.0011\)。\(r_2=-0.0011/0.0134=-0.0821\)。</p></div></div></article><article class="exercise" id="q19-6"><div class="ex-head"><span class="ex-tag">練習</span><b>第 19.6 題</b><small>・講義 p.359・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[120-83-98:13] You observed the following time series:</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(y_t\)</td>
+<td>1.2</td>
+<td>1.1</td>
+<td>0.9</td>
+<td>1.3</td>
+<td>1.5</td>
+</tr>
+</tbody>
+</table>
+<p>Determine the lag 2 sample autocorrelation coefficient \(r_2\).</p>
+<div class="opts">
+<p>(A) −0.50</p>
+<p>(B) −0.02</p>
+<p>(C) 0.15</p>
+<p>(D) 0.22</p>
+<p>(E) 0.52</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（120-83-98:13）觀察到的時間數列：</p>
+<p>求落後 2 期的樣本自相關 \(r_2\)。</p>
+<div class="opts">
+<p>(A) −0.50　(B) −0.02　(C) 0.15　(D) 0.22　(E) 0.52</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平均 1.2，離差 \(0,-0.1,-0.3,0.1,0.3\)，平方和 0.2。</p>
+<p>分子：\((0)(-0.3)+(-0.1)(0.1)+(-0.3)(0.3)=-0.1\)。\(r_2=-0.1/0.2=-0.5\)。</p></div></div></article><article class="exercise" id="q19-8"><div class="ex-head"><span class="ex-tag">練習</span><b>第 19.8 題</b><small>・講義 p.360・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F19:44] You are given the following annual sales totals for a department store.</p>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>2013</th>
+<th>2014</th>
+<th>2015</th>
+<th>2016</th>
+<th>2017</th>
+<th>2018</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sales</td>
+<td>400</td>
+<td>375</td>
+<td>410</td>
+<td>420</td>
+<td>410</td>
+<td>525</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the sample lag 2 autocorrelation.</p>
+<div class="opts">
+<p>(A) Less than 0.00</p>
+<p>(B) At least 0.00, but less than 0.05</p>
+<p>(C) At least 0.05, but less than 0.10</p>
+<p>(D) At least 0.10, but less than 0.15</p>
+<p>(E) At least 0.15</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I-F19:44）百貨公司的年度銷售額：</p>
+<p>求落後 2 期的樣本自相關。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平均 423.33，離差平方和 13583.33。</p>
+<p>分子：\((-23.33)(-13.33)+(-48.33)(-3.33)+(-13.33)(-13.33)+(-3.33)(101.67)=311.11\)。</p>
+<p>\(r_2=311.11/13583.33=0.0229\)。</p></div></div></article><article class="exercise" id="q19-16"><div class="ex-head"><span class="ex-tag">練習</span><b>第 19.16 題</b><small>・講義 p.362・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>You are given that \(x_t\) is a random walk. The variance of \(x_5\) is 35.</p>
+<p>Determine the variance of \(x_6\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(x_t\) 是隨機漫步，\(x_5\) 的變異數是 35。求 \(x_6\) 的變異數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>42</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\mathrm{Var}(x_t)=t\sigma_c^2\)：\(5\sigma_c^2=35\)，\(\sigma_c^2=7\)，\(\mathrm{Var}(x_6)=42\)。</p></div></div></article><article class="exercise" id="q19-17"><div class="ex-head"><span class="ex-tag">練習</span><b>第 19.17 題</b><small>・講義 p.362・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>For a random walk \(\{y_t\}\), differences of consecutive terms are white noise with mean 2 and variance 16. Assume that the terms of the white noise series are normally distributed.</p>
+<p>You are given that \(y_1=3\).</p>
+<p>Calculate the probability that \(y_2\) is positive.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>隨機漫步 \(\{y_t\}\) 的相鄰差是平均 2、變異數 16 的白噪音，假設常態。已知 \(y_1=3\)。求 \(y_2\) 為正的機率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>0.8944</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(y_2=y_1+c_2\sim N(5,16)\)。\(\Pr(y_2&gt;0)=1-\Phi\big(\frac{0-5}{4}\big)=1-\Phi(-1.25)=0.8944\)。</p></div></div></article><article class="exercise" id="q19-18"><div class="ex-head"><span class="ex-tag">練習</span><b>第 19.18 題</b><small>・講義 p.362・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>You are given that \(y_t\) is a random walk. Assume all terms of the series are normally distributed. \(\sigma_c^2=3\).</p>
+<p>Determine the approximate width of a 95% confidence interval for a three step ahead forecast.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(y_t\) 是隨機漫步，所有項都是常態，\(\sigma_c^2=3\)。求 3 期後預測的近似 95% 信賴區間寬度。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>12</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>3 期後的變異數 \(3\times3=9\)，標準誤 3。寬度 \(2\times2\times3=12\)。</p></div></div></article><article class="exercise" id="q19-20"><div class="ex-head"><span class="ex-tag">練習</span><b>第 19.20 題</b><small>・講義 p.363・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[4-F00:40] You are given two random walk models. These models are identical in every respect, except that for one of them \(\mu_c=0\) and for the other one \(\mu_c&gt;0\).</p>
+<p>Which of the following statements about these random walk models is incorrect?</p>
+<div class="opts">
+<p>(A) For the random walk with \(\mu_c=0\), all forecasted values from time \(T\) are equal.</p>
+<p>(B) For the random walk with \(\mu_c=0\), the standard error of the forecast from time \(T\) increases as the forecast horizon increases.</p>
+<p>(C) For the random walk with \(\mu_c\neq0\), the forecasted values from time \(T\) will increase linearly as the forecast horizon increases.</p>
+<p>(D) For the random walk with \(\mu_c\neq0\), the standard error of a forecasted value from time \(T\) is equal to the standard error of the corresponding forecasted value for the random walk with \(\mu_c=0\).</p>
+<p>(E) For the random walk with \(\mu_c\neq0\), the standard error of the forecast from time \(T\) increases or decreases, depending on \(\mu_c\), as the forecast horizon increases.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（4-F00:40）兩個隨機漫步模型除了一個 \(\mu_c=0\)、另一個 \(\mu_c&gt;0\) 之外完全相同。下列哪一個敘述<strong>不</strong>正確？</p>
+<div class="opts">
+<p>(A) \(\mu_c=0\) 的隨機漫步，從時間 \(T\) 出發的所有預測值都相等。</p>
+<p>(B) \(\mu_c=0\) 的隨機漫步，從時間 \(T\) 出發的預測標準誤隨預測期數增加。</p>
+<p>(C) \(\mu_c\neq0\) 的隨機漫步，從時間 \(T\) 出發的預測值隨預測期數線性增加。</p>
+<p>(D) \(\mu_c\neq0\) 的隨機漫步，預測值的標準誤與 \(\mu_c=0\) 時對應的標準誤相等。</p>
+<p>(E) \(\mu_c\neq0\) 的隨機漫步，預測標準誤隨期數增加或減少，取決於 \(\mu_c\)。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>(A) 對：預測 \(y_T\)。(B) 對：\(\sigma_c\sqrt l\)。(C) 對：\(y_T+l\mu_c\)。(D) 對：\(\mu_c\) 是常數，不影響變異數。(E) 錯：標準誤永遠隨 \(l\) 增加，與 \(\mu_c\) 無關。</p></div></div></article><article class="exercise" id="q19-23"><div class="ex-head"><span class="ex-tag">練習</span><b>第 19.23 題</b><small>・講義 p.363・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>(Use the information of 19.22.) Calculate the mean square error.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>承上題，求均方誤差（MSE）。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>3.75</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\frac{1+4+9+1}4=3.75\)。</p></div></div></article><article class="exercise" id="q19-25"><div class="ex-head"><span class="ex-tag">練習</span><b>第 19.25 題</b><small>・講義 p.363・<a href="#s5">回到對應概念</a></small></div><div class="prompt"><p>You are given the following time series:</p>
+<p>2, 5, 10, 11, 17, 22, 25, 28, 35, 40</p>
+<p>It is modeled as a random walk. To test this model, out-of-sample validation is done, with the first 6 terms used for the model development subsample.</p>
+<p>Calculate the mean absolute error.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>時間數列：2，5，10，11，17，22，25，28，35，40。以隨機漫步模型化。用前 6 項當訓練資料做樣本外驗證（從訓練期最後一點往前預測）。求平均絕對誤差（MAE）。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>1.5</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\bar c=(22-2)/5=4\)。預測 26、30、34、38；實際 25、28、35、40，殘差 \(-1,-2,1,2\)。MAE \(=\frac{1+2+1+2}4=1.5\)。</p></div></div></article></section><button class="toggle-all float" type="button">顯示全部解答</button><div class="navfoot"><a href="ch18.html">← 第 18 章</a><a href="ch20.html">第 20 章 →</a></div></main></body></html>
