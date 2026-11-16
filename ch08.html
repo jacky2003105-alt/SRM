@@ -1,13 +1,2075 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第 8 章　線性迴歸：收縮與降維｜SRM 精算筆記</title><link rel="stylesheet" href="assets/site.css"><link rel="stylesheet" href="assets/katex/katex.min.css"><script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/site.js"></script></head><body><nav aria-label="課程導覽"><a class="brand" href="index.html">SRM 精算筆記</a><label for="chapter">章節</label><select id="chapter"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html" selected>第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題與參考解答</option></select><a href="practice.html">題庫</a></nav><main><header><div class="kicker">SRM · 第 08 章</div><h1>線性迴歸：收縮與降維</h1><p>當資料不足以穩定估出每個係數，可以縮小係數，或先換到較少的方向。</p><div class="chips"><a href="pdf/ch08.pdf">下載本章 PDF</a><a href="practice.html#chapter8">習題索引</a></div></header><section class="panel"><h2>本章閱讀順序</h2><ol><li><a href="#s1">為什麼接受偏誤：懲罰、預算與尺度</a></li><li><a href="#s2">嶺迴歸：為什麼平方懲罰會穩定斜率</a></li><li><a href="#s3">Lasso：絕對值懲罰與軟閾值</a></li><li><a href="#s4">主成分迴歸：先把 X 壓縮，再解釋 Y</a></li><li><a href="#s5">偏最小平方法與高維資料</a></li></ol><div class="minititle">優先練習 · 10 題</div><div class="chips"><a href="#q8-3">8.3</a><a href="#q8-5">8.5</a><a href="#q8-9">8.9</a><a href="#q8-10">8.10</a><a href="#q8-12">8.12</a><a href="#q8-14">8.14</a><a href="#q8-18">8.18</a><a href="#q8-19">8.19</a><a href="#q8-23">8.23</a><a href="#q8-25">8.25</a></div></section><article class="unit" id="s1"><div class="kicker">概念 01</div><h2>為什麼接受偏誤：懲罰、預算與尺度</h2><p>預測理賠時，兩欄保額與收入若幾乎同步變動，很多組斜率可產生相近的訓練預測。最小平方法只問殘差平方和（RSS）哪一組最小，可能用很大的正負係數互相抵銷，稍微更換樣本就大幅改變估計。收縮（shrinkage）要求改善擬合的同時，也為過大係數付出成本。</p>
-<p>對新點 \(x\)、固定 \(f(x)\)、零均值且與訓練樣本獨立的誤差，\(E[(Y-\hat f(x))^2]=\sigma^2+\operatorname{Var}(\hat f(x))+[E\hat f(x)-f(x)]^2\)。壓小係數往往提高偏誤，但降低抽樣變異；適度限制可改善測試誤差。這是典型取捨，不保證每一資料集的曲線必為 U 形。用訓練集內的交叉驗證挑強度，不用測試集挑。</p>
-<p>固定預算的寫法是最小化 RSS，條件 \(P(\beta)\le s\)。拉格朗日式為 \(RSS+\lambda[P(\beta)-s]\)；固定 \(s\) 時最後一項為常數，所以得到懲罰寫法 \(RSS+\lambda P(\beta)\)。\(\lambda\) 大表示處罰強、\(s\) 小表示預算緊，兩者方向相反。截距通常不懲罰：將所有反應值加同一常數，本應只改變平均水準，不該改變斜率的限制。</p>
-<p>若將 \(x_j\) 乘十，保持相同預測需把其係數除十，懲罰會無端變小，因此不同單位要先調整。講義的尺度公式 \(x_{ij}/s_j\) 使用 \(s_j^2=\sum_i(x_{ij}-\bar x_j)^2/n\)；常用的中心化標準分數為 \((x_{ij}-\bar x_j)/s_j\)。有截距時，中心化可由截距吸收，但題目若直接問「轉換後數值」必須區分兩種定義。訓練及驗證資料應使用同一組訓練取得的縮放參數。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="中心化資料沿單位方向投影，依保留變異最大且彼此正交的順序選方向。" data-target="第 17 章 · 主成分" href="ch17.html#s1">主成分</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q8-1">8.1</a><a href="#q8-5">8.5</a><a href="#q8-11">8.11</a><a href="#q8-16">8.16</a><a href="#q8-17">8.17</a><a href="#q8-26">8.26</a></div></article><article class="exercise" id="q8-5"><button class="toggle" aria-controls="a-q8-5" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 8.5</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q8-5">題目連結</a></small><p>資料 4,5,5,6,8,10,11,12。以講義的「除以用 n 計算的標準差」慣例，第一筆尺度化值是多少？</p><div class="solution" id="a-q8-5"><strong class="label">參考解答</strong><p>約 1.394。</p><strong class="label">解析</strong><p>平均 7.625，平方離差和 65.875、變異 8.234375。\(4/\sqrt{8.234375}=1.394\)。若另要求中心化 z 分數，則為 \((4-7.625)/\sqrt{8.234375}\approx-1.263\)。</p></div></article><article class="unit" id="s2"><div class="kicker">概念 02</div><h2>嶺迴歸：為什麼平方懲罰會穩定斜率</h2><p>嶺迴歸（ridge）最小化 \(\|y-X\beta\|^2+\lambda\sum_j\beta_j^2\)，此處 \(X,y\) 已中心化，截距另行估計。對斜率微分為 \(-2X^\top(y-X\beta)+2\lambda\beta=0\)，移項即</p>
-<p>\[\hat\beta_R=(X^\top X+\lambda I)^{-1}X^\top y.\]</p>
-<p>即使 \(X^\top X\) 因共線性不可逆，\(\lambda&gt;0\) 時加上正數能使矩陣可逆。沿 \(X^\top X\) 的特徵方向，普通最小平方的非零特徵值 \(d\) 變成分母 \(d+\lambda\)，原估計乘上 \(d/(d+\lambda)\)。最不穩定的小 \(d\) 方向受抑制最多。當 \(\lambda=0\)，在滿秩條件下回到 OLS；\(\lambda\to\infty\) 時所有受懲罰斜率趨零，截距仍可保留。</p>
-<p>單一解釋變數含截距時，\(\hat\beta_0=\bar y-\hat\beta_1\bar x\)，將它代入平方和後，對斜率微分得 \(\hat\beta_1=S_{xy}/(S_{xx}+\lambda)\)，其中 \(S_{xy}=\sum_i(x_i-\bar x)(y_i-\bar y)\)。分母比普通迴歸多 \(\lambda\)，但有限懲罰通常不會讓斜率剛好為零。<strong>即：嶺迴歸保留所有方向，只對資料證據較弱的方向多縮一點。</strong></p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="中心化資料沿單位方向投影，依保留變異最大且彼此正交的順序選方向。" data-target="第 17 章 · 主成分" href="ch17.html#s1">主成分</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q8-2">8.2</a><a href="#q8-3">8.3</a><a href="#q8-6">8.6</a><a href="#q8-7">8.7</a><a href="#q8-10">8.10</a><a href="#q8-13">8.13</a><a href="#q8-14">8.14</a><a href="#q8-15">8.15</a><a href="#q8-18">8.18</a></div></article><article class="exercise" id="q8-3"><button class="toggle" aria-controls="a-q8-3" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 8.3</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q8-3">題目連結</a></small><p>模型一截距 5、斜率 (1.1,0.8)、RSS=4；模型二截距 3、斜率 (1,0.1)、RSS=9。在哪些 \(\lambda\) 下 ridge 偏好二？</p><div class="solution" id="a-q8-3"><strong class="label">參考解答</strong><p>\(\lambda&gt;5/0.84\approx5.95238\)。</p><strong class="label">解析</strong><p>比較 \(9+1.01\lambda&lt;4+1.85\lambda\)；等號時並列。</p></div></article><article class="exercise" id="q8-10"><button class="toggle" aria-controls="a-q8-10" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 8.10</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q8-10">題目連結</a></small><p>八筆無截距迴歸、設計矩陣為單位矩陣，反應 (3,−5,10,14,−12,7,3,−4)。用 ridge，\(\lambda=2\)，求全部斜率。</p><div class="solution" id="a-q8-10"><strong class="label">參考解答</strong><p>(1,−5/3,10/3,14/3,−4,7/3,1,−4/3)。</p><strong class="label">解析</strong><p>此設計下每項為 \(y_j/(1+2)\)。</p></div></article><article class="exercise" id="q8-14"><button class="toggle" aria-controls="a-q8-14" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 8.14</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q8-14">題目連結</a></small><p>表格列為第二斜率 1 至 4、欄為第一斜率 1 至 4。RSS 各列：56/52/46/52；48/41/34/30；42/37/31/33；36/40/44/48。何種最小懲罰能使 (3,2) 成最優解？</p><div class="solution" id="a-q8-14"><strong class="label">參考解答</strong><p>0.6。</p><strong class="label">解析</strong><p>目標為 \(34+13\lambda\)。與更低 RSS 的 (4,2)、(3,3)、(4,3) 比較，分別需 \(\lambda\ge4/7,3/5,1/8\)。取最大 3/5，此時也優於其餘格。</p></div></article><article class="exercise" id="q8-18"><button class="toggle" aria-controls="a-q8-18" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 8.18</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q8-18">題目連結</a></small><p>\((x,y)=(1,2),(2,5),(3,12),(4,13),(5,18)\)，模型有不受罰的截距。ridge 取 \(\lambda=4\)，求斜率。</p><div class="solution" id="a-q8-18"><strong class="label">參考解答</strong><p>\(20/7\approx2.8571\)。</p><strong class="label">解析</strong><p>\(S_{xx}=55-15^2/5=10\)，\(S_{xy}=190-15(50)/5=40\)，故 \(40/(10+4)\)。</p></div></article><article class="unit" id="s3"><div class="kicker">概念 03</div><h2>Lasso：絕對值懲罰與軟閾值</h2><p>Lasso 最小化 \(RSS+\lambda\sum_j|\beta_j|\)。嶺迴歸用的是 \(\|\beta\|_2^2=\sum_j\beta_j^2\)，不要把這個懲罰誤認成有平方根的 \(\|\beta\|_2\)。Lasso 改用 \(\|\beta\|_1\)，在零點有折角，因此一部分斜率真的可以等於零；幾何上，L1 預算形狀在座標軸上有角，RSS 等高線可能先在角上碰到它。這就是它能作特徵選取的原因。</p>
-<p>看最清楚的例子：沒有截距且 \(X=I\) 時，每個係數獨立最小化 \((y_j-b)^2+\lambda|b|\)。若 \(b&gt;0\)，一階條件 \(2(b-y_j)+\lambda=0\)；若 \(b&lt;0\) 則為 \(2(b-y_j)-\lambda=0\)。只有解的符號符合假設時才可採用；兩邊都不成立時最小點在零。故</p>
-<p>\[\hat b_j=\operatorname{sign}(y_j)\max\{|y_j|-\lambda/2,0\}.\]</p>
-<p>同一設計下 ridge 是 \(y_j/(1+\lambda)\)，不是把同一常數從每個非零值減掉。若目標函數以 \(RSS/2\) 或 \(RSS/n\) 定義，門檻中的二分之一會隨慣例改變。含單一中心化 \(X\) 時，把 \(y_j\) 替成 \(S_{xy}\)，在分子做相同軟閾值，再除以 \(S_{xx}\)。多變數高度相關時不可逐欄直接套用正交設計的簡式，lasso 選哪一欄也可能對樣本敏感。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="中心化資料沿單位方向投影，依保留變異最大且彼此正交的順序選方向。" data-target="第 17 章 · 主成分" href="ch17.html#s1">主成分</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q8-4">8.4</a><a href="#q8-8">8.8</a><a href="#q8-9">8.9</a><a href="#q8-12">8.12</a><a href="#q8-19">8.19</a><a href="#q8-20">8.20</a><a href="#q8-21">8.21</a><a href="#q8-22">8.22</a></div></article><article class="exercise" id="q8-9"><button class="toggle" aria-controls="a-q8-9" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 8.9</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q8-9">題目連結</a></small><p>八筆無截距迴歸、設計矩陣為單位矩陣，反應 (3,−5,10,14,−12,7,3,−4)。用 lasso，\(\lambda=10\)，求全部斜率。</p><div class="solution" id="a-q8-9"><strong class="label">參考解答</strong><p>(0,0,5,9,−7,2,0,0)。</p><strong class="label">解析</strong><p>套軟閾值 5。絕對值不超過 5 者成零；其餘向零縮 5。</p></div></article><article class="exercise" id="q8-12"><button class="toggle" aria-controls="a-q8-12" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 8.12</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q8-12">題目連結</a></small><p>兩模型 RSS 分別 26、50，斜率分別 (−1.7,2.5,1.2)、(0,3.1,0)。lasso 何時嚴格偏好模型二？</p><div class="solution" id="a-q8-12"><strong class="label">參考解答</strong><p>\(\lambda&gt;24/2.3\approx10.4348\)。</p><strong class="label">解析</strong><p>比較 \(50+3.1\lambda&lt;26+5.4\lambda\)。</p></div></article><article class="exercise" id="q8-19"><button class="toggle" aria-controls="a-q8-19" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 8.19</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q8-19">題目連結</a></small><p>\((x,y)=(1,2),(2,5),(3,12),(4,13),(5,18)\)，模型有不受罰的截距。lasso 取 \(\lambda=4\)，求斜率。</p><div class="solution" id="a-q8-19"><strong class="label">參考解答</strong><p>3.8。</p><strong class="label">解析</strong><p>中心化後正半軸一階條件為 \(2(10b-40)+4=0\)；解為正，符合假設。</p></div></article><article class="unit" id="s4"><div class="kicker">概念 04</div><h2>主成分迴歸：先把 X 壓縮，再解釋 Y</h2><p>主成分迴歸（PCR）先將中心化、適當縮放的原變數轉成少數新特徵 \(Z_m=\sum_j\phi_{jm}X_j\)。單位長度的 \(\phi_1\) 最大化投影變異；其後成分依序在垂直方向最大化剩餘變異。因此這<strong>不是</strong>要求權重加總為 1 的加權平均。若中心為 (5,9)、方向為 (0.6,0.8)，觀察 (5.5,8.5) 的分數為 \(0.6(0.5)+0.8(-0.5)=-0.1\)。</p>
-<p>再回歸 \(y=\theta_0+\sum_{m=1}^M\theta_m Z_m+\epsilon\)。代回 \(Z_m\)，原斜率為 \(\beta_j=\sum_m\phi_{jm}\theta_m\)；所以少估 \(M\) 個方向，並非把不重要的原始欄位逐一刪掉。少數高變異方向能減少共線方向的估計變異，但若真正與 \(Y\) 有關的是低變異方向，模型會有偏。用交叉驗證選 \(M\)；不要只看解釋 X 的比例來判定預測效果。所有非零方向都保留時，預測落回同一 OLS 投影空間。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="中心化資料沿單位方向投影，依保留變異最大且彼此正交的順序選方向。" data-target="第 17 章 · 主成分" href="ch17.html#s1">主成分</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q8-23">8.23</a><a href="#q8-27">8.27</a><a href="#q8-28">8.28</a></div></article><article class="exercise" id="q8-23"><button class="toggle" aria-controls="a-q8-23" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 8.23</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q8-23">題目連結</a></small><p>PCR 判斷：I 成分是原欄位的加權平均；II 權重平方和為一，選出變異最小方向；III 第二成分與第一成分不相關。</p><div class="solution" id="a-q8-23"><strong class="label">參考解答</strong><p>僅 III（D）。</p><strong class="label">解析</strong><p>線性組合不必是凸加權平均；最大化而非最小化投影變異。</p></div></article><article class="unit" id="s5"><div class="kicker">概念 05</div><h2>偏最小平方法與高維資料</h2><p>偏最小平方法（PLS）同樣合成變數，但第一方向使用反應值。教材做法以每欄 \(X_j\) 對 \(Y\) 的簡單迴歸斜率作權重：\(w_j=S_{X_jY}/S_{X_jX_j}\)。若已縮放到相同變異，這等同選擇與 \(Y\) 有大共變異的方向。形成 \(Z_1=Xw\)，再從每一欄扣掉它在 \(Z_1\) 的線性投影，對剩餘變動重複。方向的整體縮放只改變新特徵的單位，迴歸係數可以補回；不同軟體的正規化慣例可能不同。</p>
-<p>PCR 的第一步不使用 Y，因此新軸對 X 的變異最有代表性。PLS 因選軸時使用 Y，對反應常能降低偏誤，但同時也有機會追逐 Y 的雜訊、增加估計變異；兩者誰贏要由樣本外驗證決定。</p>
-<p>維度災難指特徵越多，固定樣本在特徵空間越稀疏。若 \(p\) 接近或超過 \(n\)，設計矩陣秩有限；可能出現多組係數給同一個訓練預測，甚至 RSS 為零。此時漂亮的訓練 \(R^2\) 並非泛化證據。收縮、降維與子集選擇都是控制有效複雜度的方法，調參與評估必須留在正確的樣本切分內。</p><div class="related"><small>接著讀：<a class="concept" data-definition="輪流留出部分資料，用未參與估計的觀察評分。" data-target="第 6 章 · 交叉驗證" href="ch06.html#s3">交叉驗證</a> · <a class="concept" data-definition="中心化資料沿單位方向投影，依保留變異最大且彼此正交的順序選方向。" data-target="第 17 章 · 主成分" href="ch17.html#s1">主成分</a></small></div><div class="minititle">這個概念的講義習題</div><div class="chips"><a href="#q8-24">8.24</a><a href="#q8-25">8.25</a></div></article><article class="exercise" id="q8-25"><button class="toggle" aria-controls="a-q8-25" aria-expanded="true">隱藏解答</button><h3>★ 精選 · 8.25</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q8-25">題目連結</a></small><p>五筆資料已知 \(\sum X_1=15,\sum X_1^2=55,\sum X_2=18,\sum X_2^2=82,\sum Y=45,\sum X_1Y=158,\sum X_2Y=148\)。不先標準化，求講義定義的第一 PLS 方向係數。</p><div class="solution" id="a-q8-25"><strong class="label">參考解答</strong><p>2.3 與約 −0.81395。</p><strong class="label">解析</strong><p>分別作簡單迴歸。第一係數 \((158-15\times45/5)/(55-15^2/5)=23/10\)；第二係數 \((148-18\times45/5)/(82-18^2/5)=-14/17.2\)。</p></div></article><article class="unit" id="terms"><div class="kicker">TERMS</div><h2>本章中英術語</h2><table><thead><tr><th>中文</th><th>English</th><th>解題時的意思</th></tr></thead><tbody><tr><td>嶺迴歸</td><td>ridge regression</td><td>用斜率平方和懲罰估計。</td></tr><tr><td>套索迴歸</td><td>lasso regression</td><td>用絕對值和處罰斜率，可使部分係數為零。</td></tr><tr><td>偏最小平方法</td><td>partial least squares</td><td>降維時連同反應資訊一起選取方向。</td></tr></tbody></table></article><section class="panel" id="remaining"><h2>章末其餘習題 · 18 題</h2><p>按講義題號排列。做題前可用各題自己的按鈕隱藏解答。</p></section><article class="exercise" id="q8-1"><button class="toggle" aria-controls="a-q8-1" aria-expanded="true">隱藏解答</button><h3>練習 · 8.1</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q8-1">題目連結</a></small><p>在典型 ridge 偏誤與變異取捨示意圖中，逐漸提高懲罰時測試 MSE 是持平、遞減、遞增、先降後升或先升後降？</p><div class="solution" id="a-q8-1"><strong class="label">參考解答</strong><p>典型答案先降後升（D）。</p><strong class="label">解析</strong><p>初期降低變異可能勝過偏誤增加，懲罰過強後過度收縮使誤差回升。這是常見圖形，不是對任一資料集的單調定理。</p></div></article><article class="exercise" id="q8-2"><button class="toggle" aria-controls="a-q8-2" aria-expanded="true">隱藏解答</button><h3>練習 · 8.2</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q8-2">題目連結</a></small><p>斜率為 2.5、−3.1、0.8，截距 11.5；\(\lambda=3\)，求 ridge 懲罰。</p><div class="solution" id="a-q8-2"><strong class="label">參考解答</strong><p>49.5。</p><strong class="label">解析</strong><p>\(3(2.5^2+3.1^2+0.8^2)=49.5\)；不加入截距。</p></div></article><article class="exercise" id="q8-4"><button class="toggle" aria-controls="a-q8-4" aria-expanded="true">隱藏解答</button><h3>練習 · 8.4</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q8-4">題目連結</a></small><p>截距 9.2、四斜率 (3.4,−2.4,0.8,2.1)，\(\lambda=5\)，求 lasso 懲罰。</p><div class="solution" id="a-q8-4"><strong class="label">參考解答</strong><p>43.5。</p><strong class="label">解析</strong><p>絕對值和為 8.7，乘 5。負係數不能抵銷正係數。</p></div></article><article class="exercise" id="q8-6"><button class="toggle" aria-controls="a-q8-6" aria-expanded="true">隱藏解答</button><h3>練習 · 8.6</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q8-6">題目連結</a></small><p>找 ridge 錯誤敘述：A 無限大懲罰使斜率趨零；B 最小化 RSS 加平方懲罰；C 對縮放不具 OLS 的等變性；D 截距不受罰；E 收縮的優點是降低偏誤。</p><div class="solution" id="a-q8-6"><strong class="label">參考解答</strong><p>E。</p><strong class="label">解析</strong><p>收縮通常以增加偏誤換降低變異，並非藉降低偏誤改善預測。</p></div></article><article class="exercise" id="q8-7"><button class="toggle" aria-controls="a-q8-7" aria-expanded="true">隱藏解答</button><h3>練習 · 8.7</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q8-7">題目連結</a></small><p>求向量 (3,−1,4,1,−6,−9) 的 L2 範數。</p><div class="solution" id="a-q8-7"><strong class="label">參考解答</strong><p>12。</p><strong class="label">解析</strong><p>\(\sqrt{9+1+16+1+36+81}=\sqrt{144}\)；ridge 懲罰用範數的平方。</p></div></article><article class="exercise" id="q8-8"><button class="toggle" aria-controls="a-q8-8" aria-expanded="true">隱藏解答</button><h3>練習 · 8.8</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q8-8">題目連結</a></small><p>求向量 (3,−1,4,1,−6,−9) 的 L1 範數。</p><div class="solution" id="a-q8-8"><strong class="label">參考解答</strong><p>24。</p><strong class="label">解析</strong><p>各元素絕對值相加：3+1+4+1+6+9。</p></div></article><article class="exercise" id="q8-11"><button class="toggle" aria-controls="a-q8-11" aria-expanded="true">隱藏解答</button><h3>練習 · 8.11</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q8-11">題目連結</a></small><p>判斷 I 懲罰趨無限時得到不受限 ridge 解；II lasso 的非零係數一定不少於 ridge；III 可用交叉驗證選 ridge 強度。</p><div class="solution" id="a-q8-11"><strong class="label">參考解答</strong><p>只有 III（C）。</p><strong class="label">解析</strong><p>不受限是零懲罰；lasso 可以把部分斜率直接設零。</p></div></article><article class="exercise" id="q8-13"><button class="toggle" aria-controls="a-q8-13" aria-expanded="true">隱藏解答</button><h3>練習 · 8.13</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q8-13">題目連結</a></small><p>表格列為第二斜率 1 至 4、欄為第一斜率 1 至 4。RSS 各列：56/52/46/52；48/41/34/16；42/37/31/33；36/40/44/48。ridge 預算 12，選斜率。</p><div class="solution" id="a-q8-13"><strong class="label">參考解答</strong><p>(2,2)。</p><strong class="label">解析</strong><p>限制 \(b_1^2+b_2^2\le12\) 排除任一個 4，也排除 3 搭 2；可行者最低 RSS 是 41。</p></div></article><article class="exercise" id="q8-15"><button class="toggle" aria-controls="a-q8-15" aria-expanded="true">隱藏解答</button><h3>練習 · 8.15</h3><div class="clearfix"></div><small><a href="#s2">回到對應概念</a> · <a href="#q8-15">題目連結</a></small><p>斜率限整數 1–3，ridge 預算 \(s=5\)。對可行的 (1,1)、(1,2)、(2,1)，截距 1 時 RSS 各為 3924/1977/1858；截距 2 時 3949/1822/1907；截距 3 時 3784/1671/1827。求三係數之和。</p><div class="solution" id="a-q8-15"><strong class="label">參考解答</strong><p>6（B）。</p><strong class="label">解析</strong><p>截距不受罰。預算使只有列出的三對可行；跨截距最低 RSS 為 1671，係數為 (截距 3，斜率 1、2)。</p></div></article><article class="exercise" id="q8-16"><button class="toggle" aria-controls="a-q8-16" aria-expanded="true">隱藏解答</button><h3>練習 · 8.16</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q8-16">題目連結</a></small><p>ridge 預算 s 增加時，曲線 X 下降、曲線 Y 先下降再上升。辨別為何種統計量。</p><div class="solution" id="a-q8-16"><strong class="label">參考解答</strong><p>X 為平方偏誤，Y 為測試 MSE（A）。</p><strong class="label">解析</strong><p>放寬預算相當於減少懲罰。這個示意例中，平方偏誤下降，估計變異逐漸上升，測試誤差先改善再惡化。</p></div></article><article class="exercise" id="q8-17"><button class="toggle" aria-controls="a-q8-17" aria-expanded="true">隱藏解答</button><h3>練習 · 8.17</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q8-17">題目連結</a></small><p>lasso 的懲罰強度增加，X 先降後升，Y 整體上升。判讀 X、Y。</p><div class="solution" id="a-q8-17"><strong class="label">參考解答</strong><p>X 是測試 MSE，Y 是訓練 MSE（B）。</p><strong class="label">解析</strong><p>X 反映偏誤與變異取捨；Y 則衡量逐漸限制模型所增加的訓練損失。</p></div></article><article class="exercise" id="q8-20"><button class="toggle" aria-controls="a-q8-20" aria-expanded="true">隱藏解答</button><h3>練習 · 8.20</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q8-20">題目連結</a></small><p>列為第二斜率 0–3，欄為第一斜率 0–3。RSS 各列 82/77/70/62；74/70/65/61；69/63/62/60；67/60/59/58。lasso 預算 3，選係數。</p><div class="solution" id="a-q8-20"><strong class="label">參考解答</strong><p>(3,0)。</p><strong class="label">解析</strong><p>只考慮 \(b_1+b_2\le3\) 的格子（均非負），可行格中最低 RSS=62。</p></div></article><article class="exercise" id="q8-21"><button class="toggle" aria-controls="a-q8-21" aria-expanded="true">隱藏解答</button><h3>練習 · 8.21</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q8-21">題目連結</a></small><p>列為第二斜率 0–3，欄為第一斜率 0–3。RSS 各列 82/77/70/67；74/70/65/62；69/64/62/57；67/63/59/56。lasso 懲罰 4，選係數。</p><div class="solution" id="a-q8-21"><strong class="label">參考解答</strong><p>(1,2)。</p><strong class="label">解析</strong><p>每格加 \(4(b_1+b_2)\)，此格 \(64+4(3)=76\) 最低。RSS 最低的 (3,3) 懲罰後為 80。</p></div></article><article class="exercise" id="q8-22"><button class="toggle" aria-controls="a-q8-22" aria-expanded="true">隱藏解答</button><h3>練習 · 8.22</h3><div class="clearfix"></div><small><a href="#s3">回到對應概念</a> · <a href="#q8-22">題目連結</a></small><p>兩斜率皆為 1–5 整數，lasso 預算為 5。可行 RSS：第一斜率 1 時依第二斜率 1–4 為 2855.0/370.3/464.4/357.2；第一斜率 2 時為 1059.1/488.4/216.3；第一斜率 3 時為 657.0/220.0；第一斜率 4 時為 368.4。求選定的第一斜率除以第二斜率。</p><div class="solution" id="a-q8-22"><strong class="label">參考解答</strong><p>2/3（B）。</p><strong class="label">解析</strong><p>可行三角區最低為 216.3，位於 (2,3)，符合 \(2+3=5\)。</p></div></article><article class="exercise" id="q8-24"><button class="toggle" aria-controls="a-q8-24" aria-expanded="true">隱藏解答</button><h3>練習 · 8.24</h3><div class="clearfix"></div><small><a href="#s5">回到對應概念</a> · <a href="#q8-24">題目連結</a></small><p>判斷 PLS：I 是使用反應資訊的成分方法；II 不一定像 PCA 那樣最大化 X 的投影變異；III 典型比較中 PLS 對 Y 的偏誤比 PCR 更高。</p><div class="solution" id="a-q8-24"><strong class="label">參考解答</strong><p>I、II（C）。</p><strong class="label">解析</strong><p>PLS 使用 Y 選方向，常能降低對反應的偏誤，但也可能提高估計變異。這不是對所有資料集的絕對排序。</p></div></article><article class="exercise" id="q8-26"><button class="toggle" aria-controls="a-q8-26" aria-expanded="true">隱藏解答</button><h3>練習 · 8.26</h3><div class="clearfix"></div><small><a href="#s1">回到對應概念</a> · <a href="#q8-26">題目連結</a></small><p>相對於全變數 OLS，子集選取或收縮可能帶來哪些優點？I 模型更簡單；II 改善預測；III 更易解讀。</p><div class="solution" id="a-q8-26"><strong class="label">參考解答</strong><p>三項均是可能優點（D）。</p><strong class="label">解析</strong><p>刪去不必要變數可簡化解釋；穩定估計有機會改善樣本外表現。並非每種方法在每個樣本都實現全部三項。</p></div></article><article class="exercise" id="q8-27"><button class="toggle" aria-controls="a-q8-27" aria-expanded="true">隱藏解答</button><h3>練習 · 8.27</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q8-27">題目連結</a></small><p>Lasso、PLS、PCA、ridge 四者，有幾種本身會選取原始變數？</p><div class="solution" id="a-q8-27"><strong class="label">參考解答</strong><p>一種，lasso（B）。</p><strong class="label">解析</strong><p>PLS、PCA 以線性組合降維；ridge 通常保留所有斜率。</p></div></article><article class="exercise" id="q8-28"><button class="toggle" aria-controls="a-q8-28" aria-expanded="true">隱藏解答</button><h3>練習 · 8.28</h3><div class="clearfix"></div><small><a href="#s4">回到對應概念</a> · <a href="#q8-28">題目連結</a></small><p>哪項關於 PCR 不正確？A 常建議先標準化；B 它是原始特徵選取法；C 仰賴高變異方向含反應資訊；D 可減少過度擬合；E 第一軸最大化投影變異。</p><div class="solution" id="a-q8-28"><strong class="label">參考解答</strong><p>B。</p><strong class="label">解析</strong><p>PCR 選成分數，不是逐一刪原變數；每個保留方向仍可能由所有原變數構成。</p></div></article><section class="panel"><h2>用模擬考複習本章</h2><div class="chips"><a href="exams.html#exam1">第 1 回 · 題 27</a><a href="exams.html#exam1">第 1 回 · 題 29</a><a href="exams.html#exam3">第 3 回 · 題 10</a><a href="exams.html#exam3">第 3 回 · 題 35</a><a href="exams.html#exam5">第 5 回 · 題 21</a><a href="exams.html#exam5">第 5 回 · 題 31</a><a href="exams.html#exam6">第 6 回 · 題 26</a></div></section><div class="navfoot"><a href="ch07.html">← 上一章</a><a href="ch09.html">下一章 →</a></div><footer>SRM 精算考試中文研讀筆記 · 依所附第四版教材章序編寫，中文解析為參考解答。</footer></main></body></html>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 8 章　線性迴歸：收縮與降維｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
+<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
+<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html" selected>第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 8 章</div><h1>線性迴歸：收縮與降維</h1><p class="ch-sub"><a href="ch07.html">第 7 章</a>用「挑掉一些變數」對抗過度配適；本章換兩種做法。收縮（ridge、lasso）把所有係數往 0 拉，用一點偏差換掉大量變異數；降維（主成分迴歸、偏最小平方）先把很多個解釋變數濃縮成少數幾個線性組合，再拿去做迴歸。每個方法都從「要最小化什麼」推到「係數長什麼樣」，最後用考試的格子題、圖形題練一次。</p><div class="chips"><a href="pdf/ch08.pdf">下載本章 PDF</a><a href="#exercises">章末習題（28 題）</a><span class="chip-note">觀念題 24 題（在各節後面）</span><button class="toggle-all" type="button">顯示全部解答</button></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">8.1 為什麼要收縮：用一點偏差換大量變異數</a></li><li><a href="#s2">8.2 Ridge 迴歸</a></li><li><a href="#s3">8.3 Lasso</a></li><li><a href="#s4">8.4 降維：主成分迴歸與偏最小平方</a></li><li><a href="#s5">8.5 維度詛咒</a></li></ol><p>本章對應講義第 8 課，讀本是 ISLR 6.2～6.4 節。主成分分析在這裡只用到「怎麼造出新變數」，完整的推導在第 17 章。</p>
+<p><strong>記號。</strong> \(n\) 是觀察筆數，\(k\) 是解釋變數個數；\(\beta_j\) 是真實參數，\(b_j\) 是估計值，ridge 與 lasso 的估計值必要時寫成 \(b_j^R\)、\(b_j^L\)。截距是 \(\beta_0\)，<strong>永遠不受懲罰</strong>。</p>
+<div class="box map">
+<div class="box-t">考點地圖：這一章在考試裡的位置</div>
+<p><strong>對應考綱</strong>：主題 2「線性模型」（占 40～50%）的學習成果 g：「和最小平方相比，正則化迴歸（lasso、ridge）有什麼不同」。主成分迴歸與偏最小平方的觀念題也常出現，而主成分本身屬於主題 5（<a href="ch17.html">第 17 章</a>）。</p>
+<p><strong>SOA 官方樣題裡的樣子</strong>：第 8 題（為什麼要用子集選擇或收縮代替最小平方：模型較簡單、預測較準、較好解釋）。歷年 MAS-I 考題（本章習題 <a href="ch08.html#q8-6">8.6</a>、<a href="ch08.html#q8-11">8.11</a>、<a href="ch08.html#q8-15">8.15</a>～<a href="ch08.html#q8-17">8.17</a>、<a href="ch08.html#q8-22">8.22</a>、<a href="ch08.html#q8-27">8.27</a>、<a href="ch08.html#q8-28">8.28</a>）則是這一章最好的練習材料：格子題、圖形題、「哪個方法會做變數選擇」各出現好幾次。</p>
+<table>
+<thead>
+<tr>
+<th>會考的東西</th>
+<th>題目長什麼樣</th>
+<th>判斷或計算的依據</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>懲罰項</td>
+<td>給係數與 \(\lambda\)，算 ridge 或 lasso 的懲罰</td>
+<td>ridge：\(\lambda\sum b_j^2\)；lasso：\(\lambda\sum\lvert b_j\rvert\)；截距不算</td>
+</tr>
+<tr>
+<td>格子題</td>
+<td>給一張 RSS 表，用 \(\lambda\) 或預算 \(s\) 選出係數</td>
+<td>每格加懲罰取最小；或先刪掉超出預算的格子再取最小</td>
+</tr>
+<tr>
+<td>兩個模型比較</td>
+<td>哪些 \(\lambda\) 會選第二個模型</td>
+<td>解不等式 \(\mathrm{RSS}_2+\lambda P_2&lt;\mathrm{RSS}_1+\lambda P_1\)</td>
+</tr>
+<tr>
+<td>一個解釋變數的手算</td>
+<td>給 \(\sum x,\sum y,\sum x^2,\sum xy\)，求 \(b_1^R\) 或 \(b_1^L\)</td>
+<td>正規方程式多一項 \(\lambda b_1\) 或 \(\lambda/2\)</td>
+</tr>
+<tr>
+<td>單位矩陣的特例</td>
+<td>\(X=I\) 時的 ridge 與 lasso 解</td>
+<td>ridge 除以 \(1+\lambda\)；lasso 軟門檻 \(\lambda/2\)</td>
+</tr>
+<tr>
+<td>圖形題</td>
+<td>隨 \(\lambda\) 或 \(s\) 變化的曲線是哪一種統計量</td>
+<td>訓練 MSE、偏差平方、變異數單調；只有測試 MSE 是 U 形</td>
+</tr>
+<tr>
+<td>觀念題</td>
+<td>誰做變數選擇、誰要標準化、PCR 與 PLS 的差別</td>
+<td>lasso 會；ridge、PCR、PLS 不會；收縮與 PCR 都要標準化</td>
+</tr>
+</tbody>
+</table>
+<p><strong>讀完這一章要會</strong>：</p>
+<ol>
+<li>寫出 ridge 與 lasso 的兩種形式（懲罰形式、預算形式），說出 \(\lambda\) 與 \(s\) 反方向。</li>
+<li>用一個解釋變數推出 ridge 與 lasso 的係數，說明為什麼 ridge 不會變成 0、lasso 會。</li>
+<li>熟練格子題的兩種走法。</li>
+<li>看到隨 \(\lambda\)（或 \(s\)）變化的圖，認得出訓練 MSE、測試 MSE、偏差平方、變異數。</li>
+<li>說出 PCR 與 PLS 怎麼造新變數、各自是監督還是非監督，算出 PLS 第一個方向的係數。</li>
+<li>說明維度詛咒：變數多到接近 \(n\) 時，訓練資料的指標全部失效。</li>
+</ol>
+</div></section><section class="unit" id="s1"><h2>8.1 為什麼要收縮：用一點偏差換大量變異數</h2><h3>一、最小平方的問題在哪裡</h3>
+<p>最小平方只問一件事：哪一組係數讓殘差平方和 \(\mathrm{RSS}=\sum_i\big(y_i-b_0-\sum_jb_jx_{ij}\big)^2\) 最小。只要 \(n\) 遠大於 \(k\)、解釋變數之間關聯不強，這樣做很好：係數是不偏的（<a href="ch03.html">第 3 章</a>），變異數也不大。</p>
+<p>麻煩出在兩種情況：</p>
+<ol>
+<li><strong>解釋變數多、\(n\) 不夠大。</strong> 每多估一個係數，就多一份從雜訊學到的「假規律」。\(k\) 接近 \(n\) 時，最小平方可以把訓練資料配得幾乎完美，但換一組資料就完全不同（<a href="ch08.html#s5">8.5 節</a>）。</li>
+<li><strong>解釋變數高度相關。</strong> <a href="ch02.html#s2">第 2 章 2.2 節</a>看過：兩個變數幾乎一起動時，資料只能估準「合起來的效果」，個別係數可能一個很大的正數配一個很大的負數，互相抵銷。這種係數的變異數很大。</li>
+</ol>
+<p><a href="ch07.html">第 7 章</a>的處理是<strong>丟掉</strong>一些變數。這是「全有或全無」的做法：一個變數不是完整保留，就是完全拿掉，選擇本身也會因為資料的小變動而跳來跳去。本章的<strong>收縮</strong>（shrinkage，又稱正則化 regularization）比較溫和：所有變數都留著，但要求係數「不要太大」。</p>
+<h3>二、懲罰形式：在 RSS 後面加一項</h3>
+<p>收縮方法把要最小化的東西改成</p>
+<p>\[\underbrace{\sum_{i=1}^n\Big(y_i-\beta_0-\sum_{j=1}^k\beta_jx_{ij}\Big)^2}_{\text{配適得好不好}}\;+\;\underbrace{\lambda\cdot P(\beta_1,\ldots,\beta_k)}_{\text{係數大不大}} .\]</p>
+<p>\(P\) 是<strong>懲罰函數</strong>（penalty function），係數絕對值越大它越大；\(\lambda\ge0\) 是<strong>調整參數</strong>（tuning parameter），決定懲罰多重：</p>
+<ul>
+<li>\(\lambda=0\)：沒有懲罰，就是最小平方。</li>
+<li>\(\lambda\to\infty\)：只要有任何係數不是 0 就會被罰到無限大，所以 \(b_1,\ldots,b_k\) 全部趨近 0，模型只剩截距 \(b_0=\bar y\)。</li>
+<li>中間的 \(\lambda\)：在「配適得好」與「係數小」之間取捨。</li>
+</ul>
+<p>兩種懲罰函數：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>懲罰函數</th>
+<th>名稱</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ridge 迴歸</td>
+<td>\(P=\sum_{j=1}^k\beta_j^2=\lVert\boldsymbol\beta\rVert_2^2\)</td>
+<td>\(\ell_2\) 範數的平方</td>
+</tr>
+<tr>
+<td>lasso</td>
+<td>\(P=\sum_{j=1}^k\lvert\beta_j\rvert=\lVert\boldsymbol\beta\rVert_1\)</td>
+<td>\(\ell_1\) 範數</td>
+</tr>
+</tbody>
+</table>
+<p>\(\ell_2\) 範數（\(\ell_2\) norm）就是一般的長度 \(\sqrt{\sum\beta_j^2}\)；\(\ell_1\) 範數是各分量絕對值的和。例如向量 \((3,-4)\) 的 \(\ell_2\) 範數是 5、\(\ell_1\) 範數是 7。</p>
+<p><strong>截距不受懲罰。</strong> 加總從 \(j=1\) 開始。原因：截距只是把整條線上下平移，罰它沒有意義；而且若罰截距，把 \(y\) 全部加上 100，估出來的斜率就會改變，這不合理。</p>
+<div class="box ex">
+<div class="box-t">例題 8-1：算懲罰項</div>
+<p>配適好的模型 \(\hat y=11.5+2.5x_1-3.1x_2+0.8x_3\)。</p>
+<ul>
+<li>ridge、\(\lambda=3\)：\(3\,(2.5^2+3.1^2+0.8^2)=3\,(6.25+9.61+0.64)=3\times16.5=49.5\)。</li>
+<li>lasso、\(\lambda=3\)：\(3\,(2.5+3.1+0.8)=3\times6.4=19.2\)。</li>
+</ul>
+<p>截距 11.5 兩種都不算；負號在 ridge 被平方掉、在 lasso 被絕對值去掉。</p>
+</div>
+<h3>三、預算形式：在限制之內把 RSS 壓到最低</h3>
+<p>同一個問題也可以寫成「有限制的最小化」：</p>
+<p>\[\min\ \mathrm{RSS}\qquad\text{限制}\quad \sum_{j=1}^k\beta_j^2\le s\ \ (\text{ridge})\qquad\text{或}\qquad\sum_{j=1}^k\lvert\beta_j\rvert\le s\ \ (\text{lasso}).\]</p>
+<p>\(s\) 叫<strong>預算參數</strong>（budget parameter），意思是「係數的總大小最多只能花 \(s\)」。</p>
+<div class="box derive">
+<div class="box-t">為什麼兩種形式是同一件事</div>
+<p>設 \(\lambda\) 給定，懲罰形式的解是 \(\mathbf b(\lambda)\)。令 \(s=P\big(\mathbf b(\lambda)\big)\)，也就是這組解實際「花掉」的預算。</p>
+<p>假設預算形式在 \(P\le s\) 之內找到另一組 \(\mathbf c\)，RSS 比 \(\mathbf b(\lambda)\) 還小：\(\mathrm{RSS}(\mathbf c)&lt;\mathrm{RSS}(\mathbf b)\)。因為 \(P(\mathbf c)\le s=P(\mathbf b)\)，
+\[\mathrm{RSS}(\mathbf c)+\lambda P(\mathbf c)&lt;\mathrm{RSS}(\mathbf b)+\lambda P(\mathbf b),\]
+這和「\(\mathbf b\) 讓懲罰形式最小」矛盾。所以 \(\mathbf b(\lambda)\) 也是預算 \(s\) 之下的解。</p>
+<p>方向：\(\lambda\) 越大，係數被壓得越小，花掉的預算 \(s\) 也越小。<strong>\(\lambda\) 和 \(s\) 反方向</strong>：\(\lambda=0\) 對應 \(s=\infty\)（沒有限制），\(\lambda\to\infty\) 對應 \(s=0\)。</p>
+</div>
+<p>考題兩種形式都會用。看圖形題時要先確認橫軸是 \(\lambda\) 還是 \(s\)：同一條曲線，換成另一個橫軸就左右顛倒。</p>
+<h3>四、偏差與變異數：為什麼收縮會讓測試誤差變小</h3>
+<p>回到<a href="ch01.html">第 1 章</a>的分解：期望測試 MSE ＝ 變異數 ＋ 偏差平方 ＋ 不可降低的誤差。</p>
+<ul>
+<li>\(\lambda=0\) 是最小平方，係數不偏（偏差 0），但變異數可能很大。</li>
+<li>加大 \(\lambda\)，係數被拉向 0：平均而言離真值越來越遠（<strong>偏差平方上升</strong>），但對資料的小變動越來越不敏感（<strong>變異數下降</strong>）。</li>
+<li>一開始變異數降得比偏差平方升得快，測試 MSE 下降；過了最佳的 \(\lambda\)，再收縮只是一直加偏差，測試 MSE 回升。</li>
+</ul>
+<p>所以測試 MSE 對 \(\lambda\) 呈 <strong>U 形</strong>；訓練 MSE 則隨 \(\lambda\) <strong>一路上升</strong>，因為 \(\lambda=0\) 已經是讓訓練 RSS 最小的解，任何懲罰都只會讓訓練資料配得比較差。</p>
+<figure><img src="assets/fig/ch08-bv-lambda.svg" alt="用模擬資料（、 個解釋變數，真實係數都不是 0，重複 300 次）實際算出 ridge 的四條曲線，橫軸是 （對數刻度）。偏差平方隨  上升，變異數下降，兩者相加再加上不可降低的誤差 1，就是 U 形的測試 MSE：（幾乎是最小平方）時約 14.1，最低點在 ，只有 3.2。訓練 MSE 從接近 0 一路上升。" loading="lazy"><figcaption>用模擬資料（\(n=50\)、\(k=45\) 個解釋變數，真實係數都不是 0，重複 300 次）實際算出 ridge 的四條曲線，橫軸是 \(\lambda\)（對數刻度）。偏差平方隨 \(\lambda\) 上升，變異數下降，兩者相加再加上不可降低的誤差 1，就是 U 形的測試 MSE：\(\lambda\approx0\)（幾乎是最小平方）時約 14.1，最低點在 \(\lambda\approx6\)，只有 3.2。訓練 MSE 從接近 0 一路上升。</figcaption></figure>
+
+<div class="box key">
+<div class="box-t">圖形題的判斷口訣</div>
+<ul>
+<li>對 \(\lambda\)：<strong>偏差平方、訓練 MSE 上升；變異數下降；只有測試 MSE 先降後升。</strong></li>
+<li>對 \(s\)（預算）：方向全部相反。偏差平方、訓練 MSE 下降；變異數上升；測試 MSE 仍是 U 形。</li>
+<li>看到 U 形的那條一定是測試 MSE；另一條單調曲線，看它和 U 形曲線在哪一端靠近：\(\lambda\) 很大時模型只剩截距，訓練 MSE 和測試 MSE 會一起升到同一個高度（都是「用平均數預測」的誤差）。</li>
+</ul>
+</div>
+<h3>五、要先標準化</h3>
+<p>最小平方的配適值和解釋變數的單位無關：把「年收入（元）」改成「年收入（千元）」，係數乘上 1000，配適值完全一樣，這叫<strong>尺度等變</strong>（scale equivariant）。</p>
+<p>收縮方法不是這樣。懲罰項把 \(b_1^2\) 和 \(b_2^2\) 直接相加，單位小的變數係數大、被罰得重；把單位換掉，同一個 \(\lambda\) 下的解就改變了。所以使用 ridge 與 lasso 前，要把每個解釋變數除以它的標準差：</p>
+<p>\[\tilde x_{ij}=\frac{x_{ij}}{\sqrt{\dfrac1n\displaystyle\sum_{i=1}^n(x_{ij}-\bar x_j)^2}} .\]</p>
+<p>分母用 \(1/n\) 或 \(1/(n-1)\) 都可以，只要每個變數用同一種，大家就在同一個尺度上。考題照題目的公式算；本書習題 <a href="ch08.html#q8-5">8.5</a> 用 \(1/n\)。</p>
+<div class="box ex">
+<div class="box-t">例題 8-2：標準化</div>
+<p>\(x_1\) 的 8 個值是 4、5、5、6、8、10、11、12。平均 \(\bar x=61/8=7.625\)。</p>
+<p>\(\sum(x_i-\bar x)^2=\sum x_i^2-n\bar x^2=531-8(7.625)^2=531-465.125=65.875\)，除以 \(n=8\) 得 8.234375，開根號 2.86956。</p>
+<p>第一個觀察值標準化後是 \(4/2.86956=1.3939\)。注意這個公式只除以標準差，沒有先減平均（減不減平均不影響斜率，截距不受懲罰）。</p>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：收縮的基本觀念</div>
+<ul>
+<li>「收縮可以減少偏差」是錯的：收縮<strong>增加</strong>偏差、<strong>減少</strong>變異數（習題 <a href="ch08.html#q8-6">8.6</a>）。</li>
+<li>「\(\lambda\to\infty\) 時得到不受限制的估計」是錯的：\(\lambda\to\infty\) 時係數趨近 0；\(\lambda=0\) 才是最小平方（習題 <a href="ch08.html#q8-11">8.11</a>）。</li>
+<li>「收縮讓模型更簡單、預測更準、更好解釋」是 SOA 樣題第 8 題，三句都對（嚴格說，「更好解釋」主要靠 lasso 把變數刪掉）。</li>
+<li>調整參數用交叉驗證選（<a href="ch06.html">第 6 章</a>）。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q8-5"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.5 題</b><small>・講義 p.139・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>When performing ridge regression, the predictors should be standardized.</p>
+<p>The observations for one of the predictors, \(x_1\), are:</p>
+<p>4　5　5　6　8　10　11　12</p>
+<p>Calculate the standardized value of the first observation of \(x_1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>進行 ridge 迴歸時，解釋變數應先標準化。某個解釋變數 \(x_1\) 的觀察值為</p>
+<p>4　5　5　6　8　10　11　12</p>
+<p>求第一個觀察值標準化後的值。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>1.3939</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>標準化是把每個值除以「分母用 \(n\) 的樣本標準差」（<a href="ch08.html#s1">8.1 節</a>的公式）。</p>
+<p><strong>平均</strong>：\(\bar x=61/8=7.625\)。</p>
+<p><strong>變異數（分母 \(n\)）</strong>：\(\sum x_i^2=531\)，\(\sum(x_i-\bar x)^2=531-8(7.625)^2=65.875\)，除以 8 得 8.234375。</p>
+<p><strong>標準差</strong>：\(\sqrt{8.234375}=2.86956\)。</p>
+<p><strong>標準化</strong>：\(4/2.86956=1.3939\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>這個公式只除以標準差，不減平均。若題目給的是「先減平均再除以標準差」的定義，答案會是 \((4-7.625)/2.86956=-1.2633\)，照題目的定義算。</p></div></div></article><article class="exercise" id="q8-16"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.16 題</b><small>・講義 p.143・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:34] You are estimating the coefficients of a linear regression model by minimizing the sum:
+\[\sum_{i=1}^n\Big(y_i-\beta_0-\sum_{j=1}^k\beta_jx_{ij}\Big)^2\quad\text{subject to}\quad\sum_{j=1}^k\beta_j^2\le s\]
+From this model, you have produced the following plot of various statistics as a function of the budget parameter, \(s\):</p>
+<figure><img src="assets/fig/ch08-ex16.svg" alt="依題目原圖重畫的示意圖，橫軸是預算參數 （0 到 ）。實線 X 從約 1.2 一路平滑下降到約 0.2 後持平；虛線 Y 從約 1.25 先下降到約 0.95 的最低點，再回升到約 1.3。" loading="lazy"><figcaption>依題目原圖重畫的示意圖，橫軸是預算參數 \(s\)（0 到 \(10^{10}\)）。實線 X 從約 1.2 一路平滑下降到約 0.2 後持平；虛線 Y 從約 1.25 先下降到約 0.95 的最低點，再回升到約 1.3。</figcaption></figure>
+
+<p>Determine which of the following statistics \(X\) and \(Y\) represent.</p>
+<div class="opts">
+<p>(A) \(X\) = Squared Bias, \(Y\) = Test MSE</p>
+<p>(B) \(X\) = Test MSE, \(Y\) = Variance</p>
+<p>(C) \(X\) = Training MSE, \(Y\) = Squared Bias</p>
+<p>(D) \(X\) = Training MSE, \(Y\) = Variance</p>
+<p>(E) \(X\) = Variance, \(Y\) = Training MSE</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2018 春季第 34 題）以最小化
+估計線性迴歸係數。下圖是各種統計量隨預算參數 \(s\) 變化的圖：</p>
+<p>X 與 Y 各代表哪一個統計量？</p>
+<div class="opts">
+<p>(A) X＝偏差平方，Y＝測試 MSE</p>
+<p>(B) X＝測試 MSE，Y＝變異數</p>
+<p>(C) X＝訓練 MSE，Y＝偏差平方</p>
+<p>(D) X＝訓練 MSE，Y＝變異數</p>
+<p>(E) X＝變異數，Y＝訓練 MSE</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>先找 U 形</strong>：五個統計量裡只有測試 MSE 會先降後升，所以 Y 是測試 MSE，只剩 (A)。</p>
+<p><strong>再確認 X</strong>：橫軸是預算 \(s\)，和 \(\lambda\) 反方向。\(s\) 越大限制越鬆，模型越接近最小平方：偏差平方<strong>下降</strong>、變異數上升、訓練 MSE 下降。X 一路下降，可以是偏差平方（或訓練 MSE），和 (A) 一致。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>橫軸是 \(s\) 不是 \(\lambda\)：若誤當成 \(\lambda\)，會以為下降的曲線是變異數。先確認橫軸，再套「偏差平方隨 \(\lambda\) 上升」。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC8-1-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.1-1</b><small>仿 SOA 樣題・跨章：第 1 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For ridge regression, determine which of the following statements is/are true as the tuning parameter \(\lambda\) increases from 0.</p>
+<div class="items">
+<p>I. The training MSE does not decrease.</p>
+<p>II. The squared bias decreases.</p>
+<p>III. The variance decreases.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>ridge 迴歸的 \(\lambda\) 從 0 增加時，下列哪些正確？</p>
+<div class="items">
+<p>I. 訓練 MSE 不會下降。</p>
+<p>II. 偏差平方下降。</p>
+<p>III. 變異數下降。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(\lambda=0\) 已經是讓訓練 RSS 最小的解，加任何懲罰都只會讓訓練資料配得一樣或更差。</p>
+<p>II 錯：收縮把係數拉離最小平方解，偏差平方<strong>上升</strong>。</p>
+<p>III 對：係數被壓小，對資料的小變動較不敏感，變異數下降。這就是 <a href="ch08.html#s1">8.1 節</a>「用偏差換變異數」的意思。</p></div></div></article><article class="exercise concept-q" id="qC8-1-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.1-2</b><small>仿 SOA 樣題・跨章：第 6 章・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about the tuning parameter \(\lambda\) in ridge regression and the lasso is/are true.</p>
+<div class="items">
+<p>I. When \(\lambda=0\), both methods give the least squares estimates.</p>
+<p>II. As \(\lambda\to\infty\), both methods produce a model containing only the intercept.</p>
+<p>III. The tuning parameter should be chosen to minimize the training MSE.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I and II only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於 ridge 與 lasso 的調整參數，下列哪些正確？</p>
+<div class="items">
+<p>I. \(\lambda=0\) 時兩者都是最小平方。</p>
+<p>II. \(\lambda\to\infty\) 時兩者都只剩截距。</p>
+<p>III. 調整參數應該選讓訓練 MSE 最小的值。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 I、II 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、II 對：懲罰為 0 時沒有限制；懲罰無限大時所有斜率都只能是 0，截距不受懲罰，等於 \(\bar y\)。</p>
+<p>III 錯：訓練 MSE 在 \(\lambda=0\) 最小，照這個標準永遠不會收縮。\(\lambda\) 要用交叉驗證選，看的是測試誤差的估計（<a href="ch06.html">第 6 章</a>）。</p></div></div></article><article class="exercise concept-q" id="qC8-1-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.1-3</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>A fitted linear model is
+\[\hat y=4+1.5x_1-2x_2+0.5x_3 .\]
+Using \(\lambda=2\), calculate the ridge penalty minus the lasso penalty.</p>
+<div class="opts">
+<p>(A) 3</p>
+<p>(B) 5</p>
+<p>(C) 8</p>
+<p>(D) 13</p>
+<p>(E) 45</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(\hat y=4+1.5x_1-2x_2+0.5x_3\)，\(\lambda=2\)。求 ridge 懲罰減去 lasso 懲罰。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：5</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>ridge</strong>：\(2(1.5^2+2^2+0.5^2)=2(2.25+4+0.25)=13\)。</p>
+<p><strong>lasso</strong>：\(2(1.5+2+0.5)=2\times4=8\)。</p>
+<p>差 \(13-8=5\)。(E) 45 是把截距 4 也算進 ridge 懲罰（\(2(16+6.5)=45\)）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>截距不受懲罰。</p></div></div></article><article class="exercise concept-q" id="qC8-1-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.1-4</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Before applying the lasso, each predictor is standardized by dividing it by its standard deviation computed with divisor \(n\). The values of one predictor are
+\[2,\quad 4,\quad 6,\quad 8 .\]
+Calculate the standardized value of the observation 8.</p>
+<div class="opts">
+<p>(A) 1.1619</p>
+<p>(B) 1.3416</p>
+<p>(C) 1.6000</p>
+<p>(D) 3.0984</p>
+<p>(E) 3.5777</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>把解釋變數除以「分母為 \(n\) 的標準差」做標準化。資料 2、4、6、8，求 8 標準化後的值。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：3.5777</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>平均 5，離差平方和 \(9+1+1+9=20\)，除以 \(n=4\) 得 5，標準差 \(\sqrt5=2.23607\)。\(8/2.23607=3.5777\)。</p>
+<p>(D) 3.0984 是分母用 \(n-1\)（\(\sqrt{20/3}\)）；(B) 1.3416 是先減平均 \((8-5)/\sqrt5\)，但題目的定義只除以標準差。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>照題目給的定義算：分母 \(n\) 或 \(n-1\)、減不減平均都會改變數值。</p></div></div></article><article class="exercise concept-q" id="qC8-1-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.1-5</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about shrinkage methods is NOT true.</p>
+<div class="opts">
+<p>(A) Ridge regression coefficient estimates are not scale equivariant.</p>
+<p>(B) Predictors should be standardized before applying the lasso.</p>
+<p>(C) The intercept is included in the shrinkage penalty.</p>
+<p>(D) Shrinkage methods reduce variance at the cost of some bias.</p>
+<p>(E) The tuning parameter is usually selected by cross-validation.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於收縮方法，下列哪一句<strong>不正確</strong>？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：截距不受懲罰</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>(C) 錯：懲罰從 \(j=1\) 開始加，截距不罰；罰截距會讓結果隨 \(y\) 的平移而改變。其他四句都是 <a href="ch08.html#s1">8.1 節</a>的重點。</p></div></div></article></div></section><section class="unit" id="s2"><h2>8.2 Ridge 迴歸</h2><h3>一、定義</h3>
+<p><strong>Ridge 迴歸</strong>（ridge regression）選 \(b_0,b_1,\ldots,b_k\) 使</p>
+<p>\[\sum_{i=1}^n\Big(y_i-b_0-\sum_{j=1}^kb_jx_{ij}\Big)^2+\lambda\sum_{j=1}^kb_j^2\]</p>
+<p>最小。懲罰是係數平方和，所以大的係數被罰得特別重（係數變成兩倍，懲罰變成四倍）。</p>
+<h3>二、只有一個解釋變數時，親手算一次</h3>
+<div class="box derive">
+<div class="box-t">推導：一個解釋變數的 ridge 係數</div>
+<p>要最小化 \(Q(b_0,b_1)=\sum_i(y_i-b_0-b_1x_i)^2+\lambda b_1^2\)。</p>
+<p><strong>對 \(b_0\) 微分</strong>（懲罰項沒有 \(b_0\)，所以和最小平方一樣）：
+\[\frac{\partial Q}{\partial b_0}=-2\sum_i(y_i-b_0-b_1x_i)=0\ \Rightarrow\ nb_0+\Big(\sum x_i\Big)b_1=\sum y_i .\]</p>
+<p><strong>對 \(b_1\) 微分</strong>（多了懲罰項的導數 \(2\lambda b_1\)）：
+\[\frac{\partial Q}{\partial b_1}=-2\sum_ix_i(y_i-b_0-b_1x_i)+2\lambda b_1=0\ \Rightarrow\ \Big(\sum x_i\Big)b_0+\Big(\sum x_i^2+\lambda\Big)b_1=\sum x_iy_i .\]</p>
+<p>和最小平方唯一的差別：\(\sum x_i^2\) 變成 \(\sum x_i^2+\lambda\)。</p>
+<p><strong>解聯立方程式</strong>：第二式減去第一式乘 \(\bar x\)（也就是乘 \(\sum x_i/n\)），消掉 \(b_0\)：
+\[\Big(\sum x_i^2-n\bar x^2+\lambda\Big)b_1=\sum x_iy_i-n\bar x\bar y\quad\Rightarrow\quad b_1^R=\frac{S_{xy}}{S_{xx}+\lambda}.\]
+截距仍是 \(b_0=\bar y-b_1^R\bar x\)。</p>
+</div>
+<p>和最小平方 \(b_1=S_{xy}/S_{xx}\) 比，ridge 只是分母多加了 \(\lambda\)。三個結論馬上看得出來：</p>
+<ol>
+<li>\(\lambda&gt;0\) 時 \(\lvert b_1^R\rvert&lt;\lvert b_1\rvert\)：係數被往 0 拉。</li>
+<li>\(\lambda\) 越大拉得越多，\(\lambda\to\infty\) 時 \(b_1^R\to0\)。</li>
+<li>但對任何有限的 \(\lambda\)，只要 \(S_{xy}\ne0\)，\(b_1^R\) 就<strong>不會剛好等於 0</strong>。ridge 會收縮，但<strong>不會刪變數</strong>。</li>
+</ol>
+<div class="box ex">
+<div class="box-t">例題 8-3：一個解釋變數的 ridge</div>
+<p>資料 \(x=(1,2,3,4,5)\)、\(y=(2,5,12,13,18)\)：\(\sum x=15\)、\(\sum y=50\)、\(\sum x^2=55\)、\(\sum xy=190\)。</p>
+<p>\(S_{xx}=55-5(3)^2=10\)，\(S_{xy}=190-5(3)(10)=40\)。最小平方 \(b_1=40/10=4\)。</p>
+<p>ridge、\(\lambda=4\)：\(b_1^R=\dfrac{40}{10+4}=\dfrac{40}{14}=2.857\)，截距 \(b_0=10-2.857\times3=1.429\)。</p>
+<p>斜率從 4 被拉到 2.857，但沒有變成 0。</p>
+</div>
+<h3>三、矩陣形式與「ridge」這個名字</h3>
+<p>把解釋變數標準化並置中（每一欄減去平均），截距就是 \(\bar y\)，其餘係數滿足</p>
+<p>\[\mathbf b^R=(X&#x27;X+\lambda I)^{-1}X&#x27;\mathbf y .\]</p>
+<div class="box derive">
+<div class="box-t">推導：矩陣形式</div>
+<p>置中後要最小化 \((\mathbf y-X\mathbf b)&#x27;(\mathbf y-X\mathbf b)+\lambda\,\mathbf b&#x27;\mathbf b\)。展開：
+\[\mathbf y&#x27;\mathbf y-2\mathbf b&#x27;X&#x27;\mathbf y+\mathbf b&#x27;X&#x27;X\mathbf b+\lambda\,\mathbf b&#x27;\mathbf b=\mathbf y&#x27;\mathbf y-2\mathbf b&#x27;X&#x27;\mathbf y+\mathbf b&#x27;(X&#x27;X+\lambda I)\mathbf b .\]
+這和<a href="ch02.html">第 2 章</a>最小平方的式子一模一樣，只是 \(X&#x27;X\) 換成 \(X&#x27;X+\lambda I\)。照<a href="ch02.html">第 2 章</a>的步驟（或對 \(\mathbf b\) 微分），正規方程式變成 \((X&#x27;X+\lambda I)\mathbf b=X&#x27;\mathbf y\)。</p>
+</div>
+<p>\(\lambda I\) 是在 \(X&#x27;X\) 的對角線（diagonal，像一條「山脊」ridge）上加 \(\lambda\)。這有一個重要的好處：矩陣可不可逆，看它的<strong>特徵值</strong>（eigenvalue，可以想成矩陣在某些特定方向上的「放大倍數」）有沒有 0。\(X&#x27;X\) 的特徵值都 \(\ge0\)，共線時至少有一個是 0（某個方向被壓扁成 0，資料在那個方向沒有資訊），所以不可逆；加上 \(\lambda I\) 等於每個特徵值都加 \(\lambda\)，全部變成 \(&gt;0\)，矩陣<strong>一定可逆</strong>。即使解釋變數完全共線、甚至 \(k&gt;n\)，最小平方無解，ridge 仍然有唯一解。</p>
+<h3>四、單位矩陣的特例：每個係數各除以 \(1+\lambda\)</h3>
+<p>ISLR 用一個極簡的情況看清楚收縮的形狀：沒有截距、\(n=k\)、\(X\) 是單位矩陣（第 \(j\) 筆觀察只有第 \(j\) 個變數是 1，其他都是 0）。這時 \(X&#x27;X=I\)，最小平方的解是 \(b_j=y_j\)。</p>
+<p>ridge：\(\mathbf b^R=(I+\lambda I)^{-1}\mathbf y\)，也就是</p>
+<p>\[b_j^R=\frac{y_j}{1+\lambda}.\]</p>
+<p>每個係數都按<strong>同一個比例</strong>縮小：\(\lambda=2\) 時全部變成三分之一，大的係數減少得多、小的減少得少，但沒有一個變成 0。</p>
+<h3>五、格子題：考試最常見的計算</h3>
+<p>考題常把「最小化」改成在有限個整數候選值裡找最小：給一張每組係數的 RSS 表，問 ridge 選哪一組。兩種問法：</p>
+<ol>
+<li><strong>給 \(\lambda\)</strong>：每一格算「RSS ＋ \(\lambda\sum b_j^2\)」，取最小。</li>
+<li><strong>給預算 \(s\)</strong>：先刪掉 \(\sum b_j^2&gt;s\) 的格子，剩下的格子裡取 RSS 最小。</li>
+</ol>
+<div class="box ex">
+<div class="box-t">例題 8-4：格子題（講義例 8A）</div>
+<p>10 筆觀察、兩個解釋變數。\(b_0,b_1,b_2\) 只考慮整數 1～3，各組合的 RSS 如下：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>\(b_0=1\), \(b_2=1\)</th>
+<th>\(b_0=1\), \(b_2=2\)</th>
+<th>\(b_0=1\), \(b_2=3\)</th>
+<th>\(b_0=2\), \(b_2=1\)</th>
+<th>\(b_0=2\), \(b_2=2\)</th>
+<th>\(b_0=2\), \(b_2=3\)</th>
+<th>\(b_0=3\), \(b_2=1\)</th>
+<th>\(b_0=3\), \(b_2=2\)</th>
+<th>\(b_0=3\), \(b_2=3\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(b_1=1\)</td>
+<td>772</td>
+<td>630</td>
+<td>525</td>
+<td>627</td>
+<td>605</td>
+<td>498</td>
+<td>611</td>
+<td>609</td>
+<td>712</td>
+</tr>
+<tr>
+<td>\(b_1=2\)</td>
+<td>610</td>
+<td>559</td>
+<td>572</td>
+<td>707</td>
+<td>665</td>
+<td>601</td>
+<td>578</td>
+<td>521</td>
+<td>562</td>
+</tr>
+<tr>
+<td>\(b_1=3\)</td>
+<td>489</td>
+<td>495</td>
+<td>512</td>
+<td>722</td>
+<td>705</td>
+<td>651</td>
+<td>549</td>
+<td>498</td>
+<td>503</td>
+</tr>
+</tbody>
+</table>
+<p><strong>(1) ridge、\(\lambda=20\)。</strong> 每格加上 \(20(b_1^2+b_2^2)\)，\(b_0\) 不加。懲罰只和 \((b_1,b_2)\) 有關：\((1,1)\) 加 40、\((1,2)\) 和 \((2,1)\) 加 100、\((2,2)\) 加 160、\((1,3)\) 和 \((3,1)\) 加 200、\((2,3)\) 和 \((3,2)\) 加 260、\((3,3)\) 加 360。</p>
+<p>先看懲罰最小的 \((b_1,b_2)=(1,1)\)：三個 \(b_0\) 的 RSS 是 772、627、611，加 40 後最小是 \(611+40=651\)。其他組要贏它，RSS 必須小於「651 減自己的懲罰」：</p>
+<table>
+<thead>
+<tr>
+<th>\((b_1,b_2)\)</th>
+<th>懲罰</th>
+<th>RSS 必須小於</th>
+<th>這一組最小的 RSS</th>
+<th>能不能贏</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\((1,2)\)</td>
+<td>100</td>
+<td>551</td>
+<td>605</td>
+<td>不能</td>
+</tr>
+<tr>
+<td>\((2,1)\)</td>
+<td>100</td>
+<td>551</td>
+<td>578</td>
+<td>不能</td>
+</tr>
+<tr>
+<td>\((2,2)\)</td>
+<td>160</td>
+<td>491</td>
+<td>521</td>
+<td>不能</td>
+</tr>
+<tr>
+<td>\((1,3)\)</td>
+<td>200</td>
+<td>451</td>
+<td>498</td>
+<td>不能</td>
+</tr>
+<tr>
+<td>\((3,1)\)</td>
+<td>200</td>
+<td>451</td>
+<td>489</td>
+<td>不能</td>
+</tr>
+<tr>
+<td>\((2,3)\)、\((3,2)\)、\((3,3)\)</td>
+<td>260 以上</td>
+<td>391 以下</td>
+<td>498 以上</td>
+<td>不能</td>
+</tr>
+</tbody>
+</table>
+<p>所以答案是 \((b_0,b_1,b_2)=(3,1,1)\)，懲罰後 651。注意 RSS 最小的 489 在懲罰後是 \(489+200=689\)，輸給 651：ridge 寧可多一點 RSS，換來小得多的係數。</p>
+<p><strong>(2) ridge、預算 \(s=10\)。</strong> 限制 \(b_1^2+b_2^2\le10\)，刪掉 \((b_1,b_2)=(3,2),(2,3),(3,3)\)（平方和 13、13、18）。剩下的格子裡 RSS 最小是 489，在 \((b_0,b_1,b_2)=(1,3,1)\)，\(3^2+1^2=10\) 剛好不超過預算。</p>
+</div>
+<div class="box key">
+<div class="box-t">格子題的走法</div>
+<ol>
+<li>先看清楚表格的<strong>列與欄各是哪個係數</strong>（題目常把 \(b_2\) 放在列、\(b_1\) 放在欄）。</li>
+<li>懲罰只和斜率有關，同一組 \((b_1,b_2)\) 的格子懲罰相同：先在每組 \((b_1,b_2)\) 裡挑 RSS 最小的 \(b_0\)，再比較各組的「RSS＋懲罰」。</li>
+<li>從懲罰最小的組開始，算出目前的最佳值，其他組的 RSS 必須比「最佳值－它的懲罰」還小才有機會，可以很快排除大部分格子。</li>
+<li>預算題：先刪格子，再取 RSS 最小；不用加懲罰。</li>
+</ol>
+</div>
+<h3>六、係數路徑</h3>
+<p>把每個 \(\lambda\) 的解畫出來，叫<strong>係數路徑</strong>（coefficient path）。</p>
+<figure><img src="assets/fig/ch08-ridge-path.svg" alt="一組模擬資料（8 個標準化的解釋變數，其中  與 、 與  高度相關；真實係數只有  不是 0）的 ridge 係數路徑。左端  是最小平方的係數，例如 、；往右所有係數一起縮向 0，但在圖的範圍內沒有一個剛好等於 0。 與  在途中變號（虛線）： 和  高度相關，最小平方給它一個小小的負係數去「抵銷」，收縮後這種抵銷消失。" loading="lazy"><figcaption>一組模擬資料（8 個標準化的解釋變數，其中 \(x_1\) 與 \(x_2\)、\(x_5\) 與 \(x_6\) 高度相關；真實係數只有 \(\beta_1,\beta_3,\beta_5,\beta_7\) 不是 0）的 ridge 係數路徑。左端 \(\lambda\approx0\) 是最小平方的係數，例如 \(b_1=3.68\)、\(b_5=-2.12\)；往右所有係數一起縮向 0，但在圖的範圍內沒有一個剛好等於 0。\(b_2\) 與 \(b_8\) 在途中變號（虛線）：\(x_2\) 和 \(x_1\) 高度相關，最小平方給它一個小小的負係數去「抵銷」\(x_1\)，收縮後這種抵銷消失。</figcaption></figure>
+
+<h3>七、貝氏觀點</h3>
+<p>若在貝氏統計裡給每個 \(\beta_j\) 一個平均 0 的<strong>常態先驗分配</strong>（normal prior），標準差越小代表越相信 \(\beta_j\) 接近 0，則後驗分配仍是常態，ridge 的解同時是<strong>後驗眾數</strong>（posterior mode）與<strong>後驗平均數</strong>（posterior mean）。\(\lambda\) 越大，對應的先驗標準差越小。考試只考這個結論：ridge ↔ 常態先驗 ↔ 眾數＝平均數。</p>
+<div class="box exam">
+<div class="box-t">考試怎麼考：ridge</div>
+<ul>
+<li>懲罰計算、格子題、兩個模型何時改選第二個（解一次不等式）。</li>
+<li>一個解釋變數：\(b_1^R=S_{xy}/(S_{xx}+\lambda)\)。考題常只給原始和，要自己算 \(S_{xx}\)、\(S_{xy}\)。</li>
+<li>「ridge 會做變數選擇」是錯的；「ridge 係數不是尺度等變，要先標準化」是對的。</li>
+<li>給 \(\lambda\) 的格子題問「讓這組成為解的最小 \(\lambda\)」：要求這組的「RSS＋懲罰」不大於每一組，對每個 RSS 較小、懲罰較大的組解出 \(\lambda\) 的下限，取最大（習題 <a href="ch08.html#q8-14">8.14</a>）。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q8-3"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.3 題</b><small>・講義 p.139・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>Consider the following two linear regression models:</p>
+<ol>
+<li>\(y_i=5+1.1x_{i1}+0.8x_{i2}+\varepsilon_i\), and \(\sum e_i^2=4.0\).</li>
+<li>\(y_i=3+1.0x_{i1}+0.1x_{i2}+\varepsilon_i\), and \(\sum e_i^2=9.0\).</li>
+</ol>
+<p>If ridge regression is used, for which values of \(\lambda\) is the second model preferred?</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個線性迴歸模型：</p>
+<ol>
+<li>\(y_i=5+1.1x_{i1}+0.8x_{i2}+\varepsilon_i\)，\(\sum e_i^2=4.0\)。</li>
+<li>\(y_i=3+1.0x_{i1}+0.1x_{i2}+\varepsilon_i\)，\(\sum e_i^2=9.0\)。</li>
+</ol>
+<p>使用 ridge 迴歸時，\(\lambda\) 在什麼範圍會偏好第二個模型？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\lambda&gt;5.952\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>ridge 比較的是「RSS ＋ \(\lambda\times\) 斜率平方和」，越小越好。</p>
+<p><strong>模型 1</strong>：\(4+(1.1^2+0.8^2)\lambda=4+1.85\lambda\)。</p>
+<p><strong>模型 2</strong>：\(9+(1.0^2+0.1^2)\lambda=9+1.01\lambda\)。</p>
+<p>偏好模型 2 的條件：
+\[9+1.01\lambda&lt;4+1.85\lambda\ \Rightarrow\ 5&lt;0.84\lambda\ \Rightarrow\ \lambda&gt;\frac{5}{0.84}=5.952 .\]
+直覺：模型 1 配適得比較好（RSS 小 5），但係數比較大；懲罰夠重時，係數小的模型 2 勝出。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>截距 5 和 3 不進懲罰。</p></div></div></article><article class="exercise" id="q8-10"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.10 題</b><small>・講義 p.140・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>For a linear regression model with 8 explanatory variables and no intercept:</p>
+<ul>
+<li>There are 8 observations.</li>
+<li>\(x_{ij}=0\) for \(i\ne j\) and \(x_{ii}=1\).</li>
+<li>The response vector is \((3,-5,10,14,-12,7,3,-4)\).</li>
+</ul>
+<p>Ridge regression is used with \(\lambda=2\). Determine the fitted values of \(\hat\beta_i\), \(i=1,\ldots,8\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同上題（\(X\) 為單位矩陣，反應向量 \((3,-5,10,14,-12,7,3,-4)\)，沒有截距），改用 \(\lambda=2\) 的 ridge 迴歸，求 \(b_1,\ldots,b_8\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\big(1,\ -\tfrac53,\ \tfrac{10}3,\ \tfrac{14}3,\ -4,\ \tfrac73,\ 1,\ -\tfrac43\big)\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(X=I\) 時 \(X&#x27;X=I\)，ridge 的解 \(\mathbf b^R=(I+\lambda I)^{-1}\mathbf y=\mathbf y/(1+\lambda)\)，每個分量除以 3。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>ridge 是按比例縮小，所以沒有一個變成 0；和上一題 lasso 的結果對照著看。</p></div></div></article><article class="exercise" id="q8-14"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.14 題</b><small>・講義 p.141・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>A ridge regression is performed based on two predictors and an intercept:
+\[y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i\]
+For \(\beta_1\) and \(\beta_2\), only integer values between 1 and 4 are considered.</p>
+<p>The resulting lowest residual sum of squares for the optimal value of \(\hat\beta_0\) and each combination of \(\hat\beta_1\) and \(\hat\beta_2\) is:</p>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_2\) \ \(\hat\beta_1\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>56</td>
+<td>52</td>
+<td>46</td>
+<td>52</td>
+</tr>
+<tr>
+<td>2</td>
+<td>48</td>
+<td>41</td>
+<td>34</td>
+<td>30</td>
+</tr>
+<tr>
+<td>3</td>
+<td>42</td>
+<td>37</td>
+<td>31</td>
+<td>33</td>
+</tr>
+<tr>
+<td>4</td>
+<td>36</td>
+<td>40</td>
+<td>44</td>
+<td>48</td>
+</tr>
+</tbody>
+</table>
+<p>The fitted values of the parameters are \(\hat\beta_1=3\), \(\hat\beta_2=2\). Determine the lowest value of the tuning parameter \(\lambda\) that results in these fitted values.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同上題的設定，但表中 \((b_1,b_2)=(4,2)\) 的 RSS 是 30：</p>
+<p>ridge 迴歸的配適結果為 \(b_1=3\)、\(b_2=2\)。求能得到這個結果的最小調整參數 \(\lambda\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\lambda=0.6\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\((3,2)\) 的目標函數值是 \(34+(3^2+2^2)\lambda=34+13\lambda\)。它要成為最小，必須不大於每一個其他格子的「RSS＋懲罰」。</p>
+<p><strong>下限：RSS 比 34 小的格子</strong>（這些格子的懲罰都比較大，\(\lambda\) 要夠大才壓得過它們）：</p>
+<table>
+<thead>
+<tr>
+<th>\((b_1,b_2)\)</th>
+<th>RSS</th>
+<th>懲罰係數</th>
+<th>條件 \(34+13\lambda\le\text{RSS}+P\lambda\)</th>
+<th>\(\lambda\) 至少</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\((4,2)\)</td>
+<td>30</td>
+<td>20</td>
+<td>\(4\le7\lambda\)</td>
+<td>\(4/7=0.571\)</td>
+</tr>
+<tr>
+<td>\((3,3)\)</td>
+<td>31</td>
+<td>18</td>
+<td>\(3\le5\lambda\)</td>
+<td>\(3/5=0.6\)</td>
+</tr>
+<tr>
+<td>\((4,3)\)</td>
+<td>33</td>
+<td>25</td>
+<td>\(1\le12\lambda\)</td>
+<td>\(1/12=0.083\)</td>
+</tr>
+</tbody>
+</table>
+<p>三個條件都要成立，取最大，\(\lambda\ge0.6\)。</p>
+<p><strong>檢查上限</strong>：RSS 比 34 大、懲罰比較小的格子會限制 \(\lambda\) 不能太大，例如 \((2,2)\)：\(34+13\lambda\le41+8\lambda\) 得 \(\lambda\le1.4\)；\((1,2)\)：\(34+13\lambda\le48+5\lambda\) 得 \(\lambda\le1.75\)。最緊的是 1.4，所以 \((3,2)\) 在 \(0.6\le\lambda\le1.4\) 時是解，最小的 \(\lambda\) 是 0.6。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>三個下限要<strong>同時</strong>成立，答案是最大的那個（0.6），不是最小的。\((4,3)\) 的比值是 \(1/12\)（\(25-13=12\)），講義寫成 \(1/8\) 是筆誤，不影響答案。</p></div></div></article><article class="exercise" id="q8-15"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.15 題</b><small>・講義 p.142・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F19:37] For a set of data with 40 observations, 2 predictors (\(X_1\) and \(X_2\)), and one response (\(Y\)), the residual sum of squares has been calculated for several different estimates of a linear model with an intercept. Only integer values from 1 to 3 were considered for estimates of \(\beta_0\) (the intercept), \(\beta_1\), and \(\beta_2\).</p>
+<p>The grid below shows the residual sum of squares for every combination of the parameter estimates, after standardization:</p>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_0=1\)</th>
+<th>\(\hat\beta_2=1\)</th>
+<th>\(\hat\beta_2=2\)</th>
+<th>\(\hat\beta_2=3\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(\hat\beta_1=1\)</td>
+<td>3,924</td>
+<td>1,977</td>
+<td>1,250</td>
+</tr>
+<tr>
+<td>\(\hat\beta_1=2\)</td>
+<td>1,858</td>
+<td>1,141</td>
+<td>711</td>
+</tr>
+<tr>
+<td>\(\hat\beta_1=3\)</td>
+<td>1,386</td>
+<td>822</td>
+<td>369</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_0=2\)</th>
+<th>\(\hat\beta_2=1\)</th>
+<th>\(\hat\beta_2=2\)</th>
+<th>\(\hat\beta_2=3\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(\hat\beta_1=1\)</td>
+<td>3,949</td>
+<td>1,822</td>
+<td>1,174</td>
+</tr>
+<tr>
+<td>\(\hat\beta_1=2\)</td>
+<td>1,907</td>
+<td>1,187</td>
+<td>717</td>
+</tr>
+<tr>
+<td>\(\hat\beta_1=3\)</td>
+<td>1,363</td>
+<td>711</td>
+<td>349</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_0=3\)</th>
+<th>\(\hat\beta_2=1\)</th>
+<th>\(\hat\beta_2=2\)</th>
+<th>\(\hat\beta_2=3\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(\hat\beta_1=1\)</td>
+<td>3,784</td>
+<td>1,671</td>
+<td>1,107</td>
+</tr>
+<tr>
+<td>\(\hat\beta_1=2\)</td>
+<td>1,827</td>
+<td>1,128</td>
+<td>668</td>
+</tr>
+<tr>
+<td>\(\hat\beta_1=3\)</td>
+<td>1,294</td>
+<td>700</td>
+<td>344</td>
+</tr>
+</tbody>
+</table>
+<p>Let \(\hat\beta_i^R\) be the estimate of \(\beta_i\) using a ridge regression with budget parameter \(s=5\). Assume the intercept is not subject to the budget parameter.</p>
+<p>Calculate the value of \(\hat\beta_0^R+\hat\beta_1^R+\hat\beta_2^R\).</p>
+<div class="opts">
+<p>(A) Less than 6</p>
+<p>(B) 6</p>
+<p>(C) 7</p>
+<p>(D) 8</p>
+<p>(E) Greater than 8</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2019 秋季第 37 題）40 筆觀察、兩個解釋變數 \(X_1,X_2\) 與反應 \(Y\)。對有截距的線性模型的各種估計值算出殘差平方和，\(\beta_0,\beta_1,\beta_2\) 只考慮整數 1 到 3。標準化後各組合的 RSS 如下（每個 \(b_0\) 一張表，列是 \(b_1\)、欄是 \(b_2\)）：</p>
+<p>令 \(b_j^R\) 為預算參數 \(s=5\) 的 ridge 迴歸估計值，截距不受預算限制。求 \(b_0^R+b_1^R+b_2^R\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 6</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>預算限制 \(b_1^2+b_2^2\le5\)，只允許 \((b_1,b_2)=(1,1)\)、\((1,2)\)、\((2,1)\)（平方和 2、5、5）。每張表左上角這三格共 9 個數：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>\((1,1)\)</th>
+<th>\((1,2)\)</th>
+<th>\((2,1)\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(b_0=1\)</td>
+<td>3,924</td>
+<td>1,977</td>
+<td>1,858</td>
+</tr>
+<tr>
+<td>\(b_0=2\)</td>
+<td>3,949</td>
+<td>1,822</td>
+<td>1,907</td>
+</tr>
+<tr>
+<td>\(b_0=3\)</td>
+<td>3,784</td>
+<td>1,671</td>
+<td>1,827</td>
+</tr>
+</tbody>
+</table>
+<p>最小是 1,671，在 \(b_0=3\)、\(b_1=1\)、\(b_2=2\)，和為 6。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>注意 \((b_1,b_2)=(1,2)\) 在表中是「\(b_1=1\) 那一列、\(b_2=2\) 那一欄」。截距不受預算限制，所以三張表都要看。</p></div></div></article><article class="exercise" id="q8-18"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.18 題</b><small>・講義 p.145・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>You are given the following observations of two variables:</p>
+<table>
+<thead>
+<tr>
+<th>\(i\)</th>
+<th>\(x_i\)</th>
+<th>\(y_i\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+<td>5</td>
+</tr>
+<tr>
+<td>3</td>
+<td>3</td>
+<td>12</td>
+</tr>
+<tr>
+<td>4</td>
+<td>4</td>
+<td>13</td>
+</tr>
+<tr>
+<td>5</td>
+<td>5</td>
+<td>18</td>
+</tr>
+</tbody>
+</table>
+<p>\(\sum x_i=15\), \(\sum y_i=50\), \(\sum x_i^2=55\), \(\sum x_iy_i=190\), \(\sum y_i^2=666\).</p>
+<p>You are fitting the linear model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) using ridge regression with \(\lambda=4\). Determine \(\hat\beta_1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個變數的觀察值：</p>
+<p>\(\sum x_i=15\)、\(\sum y_i=50\)、\(\sum x_i^2=55\)、\(\sum x_iy_i=190\)、\(\sum y_i^2=666\)。用 \(\lambda=4\) 的 ridge 迴歸配適 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，求 \(b_1\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>2.857</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>最小化 \(\sum(y_i-b_0-b_1x_i)^2+4b_1^2\)。對 \(b_0\)、\(b_1\) 微分並除以 2：
+\[5b_0+15b_1=50,\]
+\[15b_0+(55+4)b_1=190 .\]
+第二式減去第一式的 3 倍：\((59-45)b_1=190-150\)，\(14b_1=40\)，\(b_1=2.857\)。</p>
+<p>也可以直接套公式 \(b_1^R=S_{xy}/(S_{xx}+\lambda)\)：\(S_{xx}=55-45=10\)，\(S_{xy}=190-150=40\)，\(40/(10+4)=2.857\)。最小平方是 \(40/10=4\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>懲罰只加在 \(b_1\) 的方程式，\(\lambda\) 加在 \(\sum x_i^2\) 上；對 \(b_0\) 的方程式不變。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC8-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.2-1</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A simple linear regression is fitted to 4 observations using ridge regression with \(\lambda=5\). You are given
+\[\sum x_i=10,\quad \sum x_i^2=45,\quad \sum y_i=20,\quad \sum x_iy_i=100 .\]
+Calculate the ridge estimate of the slope.</p>
+<div class="opts">
+<p>(A) 1.67</p>
+<p>(B) 2.00</p>
+<p>(C) 2.22</p>
+<p>(D) 2.50</p>
+<p>(E) 4.00</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>4 筆資料、\(\lambda=5\) 的 ridge 簡單迴歸，\(\sum x=10\)、\(\sum x^2=45\)、\(\sum y=20\)、\(\sum xy=100\)。求斜率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：2.00</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(S_{xx}=45-4(2.5)^2=20\)，\(S_{xy}=100-4(2.5)(5)=50\)。最小平方斜率 \(50/20=2.5\)。</p>
+<p>ridge：\(b_1^R=S_{xy}/(S_{xx}+\lambda)=50/(20+5)=2.00\)。</p>
+<p>(A) 1.67 是把 \(2\lambda\) 加到分母（\(50/30\)）；(D) 2.50 是最小平方；(C) 2.22 是直接用 \(\sum xy/\sum x^2=100/45\)，沒有減掉平均的部分。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>分母是 \(S_{xx}+\lambda\)；目標函數的懲罰是 \(\lambda b_1^2\)，微分後除以 2，所以加的是 \(\lambda\) 不是 \(2\lambda\)。</p></div></div></article><article class="exercise concept-q" id="qC8-2-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.2-2</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Two fitted models are compared using ridge regression:</p>
+<ol>
+<li>Slopes \((2,\ 1)\), residual sum of squares 30.</li>
+<li>Slopes \((1,\ 0.5)\), residual sum of squares 40.</li>
+</ol>
+<p>Determine the smallest value of \(\lambda\) above which model 2 is preferred.</p>
+<div class="opts">
+<p>(A) 1.60</p>
+<p>(B) 2.00</p>
+<p>(C) 2.67</p>
+<p>(D) 3.20</p>
+<p>(E) 4.00</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>模型 1 斜率 \((2,1)\)、RSS 30；模型 2 斜率 \((1,0.5)\)、RSS 40。用 ridge 比較，\(\lambda\) 超過多少時偏好模型 2？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：2.67</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>模型 1：\(30+(4+1)\lambda=30+5\lambda\)；模型 2：\(40+(1+0.25)\lambda=40+1.25\lambda\)。</p>
+<p>\(40+1.25\lambda&lt;30+5\lambda\Rightarrow10&lt;3.75\lambda\Rightarrow\lambda&gt;2.67\)。</p>
+<p>(B) 2.00 是忘了模型 2 也有懲罰（\(10/5\)）。若把 \(0.5^2\) 誤寫成 0.5，會得到 \(10/3.5=2.86\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>ridge 用斜率<strong>平方</strong>和：\(0.5^2=0.25\)，不是 0.5。</p></div></div></article><article class="exercise concept-q" id="qC8-2-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.2-3</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A regression with no intercept has design matrix equal to the \(3\times3\) identity matrix and response vector \((6,\ -3,\ 1.5)\). Ridge regression with \(\lambda=0.5\) is used.</p>
+<p>Calculate the first coefficient estimate.</p>
+<div class="opts">
+<p>(A) 3.0</p>
+<p>(B) 4.0</p>
+<p>(C) 5.5</p>
+<p>(D) 5.75</p>
+<p>(E) 6.0</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>沒有截距、\(X\) 為 \(3\times3\) 單位矩陣、\(\mathbf y=(6,-3,1.5)\)，\(\lambda=0.5\) 的 ridge，求第一個係數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：4.0</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(X=I\) 時 \(b_j^R=y_j/(1+\lambda)=6/1.5=4.0\)。三個係數是 \((4,-2,1)\)，全部按同一比例縮小。</p>
+<p>(D) 5.75 是 lasso 的軟門檻 \(6-0.5/2\)；(C) 5.5 是減掉 \(\lambda\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>ridge 是乘上比例 \(1/(1+\lambda)\)；減去一個固定量是 lasso。</p></div></div></article><article class="exercise concept-q" id="qC8-2-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.2-4</b><small>仿 SOA 樣題・跨章：第 2 章・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about ridge regression is/are true.</p>
+<div class="items">
+<p>I. For \(\lambda&gt;0\), the matrix \(X&#x27;X+\lambda I\) is invertible even when the number of predictors exceeds the number of observations.</p>
+<p>II. For a sufficiently large but finite \(\lambda\), ridge regression sets some coefficients exactly to zero.</p>
+<p>III. Under a normal prior for the coefficients, the ridge estimate is the posterior mean.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於 ridge，下列哪些正確？</p>
+<div class="items">
+<p>I. \(\lambda&gt;0\) 時，即使變數比觀察多，\(X&#x27;X+\lambda I\) 也可逆。</p>
+<p>II. \(\lambda\) 夠大但有限時，ridge 會把一些係數設成剛好 0。</p>
+<p>III. 常態先驗下，ridge 的解是後驗平均數。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(X&#x27;X\) 的特徵值都 \(\ge0\)，加 \(\lambda\) 後都 \(&gt;0\)，所以可逆（<a href="ch08.html#s2">8.2 節</a>第三小段）。</p>
+<p>II 錯：一個變數時 \(b_1^R=S_{xy}/(S_{xx}+\lambda)\)，有限的 \(\lambda\) 不會讓它變 0；ridge 不做變數選擇。</p>
+<p>III 對：常態先驗的後驗也是常態，眾數＝平均數＝ridge 的解。</p></div></div></article><article class="exercise concept-q" id="qC8-2-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.2-5</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A ridge regression with two predictors and an intercept considers only integer slopes from 1 to 3. For the optimal intercept, the residual sums of squares are (rows: \(\hat\beta_2\); columns: \(\hat\beta_1\)):</p>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_2\) \ \(\hat\beta_1\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>40</td>
+<td>35</td>
+<td>30</td>
+</tr>
+<tr>
+<td>2</td>
+<td>33</td>
+<td>28</td>
+<td>22</td>
+</tr>
+<tr>
+<td>3</td>
+<td>30</td>
+<td>24</td>
+<td>20</td>
+</tr>
+</tbody>
+</table>
+<p>The budget parameter is \(s=8\). Calculate \(\hat\beta_1+\hat\beta_2\).</p>
+<div class="opts">
+<p>(A) 2</p>
+<p>(B) 3</p>
+<p>(C) 4</p>
+<p>(D) 5</p>
+<p>(E) 6</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>ridge、預算 \(s=8\)，斜率只考慮 1～3 的整數，RSS 表如上（列是 \(b_2\)、欄是 \(b_1\)）。求 \(b_1+b_2\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：4</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>限制 \(b_1^2+b_2^2\le8\)：允許 \((1,1)\)、\((2,1)\)、\((1,2)\)、\((2,2)\)，RSS 分別是 40、35、33、28。最小 28，在 \((b_1,b_2)=(2,2)\)，和為 4。</p>
+<p>\((3,1)\) 與 \((1,3)\) 的 RSS 都是 30，但平方和 10 超出預算。若誤用 lasso 的預算 \(\lvert b_1\rvert+\lvert b_2\rvert\le8\)，整張表都允許，會選 \((3,3)\) 得 (E) 6。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>ridge 的預算是平方和；lasso 才是絕對值和。</p></div></div></article></div></section><section class="unit" id="s3"><h2>8.3 Lasso</h2><h3>一、定義</h3>
+<p><strong>Lasso</strong>（least absolute shrinkage and selection operator）選係數使</p>
+<p>\[\sum_{i=1}^n\Big(y_i-b_0-\sum_{j=1}^kb_jx_{ij}\Big)^2+\lambda\sum_{j=1}^k\lvert b_j\rvert\]</p>
+<p>最小。和 ridge 只差在懲罰從平方改成絕對值，但這一點差別讓 lasso 會把一些係數<strong>剛好變成 0</strong>，等於把那些變數從模型拿掉。所以 lasso 同時做收縮與<strong>變數選擇</strong>（feature selection），得到的模型比較<strong>稀疏</strong>（sparse），也比較好解釋。</p>
+<h3>二、為什麼 lasso 會出現 0：單位矩陣的特例</h3>
+<div class="box derive">
+<div class="box-t">推導：單位矩陣時的 lasso 解（軟門檻）</div>
+<p>同樣取 \(X=I\)、沒有截距。目標函數拆成 \(k\) 個互不相關的小問題，每個 \(j\) 各自最小化
+\[g(b)=(y_j-b)^2+\lambda\lvert b\rvert .\]
+絕對值在 \(b=0\) 不能微分，分三種情況看。</p>
+<p><strong>情況一：\(b&gt;0\)。</strong> \(g(b)=(y_j-b)^2+\lambda b\)，微分 \(-2(y_j-b)+\lambda=0\)，得 \(b=y_j-\lambda/2\)。這個解要真的大於 0，所以只在 \(y_j&gt;\lambda/2\) 時成立。</p>
+<p><strong>情況二：\(b&lt;0\)。</strong> \(g(b)=(y_j-b)^2-\lambda b\)，微分 \(-2(y_j-b)-\lambda=0\)，得 \(b=y_j+\lambda/2\)，只在 \(y_j&lt;-\lambda/2\) 時成立。</p>
+<p><strong>情況三：\(\lvert y_j\rvert\le\lambda/2\)。</strong> 兩邊的解都不成立。\(g\) 在 \(b&gt;0\) 時的斜率是 \(-2(y_j-b)+\lambda\ge-2y_j+\lambda\ge0\)，在 \(b&lt;0\) 時的斜率是 \(-2(y_j-b)-\lambda\le-2y_j-\lambda\le0\)，所以 \(g\) 在 0 的左邊遞減、右邊遞增，最小值就在 \(b=0\)。</p>
+<p>合起來：
+\[b_j^L=\begin{cases}y_j-\lambda/2,&amp; y_j&gt;\lambda/2\\[2pt] y_j+\lambda/2,&amp; y_j&lt;-\lambda/2\\[2pt] 0,&amp; \lvert y_j\rvert\le\lambda/2\end{cases}\]</p>
+</div>
+<p>這叫<strong>軟門檻</strong>（soft thresholding）：每個係數往 0 移動<strong>同一個距離</strong> \(\lambda/2\)，移過頭的就停在 0。和 ridge 對照：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>ridge</th>
+<th>lasso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>收縮方式</td>
+<td>每個係數乘上同一個比例 \(1/(1+\lambda)\)</td>
+<td>每個係數減去同一個量 \(\lambda/2\)</td>
+</tr>
+<tr>
+<td>小的係數</td>
+<td>變小但不是 0</td>
+<td>直接變成 0</td>
+</tr>
+<tr>
+<td>大的係數</td>
+<td>減少很多（按比例）</td>
+<td>只減少 \(\lambda/2\)</td>
+</tr>
+</tbody>
+</table>
+<figure><img src="assets/fig/ch08-threshold.svg" alt="單位矩陣的特例：橫軸是最小平方的係數 ，縱軸是收縮後的係數（）。最小平方是 45° 線。ridge 是一條斜率  的直線，穿過原點但不會停在 0。lasso 在  之間整段是 0，外面平行於 45° 線、往內移了 。" loading="lazy"><figcaption>單位矩陣的特例：橫軸是最小平方的係數 \(y_j\)，縱軸是收縮後的係數（\(\lambda=2\)）。最小平方是 45° 線。ridge 是一條斜率 \(1/3\) 的直線，穿過原點但不會停在 0。lasso 在 \(-1\le y_j\le1\) 之間整段是 0，外面平行於 45° 線、往內移了 \(\lambda/2=1\)。</figcaption></figure>
+
+<div class="box ex">
+<div class="box-t">例題 8-5：單位矩陣的 lasso 與 ridge</div>
+<p>8 個解釋變數、8 筆觀察、沒有截距，\(X=I\)，\(\mathbf y=(3,-5,10,14,-12,7,3,-4)\)。</p>
+<p><strong>lasso、\(\lambda=10\)</strong>：門檻 \(\lambda/2=5\)。絕對值不超過 5 的變成 0（3、\(-5\)、3、\(-4\)），其他往 0 移 5：
+\[\mathbf b^L=(0,\ 0,\ 5,\ 9,\ -7,\ 2,\ 0,\ 0).\]</p>
+<p><strong>ridge、\(\lambda=2\)</strong>：全部除以 3：
+\[\mathbf b^R=\big(1,\ -\tfrac53,\ \tfrac{10}3,\ \tfrac{14}3,\ -4,\ \tfrac73,\ 1,\ -\tfrac43\big).\]</p>
+<p>lasso 只留下 4 個變數；ridge 8 個都留著。</p>
+</div>
+<h3>三、為什麼 lasso 會出現 0：預算的形狀</h3>
+<p>換成預算形式看。兩個係數時，RSS 的等高線是以最小平方解 \(\hat{\boldsymbol\beta}\) 為中心的橢圓（<a href="ch02.html">第 2 章</a>的碗形）。在預算之內找 RSS 最小，就是把橢圓從中心往外擴大，<strong>第一次碰到預算區域</strong>的那一點：</p>
+<ul>
+<li>ridge 的預算 \(b_1^2+b_2^2\le s\) 是<strong>圓</strong>，邊界很圓滑，第一次碰到的點幾乎不會剛好落在座標軸上。</li>
+<li>lasso 的預算 \(\lvert b_1\rvert+\lvert b_2\rvert\le s\) 是<strong>菱形</strong>，角落就在座標軸上。橢圓很容易先碰到角落，這時某一個係數剛好是 0。</li>
+</ul>
+<figure><img src="assets/fig/ch08-constraint.svg" alt="預算形式的幾何（實際算出的等高線與解）。紅點是最小平方解，黑色橢圓是 RSS 的等高線。左：lasso 的菱形預算，等高線第一次碰到的是菱形在  軸上的角，所以 。右：ridge 的圓形預算，碰到的點兩個座標都不是 0。" loading="lazy"><figcaption>預算形式的幾何（實際算出的等高線與解）。紅點是最小平方解，黑色橢圓是 RSS 的等高線。左：lasso 的菱形預算，等高線第一次碰到的是菱形在 \(b_2\) 軸上的角，所以 \(b_1^L=0\)。右：ridge 的圓形預算，碰到的點兩個座標都不是 0。</figcaption></figure>
+
+<p>變數越多，菱形（高維時是有很多尖角的多面體）的角和邊越多，越容易碰到「好幾個係數為 0」的地方。</p>
+<h3>四、只有一個解釋變數時</h3>
+<div class="box derive">
+<div class="box-t">推導：一個解釋變數的 lasso 係數</div>
+<p>最小化 \(\sum_i(y_i-b_0-b_1x_i)^2+\lambda\lvert b_1\rvert\)。先假設 \(b_1&gt;0\)，此時 \(\lvert b_1\rvert=b_1\)。</p>
+<p>對 \(b_0\) 微分：和最小平方相同，\(nb_0+(\sum x_i)b_1=\sum y_i\)。</p>
+<p>對 \(b_1\) 微分：\(-2\sum x_i(y_i-b_0-b_1x_i)+\lambda=0\)，除以 2：
+\[\Big(\sum x_i\Big)b_0+\Big(\sum x_i^2\Big)b_1=\sum x_iy_i-\frac{\lambda}{2}.\]
+同樣消去 \(b_0\)：
+\[b_1^L=\frac{S_{xy}-\lambda/2}{S_{xx}},\]
+前提是算出來的值真的是正的。若 \(S_{xy}\le\lambda/2\)，假設不成立，答案是 \(b_1^L=0\)。（\(b_1&lt;0\) 的情形對稱：\(b_1^L=(S_{xy}+\lambda/2)/S_{xx}\)，在 \(S_{xy}&lt;-\lambda/2\) 時成立。）</p>
+</div>
+<p>lasso 減的是分子、ridge 加的是分母。分子會被減到 0，分母不會加到無限大，這就是兩者在一個變數時的差別。</p>
+<div class="box ex">
+<div class="box-t">例題 8-6：一個解釋變數的 lasso</div>
+<p>同例題 8-3 的資料，\(S_{xx}=10\)、\(S_{xy}=40\)，lasso、\(\lambda=4\)：
+\[b_1^L=\frac{40-4/2}{10}=\frac{38}{10}=3.8 .\]
+若改用 \(\lambda=80\)，\(S_{xy}-\lambda/2=0\)，\(b_1^L=0\)：斜率被整個拿掉，模型只剩 \(\hat y=\bar y=10\)。</p>
+</div>
+<h3>五、lasso 的格子題</h3>
+<div class="box ex">
+<div class="box-t">例題 8-7：格子題（講義例 8B）</div>
+<p>同一張 RSS 表，但係數的候選值改成 \(-1\)、0、1（第一列是 \(b_1=-1\)、第二列 \(b_1=0\)、第三列 \(b_1=1\)；欄依序是 \(b_0=-1,0,1\)，每個 \(b_0\) 底下 \(b_2=-1,0,1\)）。</p>
+<p><strong>(1) lasso、\(\lambda=60\)。</strong> 每格加 \(60(\lvert b_1\rvert+\lvert b_2\rvert)\)。\((b_1,b_2)=(0,0)\) 不加：三個 \(b_0\) 的 RSS 是 559、665、521，最小 521，在 \(b_0=1\)。有一個非零係數的格子加 60，RSS 要小於 461 才贏，表中沒有；兩個都非零的加 120，更不可能。答案 \((b_0,b_1,b_2)=(1,0,0)\)。</p>
+<p><strong>(2) lasso、預算 \(s=1\)。</strong> \(\lvert b_1\rvert+\lvert b_2\rvert\le1\)，不能兩個都非零。剩下的格子裡最小 RSS 是 495，在 \((b_0,b_1,b_2)=(-1,1,0)\)。</p>
+<p>\(\lambda=60\) 時 lasso 把兩個斜率都設成 0，這正是 lasso 會刪變數的樣子。</p>
+</div>
+<h3>六、係數路徑與貝氏觀點</h3>
+<figure><img src="assets/fig/ch08-lasso-path.svg" alt="同一組資料的 lasso 係數路徑。 增加時，係數一個接一個在某個  變成 0 並停在那裡（圓點標出每個變數離開模型的位置）： 時 8 個都還在， 時剩 5 個， 時剩 4 個（正好是真實係數不為 0 的那 4 個），再大就全部變成 0。和 ridge 的路徑相比，lasso 的路徑是折線，而且會碰到 0。" loading="lazy"><figcaption>同一組資料的 lasso 係數路徑。\(\lambda\) 增加時，係數一個接一個在某個 \(\lambda\) 變成 0 並停在那裡（圓點標出每個變數離開模型的位置）：\(\lambda=1\) 時 8 個都還在，\(\lambda=10\) 時剩 5 個，\(\lambda=100\) 時剩 4 個（正好是真實係數不為 0 的那 4 個），再大就全部變成 0。和 ridge 的路徑相比，lasso 的路徑是折線，而且會碰到 0。</figcaption></figure>
+
+<p>貝氏觀點：lasso 對應每個 \(\beta_j\) 的<strong>雙指數先驗</strong>（double-exponential，又稱 Laplace 分配）
+\[f(x)=\frac{1}{2\theta}e^{-\lvert x\rvert/\theta},\qquad -\infty&lt;x&lt;\infty .\]
+它在 0 有一個尖峰，比常態更相信「係數就是 0」。lasso 的解是<strong>後驗眾數</strong>，但<strong>不是後驗平均數</strong>（後驗分配不對稱，平均數不會剛好是 0）。</p>
+<figure><img src="assets/fig/ch08-priors.svg" alt="標準常態（左）與標準雙指數分配（右，，使變異數為 1）的密度。兩者變異數相同，但雙指數在 0 的地方尖得多、尾巴也厚一些。" loading="lazy"><figcaption>標準常態（左）與標準雙指數分配（右，\(\theta=1/\sqrt2\)，使變異數為 1）的密度。兩者變異數相同，但雙指數在 0 的地方尖得多、尾巴也厚一些。</figcaption></figure>
+
+<div class="box key">
+<div class="box-t">ridge 與 lasso 一覽</div>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>ridge</th>
+<th>lasso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>懲罰</td>
+<td>\(\lambda\sum b_j^2\)</td>
+<td>\(\lambda\sum\lvert b_j\rvert\)</td>
+</tr>
+<tr>
+<td>預算區域</td>
+<td>圓（球）</td>
+<td>菱形（多面體）</td>
+</tr>
+<tr>
+<td>係數會不會剛好是 0</td>
+<td>不會</td>
+<td>會，做變數選擇</td>
+</tr>
+<tr>
+<td>一個變數</td>
+<td>\(S_{xy}/(S_{xx}+\lambda)\)</td>
+<td>\((S_{xy}-\lambda/2)/S_{xx}\)，到 0 為止</td>
+</tr>
+<tr>
+<td>\(X=I\)</td>
+<td>\(y_j/(1+\lambda)\)</td>
+<td>軟門檻 \(\lambda/2\)</td>
+</tr>
+<tr>
+<td>貝氏先驗</td>
+<td>常態；解＝後驗眾數＝後驗平均數</td>
+<td>雙指數；解＝後驗眾數，不是平均數</td>
+</tr>
+<tr>
+<td>什麼時候表現較好</td>
+<td>很多變數都有中等大小的效果</td>
+<td>只有少數變數真的有效果</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>最後一列是 ISLR 的結論：真實模型裡大部分係數都不是 0 時，ridge 通常比較準；只有少數幾個變數重要時，lasso 比較準，也比較好解釋。實務上不知道是哪一種，所以兩個都用交叉驗證比較。</p>
+<div class="box exam">
+<div class="box-t">考試怎麼考：lasso</div>
+<ul>
+<li>懲罰 \(\lambda\sum\lvert b_j\rvert\) 的計算、格子題、兩個模型何時改選第二個。</li>
+<li>一個解釋變數：分子減 \(\lambda/2\)。題目只給原始和時，記得 \(S_{xy}=\sum xy-n\bar x\bar y\)。</li>
+<li>圖形題（習題 <a href="ch08.html#q8-17">8.17</a>）：橫軸 \(\lambda\)、兩條曲線，U 形的是測試 MSE；從低處一路升高、最後和測試 MSE 平行的是訓練 MSE。</li>
+<li>「幾個方法做變數選擇」：只有 lasso（和<a href="ch07.html">第 7 章</a>的子集選擇）。ridge、PCR、PLS 都不會。</li>
+<li>「lasso 的變數個數一定不少於 ridge」是錯的：ridge 留下全部變數，lasso 只會更少或相同。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q8-9"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.9 題</b><small>・講義 p.140・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>For a linear regression model with 8 explanatory variables and no intercept:</p>
+<ul>
+<li>There are 8 observations.</li>
+<li>\(x_{ij}=0\) for \(i\ne j\) and \(x_{ii}=1\).</li>
+<li>The response vector is \((3,-5,10,14,-12,7,3,-4)\).</li>
+</ul>
+<p>The lasso is used with \(\lambda=10\). Determine the fitted values of \(\hat\beta_i\), \(i=1,\ldots,8\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>沒有截距的線性迴歸，有 8 個解釋變數與 8 筆觀察，\(x_{ij}=0\)（\(i\ne j\)）、\(x_{ii}=1\)，也就是 \(X\) 為單位矩陣。反應向量為 \((3,-5,10,14,-12,7,3,-4)\)。使用 \(\lambda=10\) 的 lasso，求 \(b_1,\ldots,b_8\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\((0,\ 0,\ 5,\ 9,\ -7,\ 2,\ 0,\ 0)\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(X=I\) 時 lasso 是軟門檻（<a href="ch08.html#s3">8.3 節</a>的推導）：\(\lvert y_j\rvert\le\lambda/2\) 的設成 0，其他往 0 移 \(\lambda/2\)。</p>
+<p>門檻 \(\lambda/2=5\)：</p>
+<table>
+<thead>
+<tr>
+<th>\(y_j\)</th>
+<th>3</th>
+<th>\(-5\)</th>
+<th>10</th>
+<th>14</th>
+<th>\(-12\)</th>
+<th>7</th>
+<th>3</th>
+<th>\(-4\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>比較</td>
+<td>\(\le5\)</td>
+<td>\(\le5\)</td>
+<td>\(&gt;5\)</td>
+<td>\(&gt;5\)</td>
+<td>\(&lt;-5\)</td>
+<td>\(&gt;5\)</td>
+<td>\(\le5\)</td>
+<td>\(\le5\)</td>
+</tr>
+<tr>
+<td>\(b_j^L\)</td>
+<td>0</td>
+<td>0</td>
+<td>\(10-5=5\)</td>
+<td>\(14-5=9\)</td>
+<td>\(-12+5=-7\)</td>
+<td>\(7-5=2\)</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>只留下 4 個變數，這就是 lasso 的變數選擇。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>門檻是 \(\lambda/2\) 不是 \(\lambda\)：目標函數是 \((y_j-b)^2+\lambda\lvert b\rvert\)，微分後 \(\lambda\) 被平方項的係數 2 除掉。\(y_j=-5\) 剛好等於門檻，也是 0。</p></div></div></article><article class="exercise" id="q8-12"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.12 題</b><small>・講義 p.140・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You are considering the following two linear models for a set of observations:</p>
+<ol>
+<li>\(y_i=4.2-1.7x_{i1}+2.5x_{i2}+1.2x_{i3}+\varepsilon_i\), residual sum of squares is 26.</li>
+<li>\(y_i=5.4+3.1x_{i2}+\varepsilon_i\), residual sum of squares is 50.</li>
+</ol>
+<p>For which values of the tuning parameter \(\lambda\) would the second model be preferred when using the lasso?</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>考慮兩個線性模型：</p>
+<ol>
+<li>\(y_i=4.2-1.7x_{i1}+2.5x_{i2}+1.2x_{i3}+\varepsilon_i\)，殘差平方和 26。</li>
+<li>\(y_i=5.4+3.1x_{i2}+\varepsilon_i\)，殘差平方和 50。</li>
+</ol>
+<p>使用 lasso 時，調整參數 \(\lambda\) 在什麼範圍會偏好第二個模型？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\lambda&gt;10.4348\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>lasso 比較「RSS ＋ \(\lambda\times\) 斜率絕對值和」。</p>
+<p><strong>模型 1</strong>：\(26+(1.7+2.5+1.2)\lambda=26+5.4\lambda\)。</p>
+<p><strong>模型 2</strong>：\(50+3.1\lambda\)。</p>
+<p>\[50+3.1\lambda&lt;26+5.4\lambda\ \Rightarrow\ 24&lt;2.3\lambda\ \Rightarrow\ \lambda&gt;\frac{24}{2.3}=10.4348 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(-1.7\) 的絕對值是 1.7，不是 \(-1.7\)；若誤把它當負數，模型 1 的懲罰會算成 \(2.0\lambda\)，結論完全不同。</p></div></div></article><article class="exercise" id="q8-17"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.17 題</b><small>・講義 p.144・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F18:37] You are estimating the coefficients of a linear regression model by minimizing the sum:
+\[\sum_{i=1}^n\Big(y_i-\beta_0-\sum_{j=1}^p\beta_jx_{ij}\Big)^2+\lambda\sum_{j=1}^p\lvert\beta_j\rvert\]
+From this model you have produced the following plot of various statistics as a function of the tuning parameter \(\lambda\):</p>
+<figure><img src="assets/fig/ch08-ex17.svg" alt="依題目原圖重畫的示意圖，橫軸是 （0 到 ）。實線 X 從約 1.0 緩慢下降到約 0.6 的最低點，接著急升到約 2.2 後持平；虛線 Y 從約 0.3 幾乎持平，後段急升到約 2.0 後持平，始終在 X 下方。" loading="lazy"><figcaption>依題目原圖重畫的示意圖，橫軸是 \(\lambda\)（0 到 \(10^{10}\)）。實線 X 從約 1.0 緩慢下降到約 0.6 的最低點，接著急升到約 2.2 後持平；虛線 Y 從約 0.3 幾乎持平，後段急升到約 2.0 後持平，始終在 X 下方。</figcaption></figure>
+
+<p>Determine which of the following statistics \(X\) and \(Y\) represent.</p>
+<div class="opts">
+<p>(A) \(X\) = Squared Bias, \(Y\) = Training MSE</p>
+<p>(B) \(X\) = Test MSE, \(Y\) = Training MSE</p>
+<p>(C) \(X\) = Test MSE, \(Y\) = Variance</p>
+<p>(D) \(X\) = Training MSE, \(Y\) = Variance</p>
+<p>(E) \(X\) = Variance, \(Y\) = Test MSE</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2018 秋季第 37 題）以最小化
+估計線性迴歸係數。下圖是各種統計量隨調整參數 \(\lambda\) 變化的圖：</p>
+<p>X 與 Y 各代表哪一個統計量？</p>
+<div class="opts">
+<p>(A) X＝偏差平方，Y＝訓練 MSE</p>
+<p>(B) X＝測試 MSE，Y＝訓練 MSE</p>
+<p>(C) X＝測試 MSE，Y＝變異數</p>
+<p>(D) X＝訓練 MSE，Y＝變異數</p>
+<p>(E) X＝變異數，Y＝測試 MSE</p>
+</div>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p><strong>X 先降後升</strong>，是測試 MSE，剩 (B)、(C)。</p>
+<p><strong>Y 隨 \(\lambda\) 上升</strong>：懲罰越重，訓練資料配得越差，訓練 MSE 上升；變異數則隨 \(\lambda\) <strong>下降</strong>，所以 Y 不是變異數，答案 (B)。</p>
+<p>另一個線索：\(\lambda\) 極大時所有斜率都是 0，模型只剩截距，訓練與測試 MSE 都等於「用平均數預測」的誤差，兩條線一起持平在高處，Y 也始終低於 X（訓練誤差通常比測試誤差小）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>看到兩條線都上升就以為一條是偏差平方：偏差平方從 0 開始上升，不會在 \(\lambda=0\) 就有 0.3 的高度且始終貼著 X 下方。</p></div></div></article><article class="exercise" id="q8-19"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.19 題</b><small>・講義 p.145・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>You are given the following observations of two variables:</p>
+<table>
+<thead>
+<tr>
+<th>\(i\)</th>
+<th>\(x_i\)</th>
+<th>\(y_i\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+<td>5</td>
+</tr>
+<tr>
+<td>3</td>
+<td>3</td>
+<td>12</td>
+</tr>
+<tr>
+<td>4</td>
+<td>4</td>
+<td>13</td>
+</tr>
+<tr>
+<td>5</td>
+<td>5</td>
+<td>18</td>
+</tr>
+</tbody>
+</table>
+<p>\(\sum x_i=15\), \(\sum y_i=50\), \(\sum x_i^2=55\), \(\sum x_iy_i=190\), \(\sum y_i^2=666\).</p>
+<p>You are fitting the linear model \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\) using the lasso with \(\lambda=4\). Determine \(\hat\beta_1\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同上題的資料：</p>
+<p>\(\sum x_i=15\)、\(\sum y_i=50\)、\(\sum x_i^2=55\)、\(\sum x_iy_i=190\)。改用 \(\lambda=4\) 的 lasso 配適 \(y_i=\beta_0+\beta_1x_i+\varepsilon_i\)，求 \(b_1\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>3.8</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>最小化 \(\sum(y_i-b_0-b_1x_i)^2+4\lvert b_1\rvert\)。最小平方的斜率是正的（4），先假設 \(b_1&gt;0\)，\(\lvert b_1\rvert=b_1\)。</p>
+<p>對 \(b_0\) 微分：\(5b_0+15b_1=50\)（和 ridge 一樣）。</p>
+<p>對 \(b_1\) 微分：\(-2\sum x_i(y_i-b_0-b_1x_i)+4=0\)，除以 2：\(15b_0+55b_1=190-2=188\)。</p>
+<p>第二式減去第一式的 3 倍：\(10b_1=38\)，\(b_1=3.8\)。結果是正的，假設成立。</p>
+<p>公式：\(b_1^L=(S_{xy}-\lambda/2)/S_{xx}=(40-2)/10=3.8\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>減的是 \(\lambda/2=2\)，不是 \(\lambda=4\)（後者會得到 3.6）。</p></div></div></article><article class="exercise" id="q8-22"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.22 題</b><small>・講義 p.146・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S18:36] For a set of data with 40 observations, 2 predictors (\(X_1\) and \(X_2\)), and one response (\(Y\)), the residual sum of squares has been calculated for several different estimates of a linear model with no intercept. Only integer values from 1 to 5 were considered for estimates of \(\beta_1\) and \(\beta_2\).</p>
+<p>The grid below shows the residual sum of squares for every combination of the parameter estimates, after standardization:</p>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_1\) \ \(\hat\beta_2\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2,855.0</td>
+<td>870.3</td>
+<td>464.4</td>
+<td>357.2</td>
+<td>548.6</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1,059.1</td>
+<td>488.4</td>
+<td>216.3</td>
+<td>242.8</td>
+<td>567.9</td>
+</tr>
+<tr>
+<td>3</td>
+<td>657.0</td>
+<td>220.0</td>
+<td>81.6</td>
+<td>241.9</td>
+<td>700.8</td>
+</tr>
+<tr>
+<td>4</td>
+<td>368.4</td>
+<td>65.1</td>
+<td>60.5</td>
+<td>354.5</td>
+<td>947.1</td>
+</tr>
+<tr>
+<td>5</td>
+<td>193.2</td>
+<td>23.7</td>
+<td>152.8</td>
+<td>580.6</td>
+<td>1,307.0</td>
+</tr>
+</tbody>
+</table>
+<p>Let:</p>
+<ul>
+<li>\(\hat\beta_1^L\) = Estimate of \(\beta_1\) using a lasso with budget parameter \(s=5\)</li>
+<li>\(\hat\beta_2^L\) = Estimate of \(\beta_2\) using a lasso with budget parameter \(s=5\)</li>
+</ul>
+<p>Calculate the ratio \(\hat\beta_1^L/\hat\beta_2^L\).</p>
+<div class="opts">
+<p>(A) Less than 0.5</p>
+<p>(B) At least 0.5, but less than 1.0</p>
+<p>(C) At least 1.0, but less than 1.5</p>
+<p>(D) At least 1.5, but less than 2.0</p>
+<p>(E) At least 2.0</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2018 春季第 36 題）40 筆觀察、兩個解釋變數，沒有截距的線性模型。\(\beta_1,\beta_2\) 只考慮 1 到 5 的整數。標準化後各組合的 RSS 如下（列是 \(b_1\)、欄是 \(b_2\)）：</p>
+<p>令 \(b_1^L\)、\(b_2^L\) 為預算參數 \(s=5\) 的 lasso 估計值。求 \(b_1^L/b_2^L\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 2/3</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>限制 \(\lvert b_1\rvert+\lvert b_2\rvert\le5\)，允許的格子是 \(b_1+b_2\le5\)：</p>
+<table>
+<thead>
+<tr>
+<th>\(b_1\)</th>
+<th>允許的 \(b_2\) 與 RSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>1：2,855.0；2：870.3；3：464.4；4：357.2</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1：1,059.1；2：488.4；3：216.3</td>
+</tr>
+<tr>
+<td>3</td>
+<td>1：657.0；2：220.0</td>
+</tr>
+<tr>
+<td>4</td>
+<td>1：368.4</td>
+</tr>
+</tbody>
+</table>
+<p>最小 216.3，在 \(b_1=2\)、\(b_2=3\)，比值 \(2/3=0.667\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>表中更小的 23.7、60.5、65.1、81.6 都超出預算（係數和 7、7、6、6）。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（6 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC8-3-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.3-1</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A simple linear regression is fitted using the lasso. You are given \(S_{xx}=20\) and \(S_{xy}=50\), and the lasso slope is positive.</p>
+<p>Calculate the lasso estimate of the slope when \(\lambda=30\).</p>
+<div class="opts">
+<p>(A) 1.00</p>
+<p>(B) 1.43</p>
+<p>(C) 1.75</p>
+<p>(D) 2.25</p>
+<p>(E) 2.50</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>簡單迴歸的 lasso，\(S_{xx}=20\)、\(S_{xy}=50\)，斜率為正。求 \(\lambda=30\) 時的斜率。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：1.75</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(b_1^L=(S_{xy}-\lambda/2)/S_{xx}=(50-15)/20=1.75\)，結果為正，假設成立。</p>
+<p>(A) 1.00 是減掉 \(\lambda\) 而不是 \(\lambda/2\)；(B) 1.43 是 \(50/35\)，把 \(\lambda/2\) 加到分母（和 ridge 混在一起）；(E) 2.50 是最小平方。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>lasso 減在分子、減 \(\lambda/2\)；ridge 加在分母、加 \(\lambda\)。</p></div></div></article><article class="exercise concept-q" id="qC8-3-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.3-2</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>For the simple linear regression in the previous question (\(S_{xx}=20\), \(S_{xy}=50\)), determine the smallest value of \(\lambda\) for which the lasso slope estimate equals 0.</p>
+<div class="opts">
+<p>(A) 25</p>
+<p>(B) 50</p>
+<p>(C) 100</p>
+<p>(D) 200</p>
+<p>(E) The slope is never exactly 0 for finite \(\lambda\).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同上題，\(\lambda\) 至少多大時 lasso 的斜率會變成 0？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：100</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(b_1^L=(S_{xy}-\lambda/2)/S_{xx}\) 在 \(S_{xy}-\lambda/2\le0\) 時變成 0，即 \(\lambda\ge2S_{xy}=100\)。</p>
+<p>(E) 是 ridge 的性質；(B) 50 是忘了除以 2。</p></div></div></article><article class="exercise concept-q" id="qC8-3-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.3-3</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A regression with no intercept has design matrix equal to the \(4\times4\) identity matrix and response vector \((4,\ -1,\ 2.5,\ -6)\). The lasso is used with \(\lambda=3\).</p>
+<p>Calculate the estimate of the fourth coefficient.</p>
+<div class="opts">
+<p>(A) \(-6.0\)</p>
+<p>(B) \(-4.5\)</p>
+<p>(C) \(-3.0\)</p>
+<p>(D) \(-1.5\)</p>
+<p>(E) 0</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>沒有截距、\(X\) 為 \(4\times4\) 單位矩陣、\(\mathbf y=(4,-1,2.5,-6)\)，\(\lambda=3\) 的 lasso，求第四個係數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：\(-4.5\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>軟門檻 \(\lambda/2=1.5\)。\(y_4=-6&lt;-1.5\)，所以 \(b_4^L=-6+1.5=-4.5\)。全部係數是 \((2.5,\ 0,\ 1.0,\ -4.5)\)，第二個因為 \(\lvert-1\rvert\le1.5\) 變成 0。</p>
+<p>(C) \(-3.0\) 是減掉 \(\lambda\)；(A) 是最小平方。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>負的係數往 0 移，是<strong>加上</strong> \(\lambda/2\)。</p></div></div></article><article class="exercise concept-q" id="qC8-3-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.3-4</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>A lasso regression with two predictors and an intercept considers only integer slopes from 0 to 2. For the optimal intercept, the residual sums of squares are (rows: \(\hat\beta_2\); columns: \(\hat\beta_1\)):</p>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_2\) \ \(\hat\beta_1\)</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>50</td>
+<td>42</td>
+<td>38</td>
+</tr>
+<tr>
+<td>1</td>
+<td>44</td>
+<td>36</td>
+<td>33</td>
+</tr>
+<tr>
+<td>2</td>
+<td>41</td>
+<td>34</td>
+<td>30</td>
+</tr>
+</tbody>
+</table>
+<p>The tuning parameter is \(\lambda=5\). Determine \((\hat\beta_1,\hat\beta_2)\).</p>
+<div class="opts">
+<p>(A) \((0,\ 0)\)</p>
+<p>(B) \((1,\ 0)\)</p>
+<p>(C) \((1,\ 1)\)</p>
+<p>(D) \((2,\ 1)\)</p>
+<p>(E) \((2,\ 2)\)</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>lasso、\(\lambda=5\)，斜率只考慮 0～2 的整數，RSS 表如上。求 \((b_1,b_2)\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：\((1,\ 1)\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>每格加 \(5(b_1+b_2)\)：</p>
+<table>
+<thead>
+<tr>
+<th>\(b_2\) \ \(b_1\)</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>50</td>
+<td>47</td>
+<td>48</td>
+</tr>
+<tr>
+<td>1</td>
+<td>49</td>
+<td>46</td>
+<td>48</td>
+</tr>
+<tr>
+<td>2</td>
+<td>51</td>
+<td>49</td>
+<td>50</td>
+</tr>
+</tbody>
+</table>
+<p>最小 46，在 \((b_1,b_2)=(1,1)\)。RSS 最小的 \((2,2)\) 加懲罰後是 50。</p></div></div></article><article class="exercise concept-q" id="qC8-3-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.3-5</b><small>仿 SOA 樣題・跨章：第 2 章・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about the lasso is/are true.</p>
+<div class="items">
+<p>I. The lasso estimate is the posterior mode when each coefficient has a double-exponential (Laplace) prior.</p>
+<p>II. The lasso estimate is the posterior mean when each coefficient has a double-exponential prior.</p>
+<p>III. The lasso tends to outperform ridge regression when only a few predictors have nonzero coefficients.</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於 lasso，下列哪些正確？</p>
+<div class="items">
+<p>I. 雙指數先驗下，lasso 的解是後驗眾數。</p>
+<p>II. 雙指數先驗下，lasso 的解是後驗平均數。</p>
+<p>III. 只有少數變數真正有效果時，lasso 通常比 ridge 好。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對、II 錯：雙指數先驗下後驗分配不對稱，lasso 的解是眾數，不是平均數（ridge 才是兩者相同）。</p>
+<p>III 對：稀疏的真實模型正好符合 lasso 會把小係數設成 0 的特性。</p></div></div></article><article class="exercise concept-q" id="qC8-3-6"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.3-6</b><small>仿 SOA 樣題・<a href="#s3">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is NOT true.</p>
+<div class="opts">
+<p>(A) The lasso constraint region \(\lvert\beta_1\rvert+\lvert\beta_2\rvert\le s\) has corners on the coordinate axes.</p>
+<p>(B) The lasso can perform variable selection.</p>
+<p>(C) As \(\lambda\) increases from 0, lasso coefficients shrink and can become exactly zero.</p>
+<p>(D) Ridge regression produces lower test MSE than the lasso in every situation.</p>
+<p>(E) Neither ridge regression nor the lasso penalizes the intercept.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪一句<strong>不正確</strong>？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：沒有哪一個方法在所有情況都比較好</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>(D) 錯：很多變數都有中等效果時 ridge 較好，只有少數變數重要時 lasso 較好；實務上用交叉驗證比較。其他四句都對：菱形的角在座標軸上（<a href="ch08.html#s3">8.3 節</a>的圖），所以 lasso 會選變數。</p></div></div></article></div></section><section class="unit" id="s4"><h2>8.4 降維：主成分迴歸與偏最小平方</h2><h3>一、另一種想法：先造新變數，再做迴歸</h3>
+<p>收縮是在原本的 \(k\) 個變數上動手腳。<strong>降維</strong>（dimension reduction）換一條路：先用原本的變數造出 \(M&lt;k\) 個新變數
+\[Z_m=\phi_{1m}X_1+\phi_{2m}X_2+\cdots+\phi_{km}X_k,\qquad m=1,\ldots,M,\]
+再用最小平方配適 \(y=\theta_0+\theta_1Z_1+\cdots+\theta_MZ_M+\varepsilon\)。</p>
+<p>要估的係數從 \(k\) 個變成 \(M\) 個，變異數下降；代價是 \(\beta_j\) 被限制成 \(\beta_j=\sum_m\theta_m\phi_{jm}\) 這種形式，可能有偏差。\(M=k\) 時沒有任何限制，等於最小平方。兩種方法的差別在於 \(\phi\) 怎麼選。</p>
+<h3>二、主成分分析的三個重點（完整推導在<a href="ch17.html">第 17 章</a>）</h3>
+<p><strong>主成分分析</strong>（principal components analysis，PCA）找資料散得最開的方向：</p>
+<ol>
+<li><strong>第一主成分</strong> \(Z_1=\sum_j\phi_{j1}(X_j-\bar X_j)\)，在限制 \(\sum_j\phi_{j1}^2=1\) 之下，讓 \(Z_1\) 的變異數最大。\(\phi_{j1}\) 叫<strong>負荷量</strong>（loading），要求平方和為 1 是因為不限制的話，把係數放大就能讓變異數無限大。</li>
+<li><strong>第二主成分</strong>在同樣的限制下讓變異數最大，而且和 \(Z_1\) <strong>不相關</strong>（方向互相垂直）。之後依此類推。</li>
+<li>每一筆觀察在主成分上的值 \(z_{i1}=\sum_j\phi_{j1}(x_{ij}-\bar x_j)\) 叫<strong>主成分分數</strong>（principal component score），就是把點投影到那個方向上的座標。</li>
+</ol>
+<p>幾何上，第一主成分的方向也是「所有點到這條直線的垂直距離平方和最小」的方向。</p>
+<div class="box ex">
+<div class="box-t">例題 8-8：主成分分數</div>
+<p>兩個變數的平均 \(\bar X=5\)、\(\bar Y=9\)，第一主成分 \(Z=0.6X+0.8Y\)（\(0.6^2+0.8^2=1\)，負荷量平方和為 1）。點 \((X,Y)=(5.5,\ 8.5)\) 的分數是
+\[0.6(5.5-5)+0.8(8.5-9)=0.3-0.4=-0.1 .\]
+分數要用<strong>置中後</strong>的值算：負荷量乘的是 \(X-\bar X\)，不是 \(X\)。</p>
+</div>
+<figure><img src="assets/fig/ch08-pca-dir.svg" alt="兩個高度相關的解釋變數（標準化後）。金色箭頭是第一主成分的方向，資料沿著它散得最開；灰色箭頭是第二主成分，和第一主成分垂直。藍色細線是幾個點到第一主成分方向的投影，投影位置就是主成分分數。圖中標出兩個方向的實際負荷量與變異數比例。" loading="lazy"><figcaption>兩個高度相關的解釋變數（標準化後）。金色箭頭是第一主成分的方向，資料沿著它散得最開；灰色箭頭是第二主成分，和第一主成分垂直。藍色細線是幾個點到第一主成分方向的投影，投影位置就是主成分分數。圖中標出兩個方向的實際負荷量與變異數比例。</figcaption></figure>
+
+<h3>三、主成分迴歸（PCR）</h3>
+<p><strong>主成分迴歸</strong>（principal components regression，PCR）就是用前 \(M\) 個主成分當解釋變數做最小平方。</p>
+<ul>
+<li><strong>選 \(M\)</strong>：\(M\) 越大，偏差越小、變異數越大，測試 MSE 對 \(M\) 也是 U 形，用交叉驗證選。</li>
+<li><strong>不做變數選擇</strong>：每個主成分都是<strong>全部</strong>原始變數的線性組合，所以模型裡每個原始變數都還在。在這一點上 PCR 比較像 ridge，不像 lasso。（事實上 ridge 也可以看成「對變異數小的主成分方向收縮得比較多」，兩者很接近。）</li>
+<li><strong>要先標準化</strong>：主成分找變異數最大的方向，單位大的變數變異數大，會主導第一主成分。</li>
+<li><strong>背後的假設</strong>：解釋變數散得最開的方向，也就是和 \(y\) 關係最密切的方向。這個假設不一定對；若和 \(y\) 有關的是一個變異數很小的方向，PCR 會把它排在後面，表現就不好。PCR 是<strong>非監督</strong>地造變數（造 \(Z\) 的時候完全沒看 \(y\)），這是它的弱點。</li>
+</ul>
+<h3>四、偏最小平方（PLS）</h3>
+<p><strong>偏最小平方</strong>（partial least squares，PLS）也造線性組合，但造的時候<strong>有看 \(y\)</strong>，是<strong>監督式</strong>的降維。</p>
+<p><strong>第一個方向</strong>：\(\phi_{j1}\) 取「\(y\) 對 \(X_j\) 做簡單迴歸」的斜率：
+\[\phi_{j1}=\frac{S_{x_jy}}{S_{x_jx_j}}=\frac{\sum_i x_{ij}y_i-n\bar x_j\bar y}{\sum_i x_{ij}^2-n\bar x_j^2}.\]
+和 \(y\) 關係越強的變數，在 \(Z_1\) 裡的權重越大。（若變數已標準化，這個斜率和 \(X_j\) 與 \(y\) 的相關係數成正比。）</p>
+<p><strong>第二個方向</strong>：把每個 \(X_j\) 對 \(Z_1\) 做迴歸、取殘差（也就是拿掉 \(Z_1\) 已經說明的部分），再用殘差重複同樣的步驟得到 \(Z_2\)。依此類推，最後用 \(Z_1,\ldots,Z_M\) 對 \(y\) 做最小平方，\(M\) 也用交叉驗證選。</p>
+<div class="box ex">
+<div class="box-t">例題 8-9：PLS 的第一個方向</div>
+<p>5 筆觀察：</p>
+<table>
+<thead>
+<tr>
+<th>\(x_1\)</th>
+<th>\(x_2\)</th>
+<th>\(y\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2</td>
+<td>10</td>
+</tr>
+<tr>
+<td>2</td>
+<td>6</td>
+<td>2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>4</td>
+<td>1</td>
+<td>11</td>
+</tr>
+<tr>
+<td>5</td>
+<td>5</td>
+<td>17</td>
+</tr>
+</tbody>
+</table>
+<p>\(\sum x_1=15\)、\(\sum x_2=18\)、\(\sum y=45\)、\(\sum x_1^2=55\)、\(\sum x_2^2=82\)、\(\sum x_1y=158\)、\(\sum x_2y=148\)。</p>
+<p>\[\phi_{11}=\frac{158-15(45)/5}{55-15^2/5}=\frac{158-135}{55-45}=\frac{23}{10}=2.3,\]
+\[\phi_{21}=\frac{148-18(45)/5}{82-18^2/5}=\frac{148-162}{82-64.8}=\frac{-14}{17.2}=-0.81395 .\]
+所以 \(Z_1=2.3X_1-0.81395X_2\)（沒有標準化）。\(x_2\) 和 \(y\) 呈負相關，權重是負的。</p>
+</div>
+<h3>五、PCR 與 PLS 比一比</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>PCR</th>
+<th>PLS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>監督或非監督</td>
+<td>非監督：造 \(Z\) 時不看 \(y\)</td>
+<td>監督：造 \(Z\) 時看 \(y\)</td>
+</tr>
+<tr>
+<td>第一個方向</td>
+<td>讓 \(\sum\phi_j(X_j-\bar X_j)\) 的變異數最大，\(\sum\phi_j^2=1\)</td>
+<td>\(\phi_j\) 是 \(y\) 對 \(X_j\) 的簡單迴歸斜率</td>
+</tr>
+<tr>
+<td>方向配適解釋變數的程度</td>
+<td>較好（本來就是為解釋變數找的方向）</td>
+<td>較差（為了遷就 \(y\)）</td>
+</tr>
+<tr>
+<td>偏差與變異數</td>
+<td>偏差較高、變異數較低</td>
+<td>偏差較低、變異數較高</td>
+</tr>
+<tr>
+<td>做不做變數選擇</td>
+<td>不做</td>
+<td>不做</td>
+</tr>
+<tr>
+<td>實際表現</td>
+<td>兩者差不多；PLS 通常不會比 ridge 或 PCR 好</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>PLS 的偏差較低、變異數較高，一來一往，整體上並不比 PCR 好。這個「誰好誰壞並不一定」的結論本身就是考點。</p>
+<div class="box exam">
+<div class="box-t">考試怎麼考：降維</div>
+<ul>
+<li>「主成分是解釋變數的加權平均」是錯的：負荷量的<strong>平方和</strong>為 1，係數和不一定是 1，也可以是負的（習題 <a href="ch08.html#q8-23">8.23</a>）。</li>
+<li>「負荷量的選法讓變異數最小」是錯的，是最大。「第二主成分和第一主成分不相關」是對的。</li>
+<li>「PLS 是 PCA 的監督式替代」對；「PLS 方向配適解釋變數不如 PCR」對；「PLS 的偏差比 PCR 高」錯（習題 <a href="ch08.html#q8-24">8.24</a>）。</li>
+<li>「PCR 可以做變數選擇」錯；「PCR 要先標準化」「PCR 假設變異最大的方向和反應變數有關」「PCR 可以減少過度配適」都對（習題 <a href="ch08.html#q8-28">8.28</a>）。</li>
+<li>計算：主成分分數（用置中後的值）、PLS 第一個方向的係數（簡單迴歸斜率）。</li>
+</ul>
+</div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q8-23"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.23 題</b><small>・講義 p.146・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>You are given the following statements regarding principal components regression.</p>
+<div class="items">
+<p>I. The principal components are weighted averages of the explanatory variables.</p>
+<p>II. A principal component \(Z_i=\sum\phi_{ij}X_{ij}\) where \(\sum_j\phi_{ij}^2=1\) and the coefficients \(\phi_{ij}\) are selected to minimize the variance of \(Z_i\).</p>
+<p>III. The second principal component is selected to be uncorrelated with the first principal component.</p>
+</div>
+<p>Which statements are true?</p>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I only</p>
+<p>(C) II only</p>
+<p>(D) III only</p>
+<p>(E) I, II, and III</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於主成分迴歸的三個敘述：</p>
+<div class="items">
+<p>I. 主成分是解釋變數的加權平均。</p>
+<p>II. 主成分 \(Z_i=\sum_j\phi_{ij}X_{ij}\)，其中 \(\sum_j\phi_{ij}^2=1\)，係數 \(\phi_{ij}\) 的選法使 \(Z_i\) 的變異數最小。</p>
+<p>III. 第二主成分的選法使它和第一主成分不相關。</p>
+</div>
+<p>哪些正確？</p>
+<div class="opts">
+<p>(A) 都不正確　(B) 只有 I　(C) 只有 II　(D) 只有 III　(E) I、II、III</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 只有 III</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：主成分是線性組合，限制是負荷量的<strong>平方和</strong>為 1，不是係數和為 1，係數也可以是負的，所以不一定是加權平均。</p>
+<p>II 錯：選法使變異數<strong>最大</strong>。</p>
+<p>III 對：第二主成分在和第一主成分不相關的條件下讓變異數最大。</p></div></div></article><article class="exercise" id="q8-25"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.25 題</b><small>・講義 p.147・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>You are given the following observations of two explanatory variables and a response:</p>
+<table>
+<thead>
+<tr>
+<th>\(X_1\)</th>
+<th>\(X_2\)</th>
+<th>\(Y\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2</td>
+<td>10</td>
+</tr>
+<tr>
+<td>2</td>
+<td>6</td>
+<td>2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>4</td>
+<td>1</td>
+<td>11</td>
+</tr>
+<tr>
+<td>5</td>
+<td>5</td>
+<td>17</td>
+</tr>
+</tbody>
+</table>
+<p>\(\sum x_{i1}=15\), \(\sum x_{i2}=18\), \(\sum y_i=45\), \(\sum x_{i1}^2=55\), \(\sum x_{i2}^2=82\), \(\sum y_i^2=539\), \(\sum x_{i1}y_i=158\), \(\sum x_{i2}y_i=148\).</p>
+<p>You fit a linear regression model \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i\) using partial least squares with \(Z_1=\phi_1X_1+\phi_2X_2\).</p>
+<p>Determine \(\phi_1\) and \(\phi_2\) without standardizing the explanatory variables.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>兩個解釋變數與一個反應變數的觀察值：</p>
+<p>\(\sum x_1=15\)、\(\sum x_2=18\)、\(\sum y=45\)、\(\sum x_1^2=55\)、\(\sum x_2^2=82\)、\(\sum y^2=539\)、\(\sum x_1y=158\)、\(\sum x_2y=148\)。</p>
+<p>用偏最小平方配適 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i\)，第一個方向 \(Z_1=\phi_1X_1+\phi_2X_2\)。不標準化，求 \(\phi_1\) 與 \(\phi_2\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(\phi_1=2.3,\ \phi_2=-0.81395\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>PLS 第一個方向的係數是 \(y\) 對每個 \(X_j\) 做簡單迴歸的斜率 \(S_{x_jy}/S_{x_jx_j}\)：
+\[\phi_1=\frac{158-15(45)/5}{55-15^2/5}=\frac{158-135}{55-45}=\frac{23}{10}=2.3,\]
+\[\phi_2=\frac{148-18(45)/5}{82-18^2/5}=\frac{148-162}{82-64.8}=\frac{-14}{17.2}=-0.81395 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>是 \(y\) 對 \(X_j\) 的迴歸（\(S_{xy}/S_{xx}\)），不是 \(X_j\) 對 \(y\) 的迴歸（\(S_{xy}/S_{yy}\)）。\(\sum y^2=539\) 是用不到的資訊。</p></div></div></article><article class="exercise" id="q8-27"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 8.27 題</b><small>・講義 p.147・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S19:37] You want to perform a regression of \(Y\) onto predictors \(X_1,X_2,\ldots,X_p\), using a large number of observations, and are considering the following modelling techniques:</p>
+<ul>
+<li>Lasso Regression</li>
+<li>Partial Least Squares</li>
+<li>Principal Component Analysis</li>
+<li>Ridge Regression</li>
+</ul>
+<p>Determine how many of the above modelling procedures perform variable selection.</p>
+<div class="opts">
+<p>(A) 0</p>
+<p>(B) 1</p>
+<p>(C) 2</p>
+<p>(D) 3</p>
+<p>(E) 4</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2019 春季第 37 題）想用大量觀察把 \(Y\) 對 \(X_1,\ldots,X_p\) 做迴歸，考慮下列方法：lasso 迴歸、偏最小平方、主成分分析、ridge 迴歸。其中幾個會做變數選擇？</p>
+<div class="opts">
+<p>(A) 0　(B) 1　(C) 2　(D) 3　(E) 4</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 1</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>只有 <strong>lasso</strong> 會把係數設成 0、把變數拿掉。ridge 只縮小係數不會到 0；主成分分析與偏最小平方造出的新變數是<strong>全部</strong>原始變數的線性組合，原始變數一個也沒被拿掉，只是降低維度。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（5 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC8-4-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.4-1</b><small>仿 SOA 樣題・跨章：第 17 章・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>The first principal component of two variables is \(Z_1=0.8(X_1-\bar X_1)-0.6(X_2-\bar X_2)\), with \(\bar X_1=10\) and \(\bar X_2=20\).</p>
+<p>Calculate the principal component score of the observation \((X_1,X_2)=(12,\ 23)\).</p>
+<div class="opts">
+<p>(A) \(-4.2\)</p>
+<p>(B) \(-0.2\)</p>
+<p>(C) 0.2</p>
+<p>(D) 3.4</p>
+<p>(E) 4.2</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>\(Z_1=0.8(X_1-\bar X_1)-0.6(X_2-\bar X_2)\)，\(\bar X_1=10\)、\(\bar X_2=20\)。求 \((12,23)\) 的主成分分數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：\(-0.2\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(0.8(12-10)-0.6(23-20)=1.6-1.8=-0.2\)。</p>
+<p>(A) \(-4.2\) 是沒有置中：\(0.8(12)-0.6(23)=9.6-13.8\)。(D) 3.4 是把負號弄丟（\(1.6+1.8\)）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>分數用置中後的值算。</p></div></div></article><article class="exercise concept-q" id="qC8-4-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.4-2</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Partial least squares is applied to the following data without standardizing the predictors:</p>
+<table>
+<thead>
+<tr>
+<th>\(x_1\)</th>
+<th>\(x_2\)</th>
+<th>\(y\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>5</td>
+</tr>
+<tr>
+<td>3</td>
+<td>4</td>
+<td>6</td>
+</tr>
+<tr>
+<td>4</td>
+<td>3</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+<p>The first PLS direction is \(Z_1=\phi_1X_1+\phi_2X_2\). Calculate \(\phi_1\).</p>
+<div class="opts">
+<p>(A) 0.45</p>
+<p>(B) 1.00</p>
+<p>(C) 1.10</p>
+<p>(D) 2.20</p>
+<p>(E) 2.75</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>不標準化，用偏最小平方，第一個方向 \(Z_1=\phi_1X_1+\phi_2X_2\)。求 \(\phi_1\)。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：2.20</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\phi_1\) 是 \(y\) 對 \(x_1\) 的簡單迴歸斜率。\(\sum x_1=10\)、\(\sum x_1^2=30\)，\(S_{x_1x_1}=30-25=5\)；\(\sum y=24\)、\(\sum x_1y=3+10+18+40=71\)，\(S_{x_1y}=71-10(24)/4=11\)。\(\phi_1=11/5=2.20\)。</p>
+<p>（同理 \(\sum x_2y=65\)，\(\phi_2=(65-60)/5=1.00\)，是選項 (B)。）(A) 0.45 是把比值倒過來（\(S_{x_1x_1}/S_{x_1y}=5/11\)）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>是「\(y\) 對 \(X_j\)」的斜率 \(S_{x_jy}/S_{x_jx_j}\)。</p></div></div></article><article class="exercise concept-q" id="qC8-4-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.4-3</b><small>仿 SOA 樣題・跨章：第 17 章・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. Principal components regression uses the response variable when constructing the principal components.</p>
+<p>II. Partial least squares uses the response variable when constructing its directions.</p>
+<p>III. In both principal components regression and partial least squares, the number of components is typically chosen by cross-validation.</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) II and III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪些正確？</p>
+<div class="items">
+<p>I. PCR 造主成分時用到反應變數。</p>
+<p>II. PLS 造方向時用到反應變數。</p>
+<p>III. PCR 與 PLS 的成分個數通常用交叉驗證選。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：只有 II、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：主成分只看解釋變數，是非監督的；這正是 PCR 的弱點。II 對：PLS 是監督式。III 對。</p></div></div></article><article class="exercise concept-q" id="qC8-4-4"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.4-4</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements is true.</p>
+<div class="opts">
+<p>(A) Principal components regression performs feature selection.</p>
+<p>(B) Principal components regression using all \(k\) principal components gives the same fitted values as least squares on the original \(k\) predictors.</p>
+<p>(C) Principal components are constructed to be uncorrelated with the response.</p>
+<p>(D) The loadings of each principal component must sum to 1.</p>
+<p>(E) Partial least squares always has lower test MSE than principal components regression.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>下列哪一句正確？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：用全部 \(k\) 個主成分等於最小平方</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>(B) 對：\(k\) 個主成分是原始變數的一組可逆線性轉換，張出同一個空間，最小平方的配適值相同，沒有降維也沒有限制。</p>
+<p>(A) 錯：主成分用到全部變數。(C) 錯：主成分彼此不相關，和反應變數無關。(D) 錯：是平方和為 1。(E) 錯：PLS 偏差較低、變異數較高，不一定比較好。</p></div></div></article><article class="exercise concept-q" id="qC8-4-5"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.4-5</b><small>仿 SOA 樣題・<a href="#s4">回到本節開頭</a></small></div><div class="prompt"><p>In principal components regression, the number of components used, \(M\), is increased from 1 to \(k\). Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. The squared bias generally decreases.</p>
+<p>II. The variance generally decreases.</p>
+<p>III. The training residual sum of squares does not increase.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>PCR 的成分個數 \(M\) 從 1 增加到 \(k\)，下列哪些正確？</p>
+<div class="items">
+<p>I. 偏差平方通常下降。</p>
+<p>II. 變異數通常下降。</p>
+<p>III. 訓練 RSS 不會上升。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：只有 I、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(M\) 越大，模型越接近最小平方：限制越少，偏差下降（I 對）、變異數上升（II 錯）。多放一個成分等於多一個解釋變數，訓練 RSS 不會上升（III 對）。測試 MSE 對 \(M\) 是 U 形。</p></div></div></article></div></section><section class="unit" id="s5"><h2>8.5 維度詛咒</h2><h3>一、變數多到接近觀察數時會發生什麼事</h3>
+<p>\(k\) 很大、特別是 \(k\ge n\) 時：</p>
+<ul>
+<li>最小平方可以讓殘差全部是 0（\(k+1\ge n\) 時，係數夠多，可以讓配適的面穿過每一個點）。</li>
+<li>\(R^2=1\)，調整 \(R^2\) 也接近 1 或沒有定義；\(s^2\) 的自由度 \(n-k-1\le0\)，無法估計。</li>
+<li>係數甚至不唯一（\(X&#x27;X\) 不可逆，<a href="ch02.html#s2">第 2 章 2.2 節</a>）。</li>
+</ul>
+<p>訓練資料上的每一個指標都完美，但模型在新資料上幾乎一定表現很差。</p>
+<figure><img src="assets/fig/ch08-curse.svg" alt="模擬：，真正有關的只有前 2 個解釋變數，其餘都是純雜訊（重複 200 次）。橫軸是放進模型的變數個數。左：訓練  從 0.64（）一路升到 0.99（），調整  大致持平在 0.6 左右，兩者都看不出模型在變差。右：1,000 筆新資料上的測試 MSE， 時約 4.4，接近不可降低的誤差 4；之後每加一個雜訊變數就上升， 時約 8， 時接近 100。" loading="lazy"><figcaption>模擬：\(n=30\)，真正有關的只有前 2 個解釋變數，其餘都是純雜訊（重複 200 次）。橫軸是放進模型的變數個數。左：訓練 \(R^2\) 從 0.64（\(k=2\)）一路升到 0.99（\(k=28\)），調整 \(R^2\) 大致持平在 0.6 左右，兩者都看不出模型在變差。右：1,000 筆新資料上的測試 MSE，\(k=2\) 時約 4.4，接近不可降低的誤差 4；之後每加一個雜訊變數就上升，\(k=15\) 時約 8，\(k=28\) 時接近 100。</figcaption></figure>
+
+<h3>二、維度詛咒的意思</h3>
+<p><strong>維度詛咒</strong>（curse of dimensionality）在這裡指：</p>
+<blockquote>
+<p>在已經有很多變數的模型裡再加變數，模型會變差，除非新變數真的和反應變數有關。</p>
+</blockquote>
+<p>每個雜訊變數都會讓模型多一個可以「記住」雜訊的方向，變異數上升，而偏差沒有下降。即使新變數和 \(y\) 稍微有關，若它的貢獻比增加的變異數小，加進去仍是虧的。</p>
+<h3>三、所以要怎麼辦</h3>
+<ol>
+<li><strong>限制複雜度</strong>：子集選擇（<a href="ch07.html">第 7 章</a>）、ridge、lasso、PCR、PLS，本質上都是在控制「實際有多少自由度」。</li>
+<li><strong>調整參數一定要選對</strong>：\(\lambda\)、\(M\)、變數個數。</li>
+<li><strong>用驗證集或交叉驗證評估</strong>（<a href="ch06.html">第 6 章</a>）。變數很多時，\(C_p\)、AIC、BIC 需要的 \(\sigma^2\) 估計本身就不可靠，調整 \(R^2\) 也會被騙，只有在沒參與配適的資料上看誤差才可信。</li>
+</ol>
+<p>這也是<a href="ch15.html">第 15 章</a> K 最近鄰會再遇到的問題：變數一多，「最近的鄰居」其實都很遠。</p>
+<div class="box exam">
+<div class="box-t">考試怎麼考：維度詛咒</div>
+<ul>
+<li>「\(k\) 接近或超過 \(n\) 時，\(R^2\) 接近 1、殘差接近 0」對；「所以模型預測得很好」錯。</li>
+<li>「加入和反應無關的變數會讓高維模型變差」對，這就是維度詛咒的定義。</li>
+<li>「高維時用交叉驗證或驗證集評估模型」對；「用訓練資料的 \(R^2\) 或調整 \(R^2\) 評估」錯。</li>
+</ul>
+</div>
+<div class="box key">
+<div class="box-t">本章總整理</div>
+<ol>
+<li>收縮：\(\mathrm{RSS}+\lambda P(\boldsymbol\beta)\)，截距不罰；\(\lambda=0\) 是最小平方，\(\lambda\to\infty\) 只剩截距。等價的預算形式 \(P\le s\)，\(\lambda\) 和 \(s\) 反方向。</li>
+<li>\(\lambda\) 增加：偏差平方、訓練 MSE 上升；變異數下降；測試 MSE 是 U 形。用交叉驗證選 \(\lambda\)。</li>
+<li>ridge：\(P=\sum\beta_j^2\)；一個變數 \(b_1^R=S_{xy}/(S_{xx}+\lambda)\)；\(X=I\) 時 \(y_j/(1+\lambda)\)；不會變 0；常態先驗，後驗眾數＝平均數。</li>
+<li>lasso：\(P=\sum\lvert\beta_j\rvert\)；一個變數 \(b_1^L=(S_{xy}-\lambda/2)/S_{xx}\)，減到 0 為止；\(X=I\) 時軟門檻 \(\lambda/2\)；會做變數選擇；雙指數先驗，只是後驗眾數。</li>
+<li>收縮與 PCR 都要先把解釋變數標準化。</li>
+<li>PCR：非監督造主成分、負荷量平方和為 1；PLS：監督式，第一個方向的係數是 \(y\) 對各 \(X_j\) 的簡單迴歸斜率。兩者都不做變數選擇；PLS 偏差較低、變異數較高，整體不一定比較好。</li>
+<li>維度詛咒：變數多到接近 \(n\) 時，訓練指標全部失真；加入無關的變數只會讓模型變差。</li>
+</ol>
+</div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（3 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC8-5-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.5-1</b><small>仿 SOA 樣題・跨章：第 6,7 章・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>A model has nearly as many predictors as observations. Determine which of the following statements is/are true.</p>
+<div class="items">
+<p>I. A training \(R^2\) close to 1 indicates the model will predict well.</p>
+<p>II. Cross-validation is a feasible way to assess the model.</p>
+<p>III. Adding a predictor that is truly related to the response can still improve the model.</p>
+</div>
+<div class="opts">
+<p>(A) III only</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>解釋變數個數接近觀察數的模型，下列哪些正確？</p>
+<div class="items">
+<p>I. 訓練 \(R^2\) 接近 1 表示預測會很好。</p>
+<p>II. 交叉驗證是可行的評估方法。</p>
+<p>III. 加入真正和反應變數有關的變數仍可能改善模型。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)：只有 II、III 正確</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：變數多到接近 \(n\) 時，訓練 \(R^2\) 幾乎必然接近 1，即使全是雜訊（<a href="ch08.html#s5">8.5 節</a>的模擬）。II 對：只有沒參與配適的資料上的誤差可信。III 對：維度詛咒說的是加入<strong>無關</strong>的變數會變差。</p></div></div></article><article class="exercise concept-q" id="qC8-5-2"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.5-2</b><small>仿 SOA 樣題・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>A least squares model with an intercept is fitted to 20 observations whose predictors are in general position. Determine the smallest number of predictors that guarantees the residuals are all zero.</p>
+<div class="opts">
+<p>(A) 18</p>
+<p>(B) 19</p>
+<p>(C) 20</p>
+<p>(D) 21</p>
+<p>(E) The residuals can never all be zero.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>20 筆觀察、有截距的最小平方，解釋變數彼此沒有特殊的線性關係。至少要幾個解釋變數才能保證殘差全部為 0？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)：19</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>有截距時共 \(k+1\) 個係數。要讓配適面穿過 20 個點，需要 \(k+1=20\) 個係數，即 \(k=19\)。這時 \(R^2=1\)，殘差自由度 \(n-k-1=0\)，\(s^2\) 無法估計。</p>
+<p>(C) 20 是忘了截距也算一個係數。</p></div></div></article><article class="exercise concept-q" id="qC8-5-3"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C8.5-3</b><small>仿 SOA 樣題・跨章：第 7 章・<a href="#s5">回到本節開頭</a></small></div><div class="prompt"><p>Determine which of the following statements about high-dimensional regression is NOT true.</p>
+<div class="opts">
+<p>(A) When the number of predictors is close to the number of observations, least squares tends to overfit.</p>
+<p>(B) Adding predictors unrelated to the response tends to increase test error in high-dimensional settings.</p>
+<p>(C) Regularization is unnecessary when the number of predictors exceeds the number of observations.</p>
+<p>(D) Adjusted \(R^2\) computed on the training data can be misleading in high dimensions.</p>
+<p>(E) Selecting the tuning parameter correctly is critical for shrinkage methods.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於高維度迴歸，下列哪一句<strong>不正確</strong>？</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)：\(k&gt;n\) 時正是最需要正則化的時候</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>(C) 錯：\(k&gt;n\) 時最小平方甚至沒有唯一解，必須靠子集選擇、ridge、lasso、PCR 等方法限制複雜度。其他四句是 <a href="ch08.html#s5">8.5 節</a>的重點。</p></div></div></article></div></section><section class="unit" id="exercises"><h2>章末其餘習題（13 題，★ 精選題已放在各節後面）</h2><article class="exercise" id="q8-1"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.1 題</b><small>・講義 p.139・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>For ridge regression, which of the following patterns does the test MSE follow as the tuning parameter is increased?</p>
+<div class="opts">
+<p>(A) Flat.</p>
+<p>(B) Decreasing.</p>
+<p>(C) Increasing.</p>
+<p>(D) First decreasing, then increasing.</p>
+<p>(E) First increasing, then decreasing.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>對 ridge 迴歸，調整參數 \(\lambda\) 增加時，測試 MSE 呈現哪一種形狀？</p>
+<div class="opts">
+<p>(A) 持平　(B) 遞減　(C) 遞增　(D) 先減後增　(E) 先增後減</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 先減後增</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\lambda=0\) 是最小平方：沒有偏差，但變異數大。\(\lambda\) 增加時偏差平方上升、變異數下降。一開始變異數降得比偏差平方升得快，測試 MSE 下降；到了最佳的 \(\lambda\) 之後，變異數已經降不太下去，偏差平方繼續上升，測試 MSE 回升（<a href="ch08.html#s1">8.1 節</a>的模擬圖）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>這是「典型」的形狀。若最小平方本身的變異數就很小（例如 \(n\) 遠大於 \(k\)、變數不相關），最佳的 \(\lambda\) 可能接近 0，測試 MSE 一開始就上升。考試問「典型的形狀」時答 U 形。</p></div></div></article><article class="exercise" id="q8-2"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.2 題</b><small>・講義 p.139・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>Consider the following fitted linear model:</p>
+<p>\[y_i=11.5+2.5x_{i1}-3.1x_{i2}+0.8x_{i3}+\varepsilon_i .\]</p>
+<p>Calculate the shrinkage penalty imposed by ridge regression when \(\lambda=3\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>配適好的線性模型為
+求 \(\lambda=3\) 時 ridge 迴歸的收縮懲罰。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>49.5</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>ridge 的懲罰是 \(\lambda\sum_{j\ge1}b_j^2\)，截距不算：
+\[3\big(2.5^2+(-3.1)^2+0.8^2\big)=3(6.25+9.61+0.64)=3\times16.5=49.5 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>不要把截距 11.5 算進去；負號平方後消失。</p></div></div></article><article class="exercise" id="q8-4"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.4 題</b><small>・講義 p.139・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>Consider the following fitted linear model:</p>
+<p>\[y_i=9.2+3.4x_{i1}-2.4x_{i2}+0.8x_{i3}+2.1x_{i4}+\varepsilon_i .\]</p>
+<p>Calculate the shrinkage penalty imposed by the lasso when \(\lambda=5\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>配適好的線性模型為
+求 \(\lambda=5\) 時 lasso 的收縮懲罰。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>43.5</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>lasso 的懲罰是 \(\lambda\sum_{j\ge1}\lvert b_j\rvert\)：
+\[5\,(3.4+2.4+0.8+2.1)=5\times8.7=43.5 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>\(-2.4\) 取絕對值是 2.4；截距 9.2 不算。</p></div></div></article><article class="exercise" id="q8-6"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.6 題</b><small>・講義 p.139・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-S19:28] Determine which one of the following statements about ridge regression is false.</p>
+<div class="opts">
+<p>(A) As the tuning parameter \(\lambda\to\infty\), the coefficients tend to zero.</p>
+<p>(B) The ridge regression coefficients can be calculated by determining the coefficients \(\hat\beta_0^R,\hat\beta_1^R,\ldots,\hat\beta_p^R\) that minimize \(\sum_{i=1}^n\big(y_i-\beta_0-\sum_{j=1}^p\beta_jx_{ij}\big)^2+\lambda\sum_{j=1}^p\beta_j^2\).</p>
+<p>(C) Unlike standard least square coefficients, ridge regression coefficients are not scale equivariant.</p>
+<p>(D) The shrinkage penalty is applied to all coefficient estimates except for the intercept.</p>
+<p>(E) Ridge regression shrinks the coefficient estimates, which has the benefit of reducing the bias.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2019 春季第 28 題）下列關於 ridge 迴歸的敘述，哪一個是<strong>錯</strong>的？</p>
+<div class="opts">
+<p>(A) 調整參數 \(\lambda\to\infty\) 時，係數趨近 0。</p>
+<p>(B) ridge 迴歸的係數是使 \(\sum_{i=1}^n\big(y_i-\beta_0-\sum_{j=1}^p\beta_jx_{ij}\big)^2+\lambda\sum_{j=1}^p\beta_j^2\) 最小的 \(\beta_0^R,\beta_1^R,\ldots,\beta_p^R\)。</p>
+<p>(C) 和最小平方不同，ridge 迴歸的係數不具尺度等變性。</p>
+<p>(D) 收縮懲罰作用在截距以外的所有係數。</p>
+<p>(E) ridge 迴歸把係數估計值收縮，好處是減少偏差。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>收縮是<strong>增加</strong>偏差、<strong>減少</strong>變異數，(E) 錯。</p>
+<p>(A) 對：懲罰無限大時只能讓斜率都是 0。(B) 是定義。(C) 對：懲罰把各係數平方直接相加，換單位會改變解，所以要先標準化。(D) 對：截距不受懲罰。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>「收縮減少偏差」和「收縮減少變異數」只差兩個字，要記清楚方向：收縮用偏差換變異數。</p></div></div></article><article class="exercise" id="q8-7"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.7 題</b><small>・講義 p.140・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are given the coefficient vector \((3,-1,4,1,-6,-9)\).</p>
+<p>Calculate the \(\ell_2\) norm of the vector.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>係數向量為 \((3,-1,4,1,-6,-9)\)。求它的 \(\ell_2\) 範數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>12</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\ell_2\) 範數是各分量平方和開根號：
+\[\sqrt{3^2+1^2+4^2+1^2+6^2+9^2}=\sqrt{9+1+16+1+36+81}=\sqrt{144}=12 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>ridge 的懲罰用的是 \(\ell_2\) 範數的<strong>平方</strong> 144，不是 12。</p></div></div></article><article class="exercise" id="q8-8"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.8 題</b><small>・講義 p.140・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are given the coefficient vector \((3,-1,4,1,-6,-9)\).</p>
+<p>Calculate the \(\ell_1\) norm of the vector.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同上題的係數向量 \((3,-1,4,1,-6,-9)\)，求它的 \(\ell_1\) 範數。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>24</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\ell_1\) 範數是各分量絕對值的和：\(3+1+4+1+6+9=24\)。這就是 lasso 懲罰裡 \(\lambda\) 後面的那個量。</p></div></div></article><article class="exercise" id="q8-11"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.11 題</b><small>・講義 p.140・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F19:36] You are given the following three statements regarding shrinkage methods in linear regression:</p>
+<div class="items">
+<p>I. As tuning parameter \(\lambda\) increases towards \(\infty\), the penalty term has no effect and a ridge regression will result in the unconstrained estimates.</p>
+<p>II. For a given dataset, the number of variables in a lasso regression model will always be greater than or equal to the number of variables in a ridge regression model.</p>
+<p>III. The issue of selecting a tuning parameter for a ridge regression can be addressed with cross-validation.</p>
+</div>
+<p>Determine which of the above statements are true.</p>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2019 秋季第 36 題）關於線性迴歸的收縮方法，下列三個敘述：</p>
+<div class="items">
+<p>I. 調整參數 \(\lambda\) 增加到無限大時，懲罰項沒有作用，ridge 迴歸得到不受限制的估計。</p>
+<p>II. 對同一組資料，lasso 模型中的變數個數一定大於或等於 ridge 模型中的變數個數。</p>
+<p>III. ridge 迴歸選擇調整參數的問題，可以用交叉驗證解決。</p>
+</div>
+<p>哪些正確？</p>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) 只有 III</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：\(\lambda\to\infty\) 時懲罰最重，斜率趨近 0；<strong>\(\lambda=0\)</strong> 才是不受限制的最小平方。</p>
+<p>II 錯：方向反了。ridge 保留全部變數，lasso 會把一些設成 0，所以 lasso 的變數個數<strong>小於或等於</strong> ridge。</p>
+<p>III 對：\(\lambda\) 用交叉驗證選（<a href="ch06.html">第 6 章</a>）。</p></div></div></article><article class="exercise" id="q8-13"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.13 題</b><small>・講義 p.141・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>A ridge regression is performed based on two predictors and an intercept:
+\[y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}\]
+For \(\beta_1\) and \(\beta_2\), only integer values between 1 and 4 are considered.</p>
+<p>The resulting lowest residual sum of squares for the optimal value of \(\hat\beta_0\) and each combination of \(\hat\beta_1\) and \(\hat\beta_2\) is:</p>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_2\) \ \(\hat\beta_1\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>56</td>
+<td>52</td>
+<td>46</td>
+<td>52</td>
+</tr>
+<tr>
+<td>2</td>
+<td>48</td>
+<td>41</td>
+<td>34</td>
+<td>16</td>
+</tr>
+<tr>
+<td>3</td>
+<td>42</td>
+<td>37</td>
+<td>31</td>
+<td>33</td>
+</tr>
+<tr>
+<td>4</td>
+<td>36</td>
+<td>40</td>
+<td>44</td>
+<td>48</td>
+</tr>
+</tbody>
+</table>
+<p>The budget parameter for the ridge regression is \(s=12\). Determine the estimates of \(\beta_1\) and \(\beta_2\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以兩個解釋變數與截距做 ridge 迴歸：\(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}\)。\(\beta_1,\beta_2\) 只考慮 1 到 4 的整數。在最佳 \(\beta_0\) 之下，各組 \((b_1,b_2)\) 的最小殘差平方和如下（列是 \(b_2\)、欄是 \(b_1\)）：</p>
+<p>預算參數 \(s=12\)。求 \(b_1\) 與 \(b_2\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(b_1=2,\ b_2=2\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>ridge 的預算限制是 \(b_1^2+b_2^2\le12\)。逐一檢查：任何一個係數是 4，平方就是 16，超過預算；一個是 3 時，另一個只能是 1（\(9+1=10\)；\(9+4=13\) 超過）。允許的組合與 RSS：</p>
+<table>
+<thead>
+<tr>
+<th>\((b_1,b_2)\)</th>
+<th>\((1,1)\)</th>
+<th>\((2,1)\)</th>
+<th>\((3,1)\)</th>
+<th>\((1,2)\)</th>
+<th>\((2,2)\)</th>
+<th>\((1,3)\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>平方和</td>
+<td>2</td>
+<td>5</td>
+<td>10</td>
+<td>5</td>
+<td>8</td>
+<td>10</td>
+</tr>
+<tr>
+<td>RSS</td>
+<td>56</td>
+<td>52</td>
+<td>46</td>
+<td>48</td>
+<td>41</td>
+<td>42</td>
+</tr>
+</tbody>
+</table>
+<p>最小 RSS 41，在 \((b_1,b_2)=(2,2)\)。表中 RSS 只有 16 的 \((4,2)\) 平方和是 20，不允許。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>先看清楚列是 \(b_2\)、欄是 \(b_1\)。預算題不加懲罰，直接刪掉超出預算的格子再找最小。</p></div></div></article><article class="exercise" id="q8-20"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.20 題</b><small>・講義 p.145・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>A linear regression is performed based on two predictors and an intercept:
+\[y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i\]
+For \(\beta_1\) and \(\beta_2\), only integer values between 0 and 3 are considered.</p>
+<p>The resulting lowest residual sum of squares for the optimal value of \(\hat\beta_0\) and each combination of \(\hat\beta_1\) and \(\hat\beta_2\) is:</p>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_2\) \ \(\hat\beta_1\)</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>82</td>
+<td>77</td>
+<td>70</td>
+<td>62</td>
+</tr>
+<tr>
+<td>1</td>
+<td>74</td>
+<td>70</td>
+<td>65</td>
+<td>61</td>
+</tr>
+<tr>
+<td>2</td>
+<td>69</td>
+<td>63</td>
+<td>62</td>
+<td>60</td>
+</tr>
+<tr>
+<td>3</td>
+<td>67</td>
+<td>60</td>
+<td>59</td>
+<td>58</td>
+</tr>
+</tbody>
+</table>
+<p>The lasso with budget parameter \(s=3\) is performed. Determine the fitted values of \(\beta_1\) and \(\beta_2\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以兩個解釋變數與截距做線性迴歸：\(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i\)。\(\beta_1,\beta_2\) 只考慮 0 到 3 的整數。在最佳 \(\beta_0\) 之下，各組合的最小 RSS 如下（列是 \(b_2\)、欄是 \(b_1\)）：</p>
+<p>使用預算參數 \(s=3\) 的 lasso，求 \(b_1\) 與 \(b_2\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(b_1=3,\ b_2=0\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>限制 \(\lvert b_1\rvert+\lvert b_2\rvert\le3\)，也就是表的左上三角（含對角線 \(b_1+b_2=3\)）：</p>
+<table>
+<thead>
+<tr>
+<th>\(b_1+b_2\)</th>
+<th>允許的格子與 RSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>\((0,0)\)：82</td>
+</tr>
+<tr>
+<td>1</td>
+<td>\((1,0)\)：77；\((0,1)\)：74</td>
+</tr>
+<tr>
+<td>2</td>
+<td>\((2,0)\)：70；\((1,1)\)：70；\((0,2)\)：69</td>
+</tr>
+<tr>
+<td>3</td>
+<td>\((3,0)\)：62；\((2,1)\)：65；\((1,2)\)：63；\((0,3)\)：67</td>
+</tr>
+</tbody>
+</table>
+<p>最小 62，在 \((b_1,b_2)=(3,0)\)：lasso 把 \(b_2\) 設成 0。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>列是 \(b_2\)：右上角的 62 是 \(b_1=3\)、\(b_2=0\)，不是反過來。</p></div></div></article><article class="exercise" id="q8-21"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.21 題</b><small>・講義 p.146・<a href="#s3">回到對應概念</a></small></div><div class="prompt"><p>A linear regression is performed based on two predictors and an intercept:
+\[y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\varepsilon_i\]
+For \(\beta_1\) and \(\beta_2\), only integer values between 0 and 3 are considered.</p>
+<p>The resulting lowest residual sum of squares for the optimal value of \(\hat\beta_0\) and each combination of \(\hat\beta_1\) and \(\hat\beta_2\) is:</p>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_2\) \ \(\hat\beta_1\)</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>82</td>
+<td>77</td>
+<td>70</td>
+<td>67</td>
+</tr>
+<tr>
+<td>1</td>
+<td>74</td>
+<td>70</td>
+<td>65</td>
+<td>62</td>
+</tr>
+<tr>
+<td>2</td>
+<td>69</td>
+<td>64</td>
+<td>62</td>
+<td>57</td>
+</tr>
+<tr>
+<td>3</td>
+<td>67</td>
+<td>63</td>
+<td>59</td>
+<td>56</td>
+</tr>
+</tbody>
+</table>
+<p>The lasso with tuning parameter \(\lambda=4\) is performed. Determine the fitted values of \(\beta_1\) and \(\beta_2\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>同上題的模型，但 RSS 表改為（列是 \(b_2\)、欄是 \(b_1\)）：</p>
+<p>使用調整參數 \(\lambda=4\) 的 lasso，求 \(b_1\) 與 \(b_2\)。</p>
+<p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(b_1=1,\ b_2=2\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>每一格加上 \(4(\lvert b_1\rvert+\lvert b_2\rvert)\)：</p>
+<table>
+<thead>
+<tr>
+<th>\(b_2\) \ \(b_1\)</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>\(82+0=82\)</td>
+<td>\(77+4=81\)</td>
+<td>\(70+8=78\)</td>
+<td>\(67+12=79\)</td>
+</tr>
+<tr>
+<td>1</td>
+<td>\(74+4=78\)</td>
+<td>\(70+8=78\)</td>
+<td>\(65+12=77\)</td>
+<td>\(62+16=78\)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>\(69+8=77\)</td>
+<td>\(64+12=76\)</td>
+<td>\(62+16=78\)</td>
+<td>\(57+20=77\)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>\(67+12=79\)</td>
+<td>\(63+16=79\)</td>
+<td>\(59+20=79\)</td>
+<td>\(56+24=80\)</td>
+</tr>
+</tbody>
+</table>
+<p>最小 76，在 \((b_1,b_2)=(1,2)\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>RSS 最小的 56（\((3,3)\)）加上懲罰後是 80，反而最大。</p></div></div></article><article class="exercise" id="q8-24"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.24 題</b><small>・講義 p.147・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>You are given the following statements regarding partial least squares:</p>
+<div class="items">
+<p>I. Partial least squares is a supervised alternative to principal components analysis.</p>
+<p>II. The direction of a partial least squares variable does not fit the predictors as well as the direction of a principal components regression.</p>
+<p>III. The bias of partial least squares is higher than that of principal components regression.</p>
+</div>
+<p>Which statements are true?</p>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) I and II</p>
+<p>(D) I and III</p>
+<p>(E) I, II, and III</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>關於偏最小平方的三個敘述：</p>
+<div class="items">
+<p>I. 偏最小平方是主成分分析的監督式替代方法。</p>
+<p>II. 偏最小平方變數的方向配適解釋變數的程度，不如主成分迴歸的方向。</p>
+<p>III. 偏最小平方的偏差比主成分迴歸高。</p>
+</div>
+<p>哪些正確？</p>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) I 與 II　(D) I 與 III　(E) I、II、III</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C) I 與 II</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：PLS 造新變數時用到反應變數，是監督式的。</p>
+<p>II 對：PCR 的方向專門為了讓解釋變數散得最開而選，PLS 要同時遷就 \(y\)，所以配適解釋變數的程度較差。</p>
+<p>III 錯：因為考慮了 \(y\)，PLS 的偏差<strong>較低</strong>、變異數較高。</p></div></div></article><article class="exercise" id="q8-26"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.26 題</b><small>・講義 p.147・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #8] Determine which of the following statements describe the advantages of using an alternative fitting procedure, such as subset selection and shrinkage, instead of least squares.</p>
+<div class="items">
+<p>I. Doing so will result in a simpler model</p>
+<p>II. Doing so will improve prediction accuracy</p>
+<p>III. The results are easier to interpret</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（SRM 樣題第 8 題）下列哪些敘述說明了使用替代的配適程序（例如子集選擇與收縮）而不使用最小平方的優點？</p>
+<div class="items">
+<p>I. 會得到較簡單的模型。</p>
+<p>II. 會改善預測的準確度。</p>
+<p>III. 結果較容易解釋。</p>
+</div>
+<div class="opts">
+<p>(A) 只有 I　(B) 只有 II　(C) 只有 III　(D) I、II、III　(E) 以上皆非</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) I、II、III</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>三個都是優點：變數變少（或係數變小）模型較簡單；用一點偏差換掉大量變異數，預測較準；變數少也比較容易解釋。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>嚴格說，ridge 不刪變數，「較簡單、較好解釋」主要來自子集選擇與 lasso；但題目問的是這類方法的優點，三個都選。</p></div></div></article><article class="exercise" id="q8-28"><div class="ex-head"><span class="ex-tag">練習</span><b>第 8.28 題</b><small>・講義 p.148・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>[MAS-I-F19:28] Determine which of the following statements about Principal Component Regression (PCR) is false.</p>
+<div class="opts">
+<p>(A) When performing PCR it is recommended that the modeler standardize each predictor prior to generating the principal component.</p>
+<p>(B) PCR is useful for performing feature selection.</p>
+<p>(C) PCR assumes that the directions in which the features show the most variation are the directions that are associated with the target.</p>
+<p>(D) PCR can reduce overfitting.</p>
+<p>(E) The first principal component direction of the data is that along which the observations vary the most.</p>
+</div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2019 秋季第 28 題）下列關於主成分迴歸（PCR）的敘述，哪一個是<strong>錯</strong>的？</p>
+<div class="opts">
+<p>(A) 做 PCR 時，建議在產生主成分之前先把每個解釋變數標準化。</p>
+<p>(B) PCR 適合用來做特徵選擇。</p>
+<p>(C) PCR 假設解釋變數變化最大的方向，就是和目標變數有關的方向。</p>
+<p>(D) PCR 可以減少過度配適。</p>
+<p>(E) 資料的第一主成分方向，是觀察值變化最大的方向。</p>
+</div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>(B) 錯：每個主成分都是全部解釋變數的線性組合，PCR 降低維度但不挑選原始變數。</p>
+<p>(A) 對：不標準化時單位大的變數會主導主成分。(C) 對：這正是 PCR 背後的假設，也是它的弱點。(D) 對：只用前幾個主成分，要估的係數變少，變異數下降。(E) 是第一主成分的定義。</p></div></div></article></section><button class="toggle-all float" type="button">顯示全部解答</button><div class="navfoot"><a href="ch07.html">← 第 7 章</a><a href="ch09.html">第 9 章 →</a></div></main></body></html>
