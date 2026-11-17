@@ -1,21 +1,25 @@
 :root{--ink:#172033;--muted:#5d6779;--navy:#0e1d30;--navy2:#1c3858;--gold:#b88938;--line:#dce1e8;--bg:#eef1f5;--paper:#fff;--blue:#17527c}
 *{box-sizing:border-box}
-html{scroll-padding-top:70px}
-body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.85 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+html{scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.8 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans CJK TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
 a{color:var(--blue)}
-.course-switcher{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:10px 22px;background:var(--navy);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18)}
-.course-switcher .brand{color:#fff;text-decoration:none;font-weight:700;letter-spacing:.02em;white-space:nowrap}
-.course-switcher .pickers{display:flex;align-items:center;gap:10px;margin-left:auto;min-width:0}
-.course-switcher label{font-size:13px;color:#c8d3e2;white-space:nowrap}
-.course-switcher select{background:var(--navy2);color:#fff;border:1px solid #2e5079;border-radius:7px;padding:6px 10px;font-size:14px;max-width:min(62vw,520px)}
-main.course{max-width:1000px;margin:0 auto;padding:22px 18px 60px}
-.ch-head{background:var(--paper);border-radius:14px;padding:26px 30px;border:1px solid var(--line);margin-bottom:16px}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:12px max(4vw,20px);background:#0e1d30;color:#fff;box-shadow:0 5px 20px #0002}
+.topbar .brand{font-weight:800;letter-spacing:.06em;white-space:nowrap;color:#fff;text-decoration:none}
+.topbar .pickers{display:flex;align-items:center;gap:10px;margin-left:auto;min-width:0}
+.topbar label{font-size:13px;color:#c9d5e4;white-space:nowrap}
+.topbar select{min-width:220px;max-width:480px;padding:10px 38px 10px 13px;border:1px solid #ffffff42;border-radius:8px;background:#1c3858;color:#fff;font:inherit;font-size:14px;cursor:pointer}
+#scopeSelect{min-width:0}
+.topbar button{font:inherit;font-size:12px;padding:8px 10px;border:1px solid #738598;border-radius:6px;background:transparent;color:#fff;cursor:pointer;white-space:nowrap}
+@media(max-width:650px){.topbar{flex-wrap:wrap;gap:7px 10px;padding:10px 14px}.topbar .pickers{flex:1 1 100%;margin-left:0;gap:8px}.topbar label{display:none}#scopeSelect{flex:0 0 104px;width:104px;min-width:0;padding-right:26px}#unitSelect{flex:1 1 0;width:0;min-width:0;max-width:none}.topbar button{min-height:46px}.topbar select{font-size:16px;min-height:46px}html{scroll-padding-top:100px}}
+
+main.course{max-width:1060px;margin:0 auto;padding:22px 22px 60px}
+.ch-head{background:var(--paper);border-radius:10px;padding:26px 30px;border:1px solid var(--line);margin-bottom:16px}
 .kicker{color:var(--gold);font-size:13px;font-weight:700;letter-spacing:.06em}
 h1{margin:4px 0 8px;font-size:30px;line-height:1.35;color:var(--navy)}
 .ch-sub{color:var(--muted);margin:0 0 12px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chips a{font-size:14px;padding:4px 12px;border-radius:999px;background:#eef3f9;border:1px solid #d3deea;text-decoration:none}
-.toc,.unit{background:var(--paper);border-radius:14px;padding:22px 30px;border:1px solid var(--line);margin-bottom:16px}
+.toc,.unit{background:var(--paper);border-radius:10px;padding:22px 30px;border:1px solid var(--line);margin-bottom:16px}
 .toc h2{font-size:18px;margin:0 0 6px}
 .unit>h2{font-size:23px;color:var(--navy);margin:2px 0 14px;padding-bottom:8px;border-bottom:2px solid #e6eaf0}
 .unit h3{font-size:18.5px;color:#173c55;margin:26px 0 8px}
@@ -48,18 +52,18 @@ th{background:#eef2f7}
 button.reveal{margin:8px 0 6px;font-size:13.5px;padding:3px 12px;border-radius:999px;border:1px solid #b9c6d6;background:#fff;color:#2a4a6b;cursor:pointer}
 .exercise.folded .solution{display:none}
 .sol-part{margin:10px 0;padding:8px 14px;border-radius:8px;background:#f5f8fb}
-.sol-part.答案{background:#eff8f1;border-left:4px solid #2f7d4f}
-.sol-part.易錯{background:#fff6f1;border-left:4px solid #c0612b}
+.sol-part.答案{background:#eef5f1;border-left:4px solid #2f7d4f}
+.sol-part.易錯{background:#fbf7ee;border:1px dashed #c9a96b}
 .sol-t{font-weight:700;font-size:14px;color:#1f4e78}
-.sol-part.答案 .sol-t{color:#1f5e3a}.sol-part.易錯 .sol-t{color:#9c4a1c}
+.sol-part.答案 .sol-t{color:#1f5e3a}.sol-part.易錯 .sol-t{color:#7d5a1d}
 a.concept{color:inherit;text-decoration:none;border-bottom:1.5px dashed #6d8fb3}
 .pop{position:fixed;z-index:50;max-width:340px;background:#fff;border:1px solid #c9d3df;border-radius:9px;padding:10px 13px;box-shadow:0 6px 22px rgba(0,0,0,.16);font-size:14px;line-height:1.6}
 .pop p{margin:0 0 6px}
 .back{position:fixed;right:18px;bottom:64px;z-index:40;padding:8px 14px;border-radius:999px;border:0;background:var(--navy);color:#fff;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.25)}
 .navfoot{display:flex;justify-content:space-between;margin:20px 4px}
-@media (max-width:640px){body{font-size:16px}.course-switcher{padding:8px 12px;flex-wrap:wrap;gap:6px}.course-switcher .pickers{margin-left:0;width:100%}.course-switcher select{max-width:none;flex:1 1 0;min-width:0;width:0}
- .ch-head,.toc,.unit{padding:16px 16px;border-radius:10px}main.course{padding:14px 10px 40px}h1{font-size:24px}.unit>h2{font-size:20px}.exercise{padding:12px 12px}}
-@media print{.course-switcher,button.reveal,button.toggle-all,.chip-note,.back,.navfoot,.chips{display:none!important}body{background:#fff;font-size:12.5pt}.ch-head,.toc,.unit{border:0;padding:0 0 10px}.exercise.folded .solution{display:block}.unit{break-before:page}figure,.box,.exercise{break-inside:avoid}}
+@media (max-width:700px){body{font-size:16px}
+ .ch-head,.toc,.unit{padding:16px 16px;border-radius:10px}main.course{padding:14px 12px 40px}h1{font-size:24px}.unit>h2{font-size:20px}.exercise{padding:12px 12px}}
+@media print{.topbar,button.reveal,button.toggle-all,.chip-note,.back,.navfoot,.chips{display:none!important}body{background:#fff;font-size:12.5pt}.ch-head,.toc,.unit{border:0;padding:0 0 10px}.exercise.folded .solution{display:block}.unit{break-before:page}figure,.box,.exercise{break-inside:avoid}}
 .katex{position:relative}.katex .katex-mathml{left:0;top:0}
 
 .sol-part.中文題意{background:#f4f2fa;border-left:4px solid #6550a8}.sol-part.中文題意 .sol-t{color:#4b3a86}
@@ -67,8 +71,6 @@ a.concept{color:inherit;text-decoration:none;border-bottom:1.5px dashed #6d8fb3}
 .prompt{font-family:inherit}
 .ex-tag.cc{background:#ebe6f7;color:#4b3a86}.sec-ex.cc .sec-ex-t{color:#4b3a86}
 .chip-note{font-size:14px;padding:4px 12px;border-radius:999px;background:#f3f0fa;border:1px solid #dcd3ef;color:#4b3a86}
-button.toggle-all{font-size:14px;padding:4px 14px;border-radius:999px;border:1px solid #1f4e78;background:#1f4e78;color:#fff;cursor:pointer}
-button.toggle-all.float{position:fixed;right:18px;bottom:18px;z-index:39;box-shadow:0 3px 12px rgba(0,0,0,.25);font-size:13.5px;padding:7px 14px}
 
 /* 2026/11/14 考點地圖、互動選擇題、數字作答框 */
 .box.map{background:#fff;border:1px solid #cfdbe8;border-top:4px solid #1c3858;box-shadow:0 1px 3px #0f1d2e12}
@@ -92,3 +94,31 @@ button.toggle-all.float{position:fixed;right:18px;bottom:18px;z-index:39;box-sha
 .num-box button{height:32px;padding:0 14px;border:0;border-radius:8px;background:#1c3858;color:#fff;font:inherit;font-weight:700;cursor:pointer}
 .num-tip{font-size:12.5px;color:#728396}.num-res{font-weight:700}.num-box.ok .num-res{color:#1f7a4a}.num-box.bad .num-res{color:#b4232c}
 @media print{.mc-hint,.mc-fb,.num-box{display:none!important}}
+
+/* 2026/11/17 練習測驗 */
+.exam-bar{position:sticky;top:66px;z-index:15;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 14px;padding:10px 16px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 3px 12px #0e1d3014}
+.exam-bar .timer{font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}.exam-bar .timer.low{color:#b4232c}
+.exam-bar .progress{color:var(--muted);font-size:14px}
+.exam-bar button{margin-left:auto;font:inherit;font-size:14px;padding:6px 14px;border-radius:8px;border:1px solid #1c3858;background:#1c3858;color:#fff;cursor:pointer}
+.exam-bar button+button{margin-left:0}.exam-bar button.reset{background:#fff;color:#1c3858}
+.exam-grid{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.exam-grid a{width:34px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:7px;background:#fff;text-decoration:none;font-size:13px;color:#405066}
+.exam-grid a.done{background:#e8f1fa;border-color:#8fb3d6}.exam-grid a.ok{background:#eaf6ef;border-color:#1f7a4a;color:#1f7a4a}.exam-grid a.bad{background:#fdf0f1;border-color:#b4232c;color:#b4232c}
+.exam-result{background:#fff;border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:10px;padding:16px 22px;margin-bottom:14px}
+.exam-result h2{margin:0 0 6px;color:var(--navy)}.exam-result tr.weak td{background:#fdf0f1}
+.exam-q{margin:14px 0;padding:14px 18px;border:1px solid var(--line);border-radius:10px;background:#fcfdfe}
+.exam-q .q-state{font-size:13.5px;font-weight:700;color:#405066}.exam-q .q-state.ok{color:#1f7a4a}.exam-q .q-state.bad{color:#b4232c}
+.opts.mc p.picked{border-color:#1c3858;background:#e8f1fa;font-weight:600}
+details.zh{margin:8px 0;padding:6px 12px;border-radius:8px;background:#f4f2fa}details.zh summary{cursor:pointer;color:#4b3a86;font-size:14px}
+.exam-list li{margin:8px 0}
+@media (max-width:650px){.exam-bar{top:122px}.exam-bar button{margin-left:0}}
+@media print{.exam-bar,.exam-grid{display:none!important}.exam-sol[hidden]{display:block!important}}
+/* 首頁 */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:10px}
+.tile{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:#fcfdfe;text-decoration:none;color:inherit;transition:border-color .15s,box-shadow .15s}
+.tile:hover{border-color:#8fb3d6;box-shadow:0 3px 12px #0e1d3014}
+.tile b{color:var(--navy);font-size:17px;line-height:1.45}.tile small{color:var(--muted);font-size:14px;line-height:1.6}.tile small.cnt{color:#405066;font-size:13px}
+article.sample{padding:14px 20px}article.sample h2{font-size:17px;margin:0 0 4px}
+.pdf-link{display:inline-block;margin-top:4px}
+.unit h3+ul>li{overflow-x:auto;overflow-y:hidden}
+main.course{overflow-x:clip}

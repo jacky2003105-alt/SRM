@@ -1,0 +1,946 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>練習測驗 3｜SRM 精算考試</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css?v=89e65295">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js?v=779c73c2"></script><script defer src="assets/exam.js?v=c722f25d"></script></head>
+<body><div class="topbar"><a class="brand" href="index.html">SRM 精算考試｜課程筆記</a><div class="pickers">
+<label for="scopeSelect" class="scope-label">考試範圍</label><select id="scopeSelect" aria-label="考試範圍"><option value="all">全部</option><option value="t1">統計學習基礎</option><option value="t2">線性模型</option><option value="t3">時間數列</option><option value="t4">決策樹</option><option value="t5">非監督式學習</option></select>
+<label for="unitSelect">選擇單元</label><select id="unitSelect" aria-label="選擇單元"><option value="index.html" data-scope="all">課程首頁</option><option value="ch01.html" data-scope="t1">第 1 章｜統計學習的基本問題</option><option value="ch02.html" data-scope="t2">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html" data-scope="t2">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html" data-scope="t2">第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html" data-scope="t2">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html" data-scope="t1">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html" data-scope="t2">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html" data-scope="t2">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html" data-scope="t2">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html" data-scope="t2">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html" data-scope="t2">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html" data-scope="t2">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html" data-scope="t2">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html" data-scope="t2">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html" data-scope="t2">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html" data-scope="t4">第 16 章｜決策樹與集成學習</option><option value="ch17.html" data-scope="t5">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html" data-scope="t5">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html" data-scope="t3">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html" data-scope="t3">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html" data-scope="t3">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="exams.html" data-scope="all">練習測驗</option><option value="samples.html" data-scope="all">SOA 樣題對照</option><option value="practice.html" data-scope="all">習題索引</option><option value="exam1.html" data-scope="all">練習測驗 1</option><option value="exam2.html" data-scope="all">練習測驗 2</option><option value="exam3.html" data-scope="all" selected>練習測驗 3</option><option value="exam4.html" data-scope="all">練習測驗 4</option><option value="exam5.html" data-scope="all">練習測驗 5</option><option value="exam6.html" data-scope="all">練習測驗 6</option></select></div></div><main class="course"><header class="ch-head"><div class="kicker">SRM・練習測驗</div><h1>練習測驗 3</h1><p class="ch-sub">35 題選擇題，正式考試的時間是 3.5 小時（每題平均 6 分鐘）。先按「開始計時」再作答；作答時不會顯示對錯，按「交卷」後才計分並顯示每一題的解析與對應章節。答案會暫存在這個瀏覽器裡，重新整理頁面不會不見。題目來源：講義 415～424 頁，解答 469～473 頁。</p></header><div class="exam-bar" data-minutes="210"><span class="timer">⏱ 3:30:00</span><span class="progress">已作答 0／35</span><button type="button" class="start">開始計時</button><button type="button" class="submit">交卷</button><button type="button" class="reset">清除重來</button></div><section class="exam-result" hidden></section><nav class="exam-grid"><a href="#q1" data-q="1">1</a><a href="#q2" data-q="2">2</a><a href="#q3" data-q="3">3</a><a href="#q4" data-q="4">4</a><a href="#q5" data-q="5">5</a><a href="#q6" data-q="6">6</a><a href="#q7" data-q="7">7</a><a href="#q8" data-q="8">8</a><a href="#q9" data-q="9">9</a><a href="#q10" data-q="10">10</a><a href="#q11" data-q="11">11</a><a href="#q12" data-q="12">12</a><a href="#q13" data-q="13">13</a><a href="#q14" data-q="14">14</a><a href="#q15" data-q="15">15</a><a href="#q16" data-q="16">16</a><a href="#q17" data-q="17">17</a><a href="#q18" data-q="18">18</a><a href="#q19" data-q="19">19</a><a href="#q20" data-q="20">20</a><a href="#q21" data-q="21">21</a><a href="#q22" data-q="22">22</a><a href="#q23" data-q="23">23</a><a href="#q24" data-q="24">24</a><a href="#q25" data-q="25">25</a><a href="#q26" data-q="26">26</a><a href="#q27" data-q="27">27</a><a href="#q28" data-q="28">28</a><a href="#q29" data-q="29">29</a><a href="#q30" data-q="30">30</a><a href="#q31" data-q="31">31</a><a href="#q32" data-q="32">32</a><a href="#q33" data-q="33">33</a><a href="#q34" data-q="34">34</a><a href="#q35" data-q="35">35</a></nav><section class="unit exam"><article class="exam-q" id="q1" data-key="A" data-ch="16"><div class="ex-head"><span class="ex-tag">第 1 題</span><span class="q-state"></span></div><div class="prompt"><p>A regression tree is built based on two predictors using cost complexity pruning. Cross-validation is used to select the best value of \(\alpha\).</p>
+<p>For \(\alpha=5\), the following tree is built based on the training data:</p>
+<figure><img src="assets/fig/pe3-q1.svg" alt="依原題重畫；條件成立走左邊。" loading="lazy"><figcaption>依原題重畫；條件成立走左邊。</figcaption></figure>
+
+<p>The test data is</p>
+<table>
+<thead>
+<tr>
+<th>\(X_1\)</th>
+<th>\(X_2\)</th>
+<th>\(Y\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>70</td>
+<td>45</td>
+<td>4</td>
+</tr>
+<tr>
+<td>110</td>
+<td>50</td>
+<td>10</td>
+</tr>
+<tr>
+<td>160</td>
+<td>70</td>
+<td>11</td>
+</tr>
+<tr>
+<td>180</td>
+<td>40</td>
+<td>13</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the mean squared prediction error on the test data.</p>
+<div class="opts">
+<p>(A) 4.5</p>
+<p>(B) 5.5</p>
+<p>(C) 6.5</p>
+<p>(D) 7.5</p>
+<p>(E) 8.5</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>\(\alpha=5\) 時由訓練資料得到上圖的迴歸樹。用 4 筆測試資料（見表）計算預測均方誤差。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>逐筆沿樹走（條件成立走左）：</p>
+<ul>
+<li>\((70,45)\)：\(X_1\le100\) 是→\(X_2\le40\) 否→5.5。</li>
+<li>\((110,50)\)：\(X_1\le100\) 否→\(X_1\le150\) 是→7.2。</li>
+<li>\((160,70)\)：否→否→\(X_2\le60\) 否→12.0。</li>
+<li>\((180,40)\)：否→否→\(X_2\le60\) 是→10.4。</li>
+</ul>
+<p>\[\text{MSE}=\frac{(4-5.5)^2+(10-7.2)^2+(11-12.0)^2+(13-10.4)^2}{4}=\frac{2.25+7.84+1+6.76}{4}=4.4625\]</p>
+<p>（<a href="ch16.html#s1">第 16 章 16.1 節</a>）</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>題目開頭的「交叉驗證、\(\alpha=5\)」只是背景，這題只要讀樹算誤差。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch16.html">第 16 章 決策樹與集成學習</a></p></div></div></article><article class="exam-q" id="q2" data-key="E" data-ch="17"><div class="ex-head"><span class="ex-tag">第 2 題</span><span class="q-state"></span></div><div class="prompt"><p>Determine which of the following statements regarding principal components analysis is/are true.</p>
+<div class="items">
+<p>I. The first two principal components span the plane that is closest to the data.</p>
+<p>II. The coordinates of the projected values of the data are the principal component scores.</p>
+<p>III. Principal components are independent of the scale of the variables.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>關於 PCA：I. 前兩個主成分張成的平面是最靠近資料的平面。II. 資料投影後的座標就是主成分分數。III. 主成分與變數的尺度無關。哪些正確？</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：「變異最大的方向」等價於「垂直距離平方和最小的子空間」。II 對：分數 \(z_{im}\) 就是第 \(i\) 筆資料在第 \(m\) 個方向上的座標。III 錯：把某變數的單位從公尺改成公分，它的變異數放大一萬倍，第一主成分就會被它主導，所以通常要先標準化。答案「I 和 II」不在 (A)～(D)，選 (E)（<a href="ch17.html#s1">第 17 章 17.1 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch17.html">第 17 章 主成分分析：把多變數資料投影到少數方向</a></p></div></div></article><article class="exam-q" id="q3" data-key="D" data-ch="14"><div class="ex-head"><span class="ex-tag">第 3 題</span><span class="q-state"></span></div><div class="prompt"><p>A Poisson regression model is used to model claim counts on auto insurance. Explanatory variables are the following categorical variables:</p>
+<p>USE (business, pleasure, farm)
+AGE GROUP (under 25, 25–44, 45–64, 65 and over)
+SEX (male, female)
+MARITAL STATUS (single, married)</p>
+<p>The deviances of two regressions are as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Parameters</th>
+<th>Deviance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model 1</td>
+<td>USE + SEX + MARITAL STATUS</td>
+<td>4865.0</td>
+</tr>
+<tr>
+<td>Model 2</td>
+<td>USE + AGE GROUP + SEX + MARITAL STATUS</td>
+<td>4856.6</td>
+</tr>
+</tbody>
+</table>
+<p>The likelihood ratio test determines which model is preferred.</p>
+<p>Which of the following statements is true regarding Model 1?</p>
+<div class="opts">
+<p>(A) Reject at 0.5% significance.</p>
+<p>(B) Reject at 1% significance but not at 0.5% significance.</p>
+<p>(C) Reject at 2.5% significance but not at 1% significance.</p>
+<p>(D) Reject at 5% significance but not at 2.5% significance.</p>
+<p>(E) Do not reject at 5% significance.</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>卜瓦松迴歸，全是類別變數。模型 1 不含年齡層，偏差 4865.0；模型 2 加上年齡層（4 級），偏差 4856.6。用概似比檢定，關於模型 1（較小的模型）哪個敘述正確？</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>巢狀模型的概似比統計量就是兩者偏差之差：\(4865.0-4856.6=8.4\)。年齡層 4 級，多出 3 個指標變數，自由度 3。</p>
+<p>\(\chi^2_3\) 的臨界值：5% 為 7.815、2.5% 為 9.348。\(7.815&lt;8.4&lt;9.348\)，所以 5% 下拒絕模型 1（年齡層顯著），2.5% 下不拒絕（<a href="ch14.html#s2">第 14 章 14.2 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch14.html">第 14 章 廣義線性模型：如何判斷配適及選模</a></p></div></div></article><article class="exam-q" id="q4" data-key="E" data-ch="6"><div class="ex-head"><span class="ex-tag">第 4 題</span><span class="q-state"></span></div><div class="prompt"><p>Which of the following statements are true regarding cross-validation?</p>
+<div class="items">
+<p>I. 5-fold cross-validation has higher variance than 10-fold cross-validation.</p>
+<p>II. 5-fold cross-validation is more computationally efficient than 10-fold cross-validation.</p>
+<p>III. LOOCV when used to validate polynomial regression is computationally efficient.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>關於交叉驗證：I. 5 摺的變異數比 10 摺高。II. 5 摺比 10 摺省計算。III. 對多項式迴歸做 LOOCV 計算上很有效率。哪些正確？</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：摺數愈多，各次的訓練集重疊愈多，\(k\) 個誤差估計彼此高度相關，平均起來的變異數反而<strong>較高</strong>。所以是 10 摺變異數較高。II 對：5 摺只要配適 5 次。III 對：最小平方法（含多項式迴歸）有捷徑公式 \(\text{CV}_{(n)}=\frac1n\sum\left(\frac{y_i-\hat y_i}{1-h_i}\right)^2\)，配適一次就能算出。答案「II 和 III」選 (E)（<a href="ch06.html#s2">第 6 章 6.2 節</a>）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>「LOOCV 很耗時」是一般情況；對線性／多項式迴歸有捷徑，這是常考的例外。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch06.html">第 6 章 重抽樣：驗證集與交叉驗證</a></p></div></div></article><article class="exam-q" id="q5" data-key="E" data-ch="7"><div class="ex-head"><span class="ex-tag">第 5 題</span><span class="q-state"></span></div><div class="prompt"><p>For a linear regression model on 20 observations, you are given:</p>
+<ul>
+<li>The unbiased sample variance of the response variable is 88.</li>
+<li>The deviance is 44.</li>
+<li>There are 3 predictor variables and an intercept.</li>
+</ul>
+<p>Calculate adjusted \(R^2\).</p>
+<div class="opts">
+<p>(A) 0.93</p>
+<p>(B) 0.94</p>
+<p>(C) 0.95</p>
+<p>(D) 0.96</p>
+<p>(E) 0.97</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>20 筆資料的線性迴歸，反應變數的不偏樣本變異數 88，偏差 44，3 個解釋變數加截距。求調整 \(R^2\)。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>兩個翻譯：常態線性模型的偏差就是 RSS（\(\sigma^2\) 尺度之前），不偏樣本變異數就是 \(\text{TSS}/(n-1)\)。</p>
+<p>\[\bar R^2=1-\frac{\text{RSS}/(n-p-1)}{\text{TSS}/(n-1)}=1-\frac{44/16}{88}=0.96875\]</p>
+<p>（<a href="ch07.html#s2">第 7 章 7.2 節</a>）</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch07.html">第 7 章 線性迴歸：選擇預測變數</a></p></div></div></article><article class="exam-q" id="q6" data-key="A" data-ch="20"><div class="ex-head"><span class="ex-tag">第 6 題</span><span class="q-state"></span></div><div class="prompt"><p>Determine which of the following statements are true with regard to AR(1) processes.</p>
+<div class="items">
+<p>I. A random walk is a special case of an AR(1) process.</p>
+<p>II. White noise is a special case of an AR(1) process.</p>
+<p>III. For stationary AR(1) processes, autocorrelation is a decreasing function of lag.</p>
+<p>IV. For stationary AR(1) processes, the variance of the terms equals the variance of the error.</p>
+</div>
+<div class="opts">
+<p>(A) I, II, and III only</p>
+<p>(B) I, II, and IV only</p>
+<p>(C) I, III, and IV only</p>
+<p>(D) II, III, and IV only</p>
+<p>(E) I, II, III, and IV</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>關於 AR(1)：I. 隨機漫步是 AR(1) 的特例。II. 白噪音是 AR(1) 的特例。III. 平穩 AR(1) 的自我相關隨落後期遞減。IV. 平穩 AR(1) 各項的變異數等於誤差變異數。哪些正確？</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(\beta_1=1\)。II 對：\(\beta_1=0\)。III 對：\(\rho_k=\beta_1^k\)，\(|\beta_1|&lt;1\) 時絕對值隨 \(k\) 遞減（若 \(\beta_1&lt;0\) 會正負交錯，但大小仍遞減）。IV 錯：\(\operatorname{Var}(y_t)=\sigma^2/(1-\beta_1^2)\)，只要 \(\beta_1\ne0\) 就比 \(\sigma^2\) 大（<a href="ch20.html">第 20 章</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch20.html">第 20 章 自迴歸：記憶、估計與多步預測</a></p></div></div></article><article class="exam-q" id="q7" data-key="B" data-ch="14"><div class="ex-head"><span class="ex-tag">第 7 題</span><span class="q-state"></span></div><div class="prompt"><p>For an inverse Gaussian regression with \(\operatorname{Var}(Y)=\mathbf E[Y]^3/5\), you are given that \(y_1=68.5\) and \(\hat y_1=57.3\).</p>
+<p>Calculate the Pearson chi-square residual.</p>
+<div class="opts">
+<p>(A) Less than 0.05</p>
+<p>(B) At least 0.05, but less than 0.06</p>
+<p>(C) At least 0.06, but less than 0.07</p>
+<p>(D) At least 0.07, but less than 0.08</p>
+<p>(E) At least 0.08</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>逆高斯迴歸，\(\operatorname{Var}(Y)=\mu^3/5\)。\(y_1=68.5\)、\(\hat y_1=57.3\)。求第 1 筆的 Pearson 殘差。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Pearson 殘差 \(=\dfrac{y_i-\hat\mu_i}{\sqrt{\widehat{\operatorname{Var}}(Y_i)}}\)，分母用配適值代入變異數函數：</p>
+<p>\[\frac{68.5-57.3}{\sqrt{57.3^3/5}}=\frac{11.2}{193.97}=0.0577\]</p>
+<p>（<a href="ch14.html">第 14 章 14.6 節</a>）</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>變異數要用 \(\hat\mu\) 代入，不是 \(y\)；用 \(68.5^3/5\) 會得 0.0442，跑到 (A)。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch14.html">第 14 章 廣義線性模型：如何判斷配適及選模</a></p></div></div></article><article class="exam-q" id="q8" data-key="A" data-ch="4"><div class="ex-head"><span class="ex-tag">第 8 題</span><span class="q-state"></span></div><div class="prompt"><p>Claim severity is modeled with a normal linear model. The current model does not have AGE as an explanatory variable. You are considering adding AGE as an explanatory variable.</p>
+<p>The model is run both with and without AGE. You are given the following excerpt from an ANOVA table compiled from the two runs:</p>
+<table>
+<thead>
+<tr>
+<th>Source of Variation</th>
+<th>Degrees of Freedom</th>
+<th>Sum of Squares</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model without AGE</td>
+<td>12</td>
+<td>1111.06</td>
+</tr>
+<tr>
+<td>Improvement from adding AGE</td>
+<td>3</td>
+<td>92.55</td>
+</tr>
+<tr>
+<td>Residual</td>
+<td></td>
+<td>302.88</td>
+</tr>
+<tr>
+<td>Total</td>
+<td>38</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Determine the \(F\) ratio for testing the significance of AGE.</p>
+<div class="opts">
+<p>(A) 2.343</p>
+<p>(B) 2.382</p>
+<p>(C) 2.475</p>
+<p>(D) 2.524</p>
+<p>(E) 2.568</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>常態線性模型，考慮加入年齡變數（3 個自由度）。ANOVA 表見上，求檢定年齡顯著性的 \(F\) 比。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>第一步，補殘差自由度：總自由度 38 拆成「不含年齡的模型 12」「年齡帶來的改善 3」「殘差」，殘差自由度 \(=38-12-3=23\)。</p>
+<p>第二步，\(F=\dfrac{92.55/3}{302.88/23}=\dfrac{30.85}{13.169}=2.343\)，自由度 \((3,23)\)（<a href="ch04.html">第 4 章</a>）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>表中的 302.88 已經是<strong>加入年齡後</strong>的殘差平方和，直接當分母用。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch04.html">第 4 章 線性迴歸：F 檢定與巢狀模型</a></p></div></div></article><article class="exam-q" id="q9" data-key="D" data-ch="16"><div class="ex-head"><span class="ex-tag">第 9 題</span><span class="q-state"></span></div><div class="prompt"><p>A decision regression tree has one predictor. We are considering splitting a node. At that node, there are 6 observations:</p>
+<table>
+<thead>
+<tr>
+<th>\(X\)</th>
+<th>1</th>
+<th>3</th>
+<th>5</th>
+<th>7</th>
+<th>9</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(Y\)</td>
+<td>8</td>
+<td>13</td>
+<td>12</td>
+<td>14</td>
+<td>17</td>
+<td>21</td>
+</tr>
+</tbody>
+</table>
+<p>The split is \(X&lt;k\) versus \(X\ge k\).</p>
+<p>Determine the best value of \(k\).</p>
+<div class="opts">
+<p>(A) 2</p>
+<p>(B) 4</p>
+<p>(C) 6</p>
+<p>(D) 8</p>
+<p>(E) 10</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>迴歸樹某節點有 6 筆資料（見表），分割為 \(X&lt;k\) 與 \(X\ge k\)。求最佳的 \(k\)。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>選兩側 RSS 合計最小的切點（每側用該側平均預測）：</p>
+<table>
+<thead>
+<tr>
+<th>\(k\)</th>
+<th>左側</th>
+<th>左 RSS</th>
+<th>右側</th>
+<th>右 RSS</th>
+<th>合計</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>8</td>
+<td>0</td>
+<td>13,12,14,17,21</td>
+<td>53.2</td>
+<td>53.2</td>
+</tr>
+<tr>
+<td>4</td>
+<td>8,13</td>
+<td>12.5</td>
+<td>12,14,17,21</td>
+<td>46</td>
+<td>58.5</td>
+</tr>
+<tr>
+<td>6</td>
+<td>8,13,12</td>
+<td>14</td>
+<td>14,17,21</td>
+<td>24.67</td>
+<td>38.67</td>
+</tr>
+<tr>
+<td>8</td>
+<td>8,13,12,14</td>
+<td>20.75</td>
+<td>17,21</td>
+<td>8</td>
+<td>28.75</td>
+</tr>
+<tr>
+<td>10</td>
+<td>8,13,12,14,17</td>
+<td>42.8</td>
+<td>21</td>
+<td>0</td>
+<td>42.8</td>
+</tr>
+</tbody>
+</table>
+<p>\(k=8\) 最小（<a href="ch16.html#s1">第 16 章 16.1 節</a>）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>講義解答把 \(k=6\) 的右側 RSS 印成 243（應為 24.67），不影響結論。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch16.html">第 16 章 決策樹與集成學習</a></p></div></div></article><article class="exam-q" id="q10" data-key="B" data-ch="8"><div class="ex-head"><span class="ex-tag">第 10 題</span><span class="q-state"></span></div><div class="prompt"><p>With regard to dimension reduction methods, determine which of the following statements are applicable to principal component regression but not to partial least squares.</p>
+<div class="items">
+<p>I. The new predictors are linear combinations of the original predictors.</p>
+<p>II. The method of creating predictors is unsupervised.</p>
+<p>III. The original predictors should be standardized.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>下列哪些敘述適用於主成分迴歸（PCR），但<strong>不</strong>適用於偏最小平方法（PLS）？I. 新變數是原變數的線性組合。II. 建立新變數的方法是非監督式的。III. 原變數應先標準化。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I、III 兩者都成立：PCR 與 PLS 都用原變數的線性組合，也都受尺度影響、要先標準化。只有 II 是 PCR 獨有：PCR 找方向時只看 \(X\)，不看 \(Y\)；PLS 用 \(Y\) 與各變數的相關來決定權重，是監督式的（<a href="ch08.html#s2">第 8 章 8.2 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch08.html">第 8 章 線性迴歸：收縮與降維</a></p></div></div></article><article class="exam-q" id="q11" data-key="B" data-ch="18"><div class="ex-head"><span class="ex-tag">第 11 題</span><span class="q-state"></span></div><div class="prompt"><p>Determine which of the following statements regarding hierarchical clustering is/are true.</p>
+<div class="items">
+<p>I. The height of the cut serves the same purpose as \(K\) in K-means clustering.</p>
+<p>II. The centroid linkage may lead to inversions.</p>
+<p>III. There are \(2^n\) reorderings of a dendrogram, where \(n\) is the number of leaves.</p>
+</div>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>關於階層式集群：I. 樹狀圖切的高度與 K 平均的 \(K\) 作用相同。II. 形心連結可能產生倒置。III. 有 \(n\) 片葉子的樹狀圖有 \(2^n\) 種重新排列。哪些正確？</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：切得高群少、切得低群多，切的高度決定群數。II 對：形心連結合併後的新形心可能離其他群更近，下一次合併高度反而較低，樹狀圖出現倒置。III 錯：\(n\) 片葉子共有 \(n-1\) 次合併，每次合併的左右兩支可互換，所以是 \(2^{n-1}\) 種（<a href="ch18.html#s2">第 18 章 18.2 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch18.html">第 18 章 群集分析：沒有標籤時如何界定相似</a></p></div></div></article><article class="exam-q" id="q12" data-key="C" data-ch="20,19"><div class="ex-head"><span class="ex-tag">第 12 題</span><span class="q-state"></span></div><div class="prompt"><p>An AR(1) process is fitted to a set of 10 observations. To test this model, the first 6 observations are used as a model development set and the last 4 observations are the validation set. The resulting model is \(y_t=6-0.2y_{t-1}+\varepsilon_t\).</p>
+<p>The last 5 observations are 7, 6, 4, 5, 5.</p>
+<p>Calculate the MAE statistic.</p>
+<div class="opts">
+<p>(A) 0.2</p>
+<p>(B) 0.4</p>
+<p>(C) 0.6</p>
+<p>(D) 0.8</p>
+<p>(E) 1.0</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>10 筆資料，前 6 筆建模、後 4 筆驗證，得 \(y_t=6-0.2y_{t-1}+\varepsilon_t\)。最後 5 筆是 7、6、4、5、5（即 \(y_6,\ldots,y_{10}\)）。求驗證集的 MAE（平均絕對誤差）。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>驗證集是 \(y_7,\ldots,y_{10}\)，每一期用前一期的實際值做一步預測：</p>
+<table>
+<thead>
+<tr>
+<th>\(t\)</th>
+<th>\(y_{t-1}\)</th>
+<th>\(\hat y_t=6-0.2y_{t-1}\)</th>
+<th>\(y_t\)</th>
+<th>\(\lvert e_t\rvert\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7</td>
+<td>7</td>
+<td>4.6</td>
+<td>6</td>
+<td>1.4</td>
+</tr>
+<tr>
+<td>8</td>
+<td>6</td>
+<td>4.8</td>
+<td>4</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>9</td>
+<td>4</td>
+<td>5.2</td>
+<td>5</td>
+<td>0.2</td>
+</tr>
+<tr>
+<td>10</td>
+<td>5</td>
+<td>5.0</td>
+<td>5</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>\(\text{MAE}=(1.4+0.8+0.2+0)/4=0.6\)（<a href="ch19.html">第 19 章 19.6 節</a>、<a href="ch20.html">第 20 章</a>）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>「最後 5 筆」多給了一筆 \(y_6=7\)，它不在驗證集裡，但預測 \(y_7\) 時要用到它。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch20.html">第 20 章 自迴歸：記憶、估計與多步預測</a>、<a href="ch19.html">第 19 章 時間數列：從平穩性到預測誤差</a></p></div></div></article><article class="exam-q" id="q13" data-key="C" data-ch="16"><div class="ex-head"><span class="ex-tag">第 13 題</span><span class="q-state"></span></div><div class="prompt"><p>A classification response variable has three possible values: A, B, and C.</p>
+<p>A split of a node with 100 observations in a classification tree resulted in the following two groups:</p>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Number of A</th>
+<th>Number of B</th>
+<th>Number of C</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I</td>
+<td>40</td>
+<td>10</td>
+<td>10</td>
+</tr>
+<tr>
+<td>II</td>
+<td>5</td>
+<td>25</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the Gini index for this split.</p>
+<div class="opts">
+<p>(A) 0.4625</p>
+<p>(B) 0.4875</p>
+<p>(C) 0.5125</p>
+<p>(D) 0.5375</p>
+<p>(E) 0.5500</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>三類別的分類樹，100 筆分成兩組（見表）。求這個分割的 Gini 指標（各組 Gini 依筆數加權平均）。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Gini \(=\sum_k\hat p_k(1-\hat p_k)=1-\sum_k\hat p_k^2\)。</p>
+<ul>
+<li>組 I（60 筆）：比例 \(\tfrac23,\tfrac16,\tfrac16\)，\(G=1-\left(\tfrac49+\tfrac1{36}+\tfrac1{36}\right)=0.5\)。</li>
+<li>組 II（40 筆）：比例 \(\tfrac18,\tfrac58,\tfrac14\)，\(G=1-\left(\tfrac1{64}+\tfrac{25}{64}+\tfrac4{64}\right)=0.53125\)。</li>
+</ul>
+<p>加權：\(0.6(0.5)+0.4(0.53125)=0.5125\)（<a href="ch16.html#s1">第 16 章 16.1 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch16.html">第 16 章 決策樹與集成學習</a></p></div></div></article><article class="exam-q" id="q14" data-key="D" data-ch="13"><div class="ex-head"><span class="ex-tag">第 14 題</span><span class="q-state"></span></div><div class="prompt"><p>A count variable is modeled as a function of two predictors using Poisson regression with a log link. The model has an intercept. There are 5 observations. The results of the model are</p>
+<table>
+<thead>
+<tr>
+<th>\(i\)</th>
+<th>\(y_i\)</th>
+<th>\(\hat\mu_i\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2</td>
+<td>1.2</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>1</td>
+<td>1.8</td>
+</tr>
+<tr>
+<td>4</td>
+<td>3</td>
+<td>4.0</td>
+</tr>
+<tr>
+<td>5</td>
+<td>2</td>
+<td>0.8</td>
+</tr>
+</tbody>
+</table>
+<p>It is believed that variance is greater than the mean, so an overdispersion parameter \(\phi\) is specified.</p>
+<p>Calculate the estimate of \(\phi\).</p>
+<div class="opts">
+<p>(A) 1.0</p>
+<p>(B) 1.2</p>
+<p>(C) 1.3</p>
+<p>(D) 1.5</p>
+<p>(E) 1.6</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>兩個解釋變數加截距的卜瓦松迴歸，5 筆配適結果見表。懷疑變異數大於平均（過度離散），求離散參數 \(\phi\) 的估計。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>用 Pearson 統計量除以殘差自由度：</p>
+<p>\[\hat\phi=\frac{1}{n-(k+1)}\sum\frac{(y_i-\hat\mu_i)^2}{\hat\mu_i}=\frac12\left(\frac{0.64}{1.2}+\frac{0.04}{2.2}+\frac{0.64}{1.8}+\frac{1}{4.0}+\frac{1.44}{0.8}\right)=\frac{2.957}{2}=1.479\]</p>
+<p>自由度 \(5-3=2\)（<a href="ch13.html#s2">第 13 章 13.2 節</a>）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>除以 \(n=5\) 會得 0.59。卜瓦松的變異數函數是 \(\mu\)，分母不平方。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch13.html">第 13 章 計數反應：暴險量、過度離散與零件數</a></p></div></div></article><article class="exam-q" id="q15" data-key="B" data-ch="16"><div class="ex-head"><span class="ex-tag">第 15 題</span><span class="q-state"></span></div><div class="prompt"><p>Determine which of the following are advantages of regression trees over linear models.</p>
+<div class="items">
+<p>I. Easier to interpret</p>
+<p>II. More robust</p>
+<p>III. Easier to handle qualitative predictors</p>
+<p>IV. Predictions are more accurate</p>
+</div>
+<div class="opts">
+<p>(A) I and II only</p>
+<p>(B) I and III only</p>
+<p>(C) I and IV only</p>
+<p>(D) II and III only</p>
+<p>(E) II and IV only</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>下列哪些是迴歸樹相對於線性模型的優點？I. 較容易解釋。II. 較穩健。III. 較容易處理類別變數。IV. 預測較準確。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>依 ISLR 8.1.4 節的整理：樹的優點是容易解釋、容易畫圖、可以直接處理類別變數而不必建虛擬變數；缺點是預測準確度通常不如其他方法，而且不穩健（資料小改動就可能長出很不一樣的樹）。所以 I、III 是優點，II、IV 不是（<a href="ch16.html#s4">第 16 章 16.4 節</a>）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>講義答案表印的是 (E)，但它自己的解析寫「樹較易理解，但較不穩健、預測較不準確」，與 (E)「II 和 IV」矛盾；依解析內容與 ISLR，正確組合是 I 和 III，即 (B)。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch16.html">第 16 章 決策樹與集成學習</a></p></div></div></article><article class="exam-q" id="q16" data-key="B" data-ch="5"><div class="ex-head"><span class="ex-tag">第 16 題</span><span class="q-state"></span></div><div class="prompt"><p>For a linear regression with 2 explanatory variables and an intercept, you are given:</p>
+<div class="items">
+<p>(i) There are 50 observations.</p>
+<p>(ii) The sample standard deviation of \(x_2\) is 2.204.</p>
+<p>(iii) If \(x_2\) is regressed on \(x_1\), the standard error of the regression is 1.284.</p>
+</div>
+<p>Determine the VIF of \(x_2\).</p>
+<div class="opts">
+<p>(A) 2.5</p>
+<p>(B) 3.0</p>
+<p>(C) 3.5</p>
+<p>(D) 4.0</p>
+<p>(E) 4.5</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>兩個解釋變數加截距，50 筆。\(x_2\) 的樣本標準差 2.204；把 \(x_2\) 對 \(x_1\) 迴歸，標準誤 1.284。求 \(x_2\) 的 VIF。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\text{VIF}_2=1/(1-R_2^2)\)，其中 \(R_2^2\) 來自「\(x_2\) 對 \(x_1\)」這條輔助迴歸。\(1-R_2^2=\text{RSS}/\text{TSS}\)，所以 \(\text{VIF}_2=\text{TSS}/\text{RSS}\)。</p>
+<ul>
+<li>TSS：樣本標準差平方乘 \(n-1\)，\(49(2.204^2)=238.02\)。</li>
+<li>RSS：標準誤平方乘殘差自由度 \(n-2=48\)，\(48(1.284^2)=79.14\)。</li>
+</ul>
+<p>\(\text{VIF}_2=238.02/79.14=3.008\)（<a href="ch05.html#s3">第 5 章 5.3 節</a>）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>兩個自由度不同（49 與 48），不能直接用 \((2.204/1.284)^2=2.95\)。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch05.html">第 5 章 線性迴歸：模型診斷</a></p></div></div></article><article class="exam-q" id="q17" data-key="D" data-ch="16"><div class="ex-head"><span class="ex-tag">第 17 題</span><span class="q-state"></span></div><div class="prompt"><p>A model for insurance rating is built using decision trees with bagging. There are three rating variables under consideration: previous experience, territory, and credit rating. Three decision trees are built. The decrease in RSS for each variable is:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Tree 1</th>
+<th>Tree 2</th>
+<th>Tree 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Previous experience</td>
+<td>372</td>
+<td>249</td>
+<td>330</td>
+</tr>
+<tr>
+<td>Territory</td>
+<td>165</td>
+<td>185</td>
+<td>172</td>
+</tr>
+<tr>
+<td>Credit rating</td>
+<td>104</td>
+<td>112</td>
+<td>144</td>
+</tr>
+</tbody>
+</table>
+<p>The most important variable is previous experience, which has a variance importance of 100.</p>
+<p>Calculate the variance importance of territory.</p>
+<div class="opts">
+<p>(A) 52</p>
+<p>(B) 53</p>
+<p>(C) 54</p>
+<p>(D) 55</p>
+<p>(E) 56</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>bagging 建了 3 棵樹，各變數在各樹造成的 RSS 下降見表。把最重要的「過去經驗」的重要性定為 100，求「地區」的變數重要性。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>bagging 的變數重要性＝該變數在所有樹的 RSS 下降平均（加總也一樣，比例相同）。</p>
+<p>過去經驗平均 \((372+249+330)/3=317\)；地區平均 \((165+185+172)/3=174\)。相對重要性 \(100\times174/317=54.9\)（<a href="ch16.html#s5">第 16 章 16.5 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch16.html">第 16 章 決策樹與集成學習</a></p></div></div></article><article class="exam-q" id="q18" data-key="A" data-ch="1,17"><div class="ex-head"><span class="ex-tag">第 18 題</span><span class="q-state"></span></div><div class="prompt"><p>An insurance company is studying its field force, the agents that sell its products. There are many factors that may characterize agents: age, sex, number of years at the company, number of years of experience as an agent, annual production, region, etc. The insurance company would like to summarize all of these characteristics into a small number of variables.</p>
+<p>Determine which of the following characteristics of statistical learning that this study has.</p>
+<div class="items">
+<p>I. Classification setting</p>
+<p>II. Supervised learning</p>
+<p>III. Parametric</p>
+</div>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>保險公司想把業務員的許多特徵（年齡、性別、年資、業績、地區等）濃縮成少數幾個變數。這個研究具有下列哪些性質？I. 分類問題。II. 監督式學習。III. 參數方法。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>「把很多變數濃縮成少數幾個」是降維，典型方法是 PCA。沒有要預測的反應變數，所以是非監督式；既然沒有反應變數，也就談不上分類或迴歸、參數或非參數。三者皆不適用（<a href="ch01.html">第 1 章</a>、<a href="ch17.html">第 17 章</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch01.html">第 1 章 統計學習的基本問題</a>、<a href="ch17.html">第 17 章 主成分分析：把多變數資料投影到少數方向</a></p></div></div></article><article class="exam-q" id="q19" data-key="E" data-ch="16"><div class="ex-head"><span class="ex-tag">第 19 題</span><span class="q-state"></span></div><div class="prompt"><p>Determine which of the following statements regarding bagging is/are true.</p>
+<div class="items">
+<p>I. It is difficult to interpret the model arising from bagging.</p>
+<p>II. At each split, all available predictors are considered.</p>
+<p>III. Cost complexity pruning is used to reduce the variance of the trees.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>關於 bagging：I. bagging 得到的模型難以解釋。II. 每次分割都考慮所有解釋變數。III. 用成本複雜度修剪來降低各棵樹的變異數。哪些正確？</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：\(B\) 棵樹平均起來，無法再畫成一棵樹來讀。II 對：每次分割都考慮全部 \(p\) 個變數，這正是它與隨機森林（只抽 \(m\) 個）的差別。III 錯：bagging 的樹<strong>不修剪</strong>，讓每棵樹長深（低偏差、高變異），再靠平均降低變異數。答案「I 和 II」選 (E)（<a href="ch16.html#s5">第 16 章 16.5 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch16.html">第 16 章 決策樹與集成學習</a></p></div></div></article><article class="exam-q" id="q20" data-key="B" data-ch="16"><div class="ex-head"><span class="ex-tag">第 20 題</span><span class="q-state"></span></div><div class="prompt"><p>A classification tree is built based on 9 observations. There is a response and one predictor. The values of the variables are:</p>
+<table>
+<thead>
+<tr>
+<th>\(X\)</th>
+<th>2</th>
+<th>5</th>
+<th>6</th>
+<th>8</th>
+<th>12</th>
+<th>16</th>
+<th>19</th>
+<th>25</th>
+<th>30</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(Y\)</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>Determine which of these splits is/are best using the Gini index as the criterion.</p>
+<div class="items">
+<p>I. Between 6 and 8</p>
+<p>II. Between 8 and 12</p>
+<p>III. Between 12 and 16</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I and II only</p>
+<p>(E) II and III only</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>和練習測驗 2 第 12 題同一組資料，改用 Gini 指標。哪個切點最好？</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>兩類別時 Gini \(=2\hat p(1-\hat p)\)。各切點的加權 Gini：</p>
+<ul>
+<li>I：左 \(\{N,N,Y\}\)，\(\hat p=\tfrac13\)；右 6 筆中 Yes 4 筆，\(\hat p=\tfrac23\)。兩側 Gini 都是 \(2\cdot\tfrac13\cdot\tfrac23=\tfrac49\)，加權 \(0.444\)。</li>
+<li>II：左 4 筆 Yes 1 筆，Gini \(=2\cdot\tfrac14\cdot\tfrac34=0.375\)；右 5 筆 Yes 4 筆，Gini \(=2\cdot\tfrac45\cdot\tfrac15=0.32\)。加權 \(\tfrac49(0.375)+\tfrac59(0.32)=0.344\)。</li>
+<li>III：左 5 筆 Yes 2 筆，Gini \(0.48\)；右 4 筆 Yes 3 筆，Gini \(0.375\)。加權 \(\tfrac59(0.48)+\tfrac49(0.375)=0.433\)。</li>
+</ul>
+<p>II 最小（<a href="ch16.html#s1">第 16 章 16.1 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch16.html">第 16 章 決策樹與集成學習</a></p></div></div></article><article class="exam-q" id="q21" data-key="E" data-ch="6"><div class="ex-head"><span class="ex-tag">第 21 題</span><span class="q-state"></span></div><div class="prompt"><p>For cross-validation, determine which of the following are advantages of \(k\)-fold cross-validation with \(k&lt;n\) over LOOCV.</p>
+<div class="items">
+<p>I. \(k\)-fold cross-validation does not overestimate the test error rate as much as LOOCV.</p>
+<p>II. \(k\)-fold cross-validation has lower bias than LOOCV.</p>
+<p>III. Performing \(k\)-fold cross-validation multiple times produces the same results.</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>下列哪些是 \(k\) 摺交叉驗證（\(k&lt;n\)）相對於 LOOCV 的優點？I. 高估測試誤差的程度比 LOOCV 少。II. 偏差比 LOOCV 低。III. 重複做多次會得到相同結果。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>三個都錯。I、II：\(k\) 摺的訓練集只有 \(\tfrac{k-1}{k}n\) 筆，比 LOOCV 的 \(n-1\) 筆少，模型較差，<strong>更會</strong>高估測試誤差，偏差較高。III：\(k\) 摺的分組是隨機的，重做會不同；反而是 LOOCV 每次結果都一樣。\(k\) 摺真正的優點是計算量小、變異數較低，題目沒列出來，選 (E)（<a href="ch06.html">第 6 章</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch06.html">第 6 章 重抽樣：驗證集與交叉驗證</a></p></div></div></article><article class="exam-q" id="q22" data-key="D" data-ch="17"><div class="ex-head"><span class="ex-tag">第 22 題</span><span class="q-state"></span></div><div class="prompt"><p>You are given the following 3 observations of 2 variables:</p>
+<p>\[(1,0.4)\qquad(0,0.4)\qquad(-1,-0.8)\]</p>
+<p>Principal component analysis results in a principal component with loadings 0.836 on the first variable and 0.549 on the second variable.</p>
+<p>Calculate the proportion of variance explained by this principal component.</p>
+<div class="opts">
+<p>(A) 0.88</p>
+<p>(B) 0.90</p>
+<p>(C) 0.92</p>
+<p>(D) 0.94</p>
+<p>(E) 0.96</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>3 筆二維資料 \((1,0.4)\)、\((0,0.4)\)、\((-1,-0.8)\)。某主成分負荷量為 \((0.836,0.549)\)。求它的變異解釋比例（PVE）。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>第一步，確認已置中：兩欄平均都是 0，所以變異數就是平方和除以 \(n\)（分子分母的 \(1/n\) 會相消）。</p>
+<p>第二步，總變異 \(=\sum_{i,j}x_{ij}^2=1+0+1+0.16+0.16+0.64=2.96\)。</p>
+<p>第三步，分數 \(z_i=0.836x_{i1}+0.549x_{i2}\)：\(1.0556\)、\(0.2196\)、\(-1.2752\)，平方和 \(2.7887\)。</p>
+<p>第四步，\(\text{PVE}=2.7887/2.96=0.942\)（<a href="ch17.html#s5">第 17 章 17.5 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch17.html">第 17 章 主成分分析：把多變數資料投影到少數方向</a></p></div></div></article><article class="exam-q" id="q23" data-key="C" data-ch="19"><div class="ex-head"><span class="ex-tag">第 23 題</span><span class="q-state"></span></div><div class="prompt"><p>Determine which of the following are drawbacks of regression models for time series that fit trends in time.</p>
+<div class="items">
+<p>I. Too much weight is placed on early observations.</p>
+<p>II. Seasonal patterns cannot be incorporated.</p>
+<p>III. Other sources of information are not considered.</p>
+</div>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>用「對時間配適趨勢」的迴歸模型做時間數列，有哪些缺點？I. 早期觀察值權重過大。II. 無法納入季節型態。III. 沒有考慮其他資訊來源。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 對：迴歸的槓桿值在離時間平均最遠的點最大，最早（和最晚）的點影響力最大，但預測未來時應該更重視近期資料。II 錯：可以加季節虛擬變數或三角函數。III 對：只用時間當解釋變數，沒有利用其他相關變數（<a href="ch19.html">第 19 章</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch19.html">第 19 章 時間數列：從平穩性到預測誤差</a></p></div></div></article><article class="exam-q" id="q24" data-key="A" data-ch="5"><div class="ex-head"><span class="ex-tag">第 24 題</span><span class="q-state"></span></div><div class="prompt"><p>For a linear regression model based on 4 observations, you are given:</p>
+<div class="items">
+<p>(i) There is one explanatory variable and an intercept.</p>
+<p>(ii) The residuals are −2.3, 0.1, −2.1, and 4.3.</p>
+<p>(iii) The hat matrix is</p>
+</div>
+<p>\[\begin{pmatrix}0.3&amp;0.4&amp;0.1&amp;0.2\\0.4&amp;0.7&amp;-0.2&amp;0.1\\0.1&amp;-0.2&amp;0.7&amp;0.4\\0.2&amp;0.1&amp;0.4&amp;0.3\end{pmatrix}\]</p>
+<div class="items">
+<p>(iv) \(\hat\sigma^2=14.1\)</p>
+</div>
+<p>Calculate Cook's distance for the third observation.</p>
+<div class="opts">
+<p>(A) 1.2</p>
+<p>(B) 2.3</p>
+<p>(C) 2.7</p>
+<p>(D) 3.2</p>
+<p>(E) 3.6</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>4 筆資料、一個解釋變數加截距，殘差與帽子矩陣見上，\(\hat\sigma^2=14.1\)。求第 3 筆的 Cook 距離。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Cook 距離 \(D_i=\dfrac{e_i^2}{(p+1)s^2}\cdot\dfrac{h_{ii}}{(1-h_{ii})^2}\)，前半是「殘差多大」，後半是「槓桿多高」。</p>
+<p>\(h_{33}=0.7\)（對角線第 3 個），\(p+1=2\)（也可由對角線和 \(0.3+0.7+0.7+0.3=2\) 驗證）。</p>
+<p>\[D_3=\frac{(-2.1)^2}{2(14.1)}\cdot\frac{0.7}{0.3^2}=0.15638\times7.778=1.216\]</p>
+<p>（<a href="ch05.html#s2">第 5 章 5.2 節</a>）</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch05.html">第 5 章 線性迴歸：模型診斷</a></p></div></div></article><article class="exam-q" id="q25" data-key="C" data-ch="11,13"><div class="ex-head"><span class="ex-tag">第 25 題</span><span class="q-state"></span></div><div class="prompt"><p>A Poisson regression model is of the form</p>
+<p>\[g(\mu)=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}\]</p>
+<p>and uses the log link.</p>
+<p>The fitted values of \(\boldsymbol\beta\) are (0.15, 0.04, 0.12).</p>
+<p>Determine the fitted mean when \(x_1=1\) and \(x_2=0\).</p>
+<div class="opts">
+<p>(A) 1.0</p>
+<p>(B) 1.1</p>
+<p>(C) 1.2</p>
+<p>(D) 1.3</p>
+<p>(E) 1.4</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>對數連結的卜瓦松迴歸，\(\mathbf b=(0.15,0.04,0.12)\)。求 \(x_1=1\)、\(x_2=0\) 時的配適平均。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(\eta=0.15+0.04(1)+0.12(0)=0.19\)，反連結 \(\mu=e^{0.19}=1.209\)（<a href="ch11.html#s1">第 11 章 11.1 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch11.html">第 11 章 廣義線性模型：分配、連結與估計</a>、<a href="ch13.html">第 13 章 計數反應：暴險量、過度離散與零件數</a></p></div></div></article><article class="exam-q" id="q26" data-key="D" data-ch="1"><div class="ex-head"><span class="ex-tag">第 26 題</span><span class="q-state"></span></div><div class="prompt"><p>Determine which of the following methods may be used in a classification setting.</p>
+<div class="items">
+<p>I. Logistic regression</p>
+<p>II. K-nearest neighbors</p>
+<p>III. Boosting</p>
+</div>
+<div class="opts">
+<p>(A) I only</p>
+<p>(B) II only</p>
+<p>(C) III only</p>
+<p>(D) I, II, and III</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>下列哪些方法可用於分類問題？I. logistic 迴歸。II. KNN。III. boosting。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>三者都可以。logistic 迴歸本來就是分類方法；KNN 用鄰居的多數決；boosting 可以用分類樹當基本學習器（<a href="ch01.html">第 1 章</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch01.html">第 1 章 統計學習的基本問題</a></p></div></div></article><article class="exam-q" id="q27" data-key="A" data-ch="15"><div class="ex-head"><span class="ex-tag">第 27 題</span><span class="q-state"></span></div><div class="prompt"><p>A classification variable assuming the values of 1 and 2 is modeled as a function of \(X\) using K-nearest neighbors with \(K=3\). The training data is</p>
+<table>
+<thead>
+<tr>
+<th>\(X\)</th>
+<th>10</th>
+<th>19</th>
+<th>30</th>
+<th>39</th>
+<th>43</th>
+<th>45</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(Y\)</td>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>2</td>
+<td>1</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>The test data is</p>
+<table>
+<thead>
+<tr>
+<th>\(X\)</th>
+<th>15</th>
+<th>25</th>
+<th>37</th>
+<th>50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\(Y\)</td>
+<td>1</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>Calculate the error rate on the test data.</p>
+<div class="opts">
+<p>(A) 0</p>
+<p>(B) 0.25</p>
+<p>(C) 0.50</p>
+<p>(D) 0.75</p>
+<p>(E) 1</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>\(K=3\) 的 KNN 分類，訓練資料與測試資料見表。求測試錯誤率。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>逐點找最近 3 個訓練點，取多數：</p>
+<ul>
+<li>\(X=15\)：10、19、30（距離 5、4、15；下一個 39 是 24）→ 1、1、2，預測 1，對。</li>
+<li>\(X=25\)：30、19、39（距離 5、6、14；下一個 10 是 15）→ 2、1、2，預測 2，對。</li>
+<li>\(X=37\)：39、43、30（距離 2、6、7）→ 2、1、2，預測 2，對。</li>
+<li>\(X=50\)：45、43、39 → 2、1、2，預測 2，對。</li>
+</ul>
+<p>全部正確，錯誤率 0（<a href="ch15.html">第 15 章</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch15.html">第 15 章 K 最近鄰：從最佳分類到局部預測</a></p></div></div></article><article class="exam-q" id="q28" data-key="C" data-ch="14"><div class="ex-head"><span class="ex-tag">第 28 題</span><span class="q-state"></span></div><div class="prompt"><p>A binomial generalized linear model for the probability of a claim has an intercept and the following variables:</p>
+<div class="items">
+<p>(i) Deductible: can be 250, 500, or 1000.</p>
+<p>(ii) Gender: can be male or female.</p>
+<p>(iii) Age group: there are 5 age groups.</p>
+</div>
+<p>There are 85 observations.</p>
+<p>The AIC for the best fit is 261.53.</p>
+<p>Calculate the BIC.</p>
+<div class="opts">
+<p>(A) 277</p>
+<p>(B) 279</p>
+<p>(C) 281</p>
+<p>(D) 283</p>
+<p>(E) 285</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>二項 GLM，有截距，自負額 3 級、性別 2 級、年齡層 5 級（皆為類別），85 筆資料，AIC 為 261.53。求 BIC。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>AIC 與 BIC 只差懲罰項：AIC \(=-2\ln L+2k\)，BIC \(=-2\ln L+k\ln n\)。</p>
+<p>第一步，數參數：截距 1、自負額 2、性別 1、年齡 4，\(k=8\)。</p>
+<p>第二步，\(\text{BIC}=261.53-2(8)+8\ln85=261.53-16+35.54=281.07\)（<a href="ch14.html#s4">第 14 章 14.4 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch14.html">第 14 章 廣義線性模型：如何判斷配適及選模</a></p></div></div></article><article class="exam-q" id="q29" data-key="A" data-ch="21"><div class="ex-head"><span class="ex-tag">第 29 題</span><span class="q-state"></span></div><div class="prompt"><p>You are given the time series</p>
+<p>\[y_2=105,\quad y_3=109,\quad y_4=122,\quad y_5=104\]</p>
+<p>Exponential smoothing with smoothing parameter \(w=0.4\) is performed on this series. The resulting value of \(\hat s_5\) is 108.78.</p>
+<p>Determine \(\hat s_1\).</p>
+<div class="opts">
+<p>(A) 102</p>
+<p>(B) 104</p>
+<p>(C) 106</p>
+<p>(D) 108</p>
+<p>(E) 110</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>指數平滑，\(w=0.4\)（舊平滑值的權重）。已知 \(y_2,\ldots,y_5\) 與 \(\hat s_5=108.78\)，反推 \(\hat s_1\)。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>遞迴式 \(\hat s_t=(1-w)y_t+w\hat s_{t-1}\) 展開四次：</p>
+<p>\[\hat s_5=0.6y_5+0.6(0.4)y_4+0.6(0.4)^2y_3+0.6(0.4)^3y_2+0.4^4\hat s_1\]</p>
+<p>代入：\(108.78=0.6(104)+0.24(122)+0.096(109)+0.0384(105)+0.0256\,\hat s_1=106.176+0.0256\,\hat s_1\)。</p>
+<p>所以 \(\hat s_1=2.604/0.0256=101.7\)（<a href="ch21.html#s3">第 21 章 21.3 節</a>）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>講義的 \(w\) 是<strong>舊值</strong>的權重，新觀察值的權重是 \(1-w=0.6\)。弄反的話整個展開式都會錯。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch21.html">第 21 章 預測模型：平滑、季節、單根與波動</a></p></div></div></article><article class="exam-q" id="q30" data-key="D" data-ch="18"><div class="ex-head"><span class="ex-tag">第 30 題</span><span class="q-state"></span></div><div class="prompt"><p>Determine which of the following statements regarding K-means clustering is/are true.</p>
+<div class="items">
+<p>I. Clusters are selected to maximize the sum of the distances between points of different clusters.</p>
+<p>II. A simple algorithm finds a local optimum.</p>
+<p>III. The number of clusters must be specified in advance.</p>
+</div>
+<div class="opts">
+<p>(A) None</p>
+<p>(B) I and II only</p>
+<p>(C) I and III only</p>
+<p>(D) II and III only</p>
+<p>(E) The correct answer is not given by (A), (B), (C), or (D).</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>關於 K 平均：I. 選群的目標是讓不同群之間點的距離和最大。II. 簡單的演算法可以找到局部最佳解。III. 群數必須事先指定。哪些正確？</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>I 錯：目標是讓<strong>群內</strong>變異（群內兩兩平方距離，或到形心的平方距離）最小，不是群間距離和最大。II 對：反覆「分派到最近形心、重算形心」保證目標函數不增，但只收斂到局部最佳。III 對（<a href="ch18.html#s1">第 18 章 18.1 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch18.html">第 18 章 群集分析：沒有標籤時如何界定相似</a></p></div></div></article><article class="exam-q" id="q31" data-key="A" data-ch="14"><div class="ex-head"><span class="ex-tag">第 31 題</span><span class="q-state"></span></div><div class="prompt"><p>A generalized linear model uses a gamma distribution. The model is based on 8 observations. The results of the model are</p>
+<table>
+<thead>
+<tr>
+<th>\(i\)</th>
+<th>\(y_i\)</th>
+<th>\(\hat\mu_i\)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>5</td>
+<td>3</td>
+</tr>
+<tr>
+<td>2</td>
+<td>7</td>
+<td>15</td>
+</tr>
+<tr>
+<td>3</td>
+<td>8</td>
+<td>10</td>
+</tr>
+<tr>
+<td>4</td>
+<td>11</td>
+<td>5</td>
+</tr>
+<tr>
+<td>5</td>
+<td>13</td>
+<td>18</td>
+</tr>
+<tr>
+<td>6</td>
+<td>15</td>
+<td>10</td>
+</tr>
+<tr>
+<td>7</td>
+<td>17</td>
+<td>20</td>
+</tr>
+<tr>
+<td>8</td>
+<td>20</td>
+<td>18</td>
+</tr>
+</tbody>
+</table>
+<p>The dispersion parameter is \(\phi=1.4\).</p>
+<p>Calculate the Pearson chi-square statistic for this model.</p>
+<div class="opts">
+<p>(A) 1.84</p>
+<p>(B) 3.60</p>
+<p>(C) 12.69</p>
+<p>(D) 17.76</p>
+<p>(E) 14.87</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>伽瑪 GLM，8 筆配適結果見表，離散參數 \(\phi=1.4\)。求 Pearson 卡方統計量。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(A)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>伽瑪的變異數 \(\operatorname{Var}(Y)=\phi\mu^2\)，Pearson 卡方 \(=\sum\dfrac{(y_i-\hat\mu_i)^2}{\phi\hat\mu_i^2}\)：</p>
+<p>\[\frac{1}{1.4}\left(\frac{4}{9}+\frac{64}{225}+\frac{4}{100}+\frac{36}{25}+\frac{25}{324}+\frac{25}{100}+\frac{9}{400}+\frac{4}{324}\right)=\frac{2.5709}{1.4}=1.836\]</p>
+<p>（<a href="ch14.html#s1">第 14 章 14.1 節</a>）</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>伽瑪的變異數函數是 \(\mu^2\)，不是 \(\mu\)；用 \(\mu\) 會得到大得多的數。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch14.html">第 14 章 廣義線性模型：如何判斷配適及選模</a></p></div></div></article><article class="exam-q" id="q32" data-key="C" data-ch="18"><div class="ex-head"><span class="ex-tag">第 32 題</span><span class="q-state"></span></div><div class="prompt"><p>K-means clustering is performed on the following six observations:</p>
+<p>\[(5,15)\quad(6,11)\quad(7,10)\quad(5,18)\quad(6,14)\quad(7,7)\]</p>
+<p>The observations are to be grouped into two clusters. Initially, the first three points are grouped into one cluster and the last three points into the other cluster.</p>
+<p>Determine the number of points that move between clusters in the first iteration of the algorithm.</p>
+<div class="opts">
+<p>(A) 0</p>
+<p>(B) 1</p>
+<p>(C) 2</p>
+<p>(D) 3</p>
+<p>(E) 4</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>6 個點做 K＝2 的 K 平均。起始時前三點一群、後三點一群。第一次迭代有幾個點換群？</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>第一步，算形心：群 1 \(=(6,12)\)，群 2 \(=(6,13)\)。</p>
+<p>第二步，兩形心的第一座標相同，所以只看第二座標：小於 12.5 歸群 1，大於 12.5 歸群 2。</p>
+<p>第三步，對照原分組：\((5,15)\) 原在群 1，現在 \(15&gt;12.5\) 改去群 2；\((7,7)\) 原在群 2，現在 \(7&lt;12.5\) 改去群 1。其他四點不動。共 2 點換群（<a href="ch18.html#s1">第 18 章 18.1 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch18.html">第 18 章 群集分析：沒有標籤時如何界定相似</a></p></div></div></article><article class="exam-q" id="q33" data-key="D" data-ch="11"><div class="ex-head"><span class="ex-tag">第 33 題</span><span class="q-state"></span></div><div class="prompt"><p>You are given:</p>
+<div class="items">
+<p>(i) A response variable \(Y\) is in the exponential family,</p>
+</div>
+<p>\[f(y)=\exp\left(\frac{y\theta-b(\theta)}{\phi}+S(y,\phi)\right)\]</p>
+<div class="items">
+<p>(ii) \(\mu=\mathbf E[Y]=-\dfrac1\theta\)</p>
+<p>(iii) \(\phi=1\)</p>
+</div>
+<p>Determine \(\operatorname{Var}(Y)\).</p>
+<div class="opts">
+<p>(A) \(1/\mu\)</p>
+<p>(B) 1</p>
+<p>(C) \(\mu\)</p>
+<p>(D) \(\mu^2\)</p>
+<p>(E) \(\mu^3\)</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>指數族，\(\mu=-1/\theta\)，\(\phi=1\)。求 \(\operatorname{Var}(Y)\)。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>指數族的兩個公式：\(\mu=b&#x27;(\theta)\)，\(\operatorname{Var}(Y)=\phi\,b&#x27;&#x27;(\theta)\)。\(b&#x27;&#x27;\) 就是 \(\mu\) 對 \(\theta\) 的導數：</p>
+<p>\[b&#x27;&#x27;(\theta)=\frac{d}{d\theta}\left(-\frac1\theta\right)=\frac{1}{\theta^2}=\mu^2\]</p>
+<p>所以 \(\operatorname{Var}(Y)=\mu^2\)（這是指數分配／伽瑪的變異數函數）（<a href="ch11.html#s1">第 11 章 11.1 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch11.html">第 11 章 廣義線性模型：分配、連結與估計</a></p></div></div></article><article class="exam-q" id="q34" data-key="E" data-ch="11"><div class="ex-head"><span class="ex-tag">第 34 題</span><span class="q-state"></span></div><div class="prompt"><p>In a generalized linear model, \(Y_i\) follows a Tweedie distribution. You are given</p>
+<p>\[\mathbf E[Y_1]=2\qquad\operatorname{Var}(Y_1)=7.0711\]
+\[\mathbf E[Y_2]=3\qquad\operatorname{Var}(Y_2)=12.9904\]
+\[\mathbf E[Y_3]=2.5\]</p>
+<p>Determine \(\operatorname{Var}(Y_3)\).</p>
+<div class="opts">
+<p>(A) 9.48</p>
+<p>(B) 9.58</p>
+<p>(C) 9.68</p>
+<p>(D) 9.78</p>
+<p>(E) 9.88</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>Tweedie 分配，已知兩組平均與變異數，求 \(\mathbf E[Y_3]=2.5\) 時的變異數。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Tweedie 的變異數是平均的冪次：\(\operatorname{Var}(Y)=a\mu^p\)。兩個未知數、兩組資料，取對數變成線性方程：</p>
+<p>\[\ln7.0711=\ln a+p\ln2,\qquad \ln12.9904=\ln a+p\ln3\]</p>
+<p>相減得 \(p=\dfrac{\ln(12.9904/7.0711)}{\ln1.5}=1.5\)，回代 \(a=7.0711/2^{1.5}=2.5\)。</p>
+<p>\(\operatorname{Var}(Y_3)=2.5(2.5^{1.5})=9.882\)（<a href="ch11.html#s1">第 11 章 11.1 節</a>）。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch11.html">第 11 章 廣義線性模型：分配、連結與估計</a></p></div></div></article><article class="exam-q" id="q35" data-key="C" data-ch="8"><div class="ex-head"><span class="ex-tag">第 35 題</span><span class="q-state"></span></div><div class="prompt"><p>For a set of data with 40 observations, 2 predictors (\(X_1\) and \(X_2\)), and one response (\(Y\)), the residual sum of squares has been calculated for several different estimates of a linear model with no intercept. Only integer values from 1 to 5 were considered for estimates of \(\beta_1\) and \(\beta_2\).</p>
+<p>The grid below shows the residual sum of squares for every combination of the parameter estimates, after standardization:</p>
+<table>
+<thead>
+<tr>
+<th>\(\hat\beta_1\) \ \(\hat\beta_2\)</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2,855.0</td>
+<td>870.3</td>
+<td>464.4</td>
+<td>357.2</td>
+<td>548.6</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1,059.1</td>
+<td>488.4</td>
+<td>216.3</td>
+<td>242.8</td>
+<td>567.9</td>
+</tr>
+<tr>
+<td>3</td>
+<td>657.0</td>
+<td>220.0</td>
+<td>81.6</td>
+<td>241.9</td>
+<td>700.8</td>
+</tr>
+<tr>
+<td>4</td>
+<td>368.4</td>
+<td>65.1</td>
+<td>60.5</td>
+<td>354.5</td>
+<td>947.1</td>
+</tr>
+<tr>
+<td>5</td>
+<td>193.2</td>
+<td>23.7</td>
+<td>152.8</td>
+<td>580.6</td>
+<td>1,307.0</td>
+</tr>
+</tbody>
+</table>
+<p>Let:</p>
+<p>\(\hat\beta_1^R\) = Estimate of \(\beta_1\) using ridge regression with budget parameter \(s=25\)
+\(\hat\beta_2^R\) = Estimate of \(\beta_2\) using a ridge regression with budget parameter \(s=25\)</p>
+<p>Calculate the ratio \(\hat\beta_1^R/\hat\beta_2^R\).</p>
+<div class="opts">
+<p>(A) 0.75</p>
+<p>(B) 1.0</p>
+<p>(C) 1.33</p>
+<p>(D) 2.0</p>
+<p>(E) 2.5</p>
+</div></div><details class="zh"><summary>看中文題意（不影響作答）</summary><p>無截距的兩變數模型，\(\beta_1,\beta_2\) 只考慮 1～5 的整數，各組合的 RSS 見表。用預算形式的脊迴歸（\(\beta_1^2+\beta_2^2\le25\)），求 \(\hat\beta_1^R/\hat\beta_2^R\)。</p></details><div class="exam-sol" hidden><div class="sol-part 答案"><div class="sol-t">答案</div><p>(C)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>脊迴歸的預算形式：在 \(\beta_1^2+\beta_2^2\le s\) 的範圍內，挑 RSS 最小的組合。</p>
+<p>第一步，劃出可行範圍：任一係數為 5 時平方和至少 \(25+1=26\)，不行；\((4,4)\) 是 32，不行；\((4,3)\) 與 \((3,4)\) 剛好 25，可以。</p>
+<p>第二步，在可行格子裡找最小 RSS：\((4,3)\) 的 60.5 最小（\((4,2)\) 65.1、\((3,3)\) 81.6 次之）。全表最小的 23.7 在 \((5,2)\)，但不在預算內。</p>
+<p>所以 \(\hat\beta_1^R/\hat\beta_2^R=4/3=1.33\)（<a href="ch08.html#s1">第 8 章 8.1 節</a>）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>脊迴歸的限制是<strong>平方和</strong>；lasso 才是絕對值和 \(|\beta_1|+|\beta_2|\le s\)，兩者可行範圍不同。</p></div><div class="sol-part 章節"><div class="sol-t">對應章節</div><p><a href="ch08.html">第 8 章 線性迴歸：收縮與降維</a></p></div></div></article></section><div class="navfoot"><a href="exams.html">← 練習測驗列表</a><a href="exam4.html">練習測驗 4 →</a></div></main></body></html>

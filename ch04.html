@@ -1,8 +1,9 @@
 <!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>第 4 章　線性迴歸：F 檢定與巢狀模型｜SRM 精算筆記</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css">
-<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js"></script></head>
-<body><nav class="course-switcher"><a class="brand" href="index.html">SRM 精算考試｜中文研讀筆記</a><div class="pickers"><label for="chapter">選擇章節</label>
-<select id="chapter" aria-label="選擇章節"><option value="index.html">課程首頁</option><option value="ch01.html">第 1 章｜統計學習的基本問題</option><option value="ch02.html">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html" selected>第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html">第 16 章｜決策樹與集成學習</option><option value="ch17.html">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="practice.html">習題索引</option></select></div></nav><main class="course"><header class="ch-head"><div class="kicker">SRM・第 4 章</div><h1>線性迴歸：F 檢定與巢狀模型</h1><p class="ch-sub">\(t\) 檢定一次只檢查一個係數。要問「整個模型有沒有用」或「這一組變數能不能一起拿掉」，要用 \(F\) 檢定。本章推導 \(F\) 統計量的兩種寫法（平方和與 \(R^2\)），以及 \(F\) 和 \(t\) 的關係。</p><div class="chips"><a href="pdf/ch04.pdf">下載本章 PDF</a><a href="#exercises">章末習題（32 題）</a><span class="chip-note">觀念題 25 題（在各節後面）</span><button class="toggle-all" type="button">顯示全部解答</button></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">4.1 整體 \(F\) 檢定</a></li><li><a href="#s2">4.2 部分 \(F\) 檢定：比較巢狀模型</a></li></ol><p>本章對應講義第 4 課，讀本是 ISLR 3.2.2 節。考場不提供 \(F\) 分配表，所以題目幾乎都是「算出 \(F\) 統計量」；只有分子自由度是 1 時，可以把 \(F\) 開根號變成 \(t\)，用 \(t\) 表判斷顯著性。</p>
+<title>第 4 章　線性迴歸：F 檢定與巢狀模型｜SRM 精算考試</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css?v=89e65295">
+<script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js?v=779c73c2"></script></head>
+<body><div class="topbar"><a class="brand" href="index.html">SRM 精算考試｜課程筆記</a><div class="pickers">
+<label for="scopeSelect" class="scope-label">考試範圍</label><select id="scopeSelect" aria-label="考試範圍"><option value="all">全部</option><option value="t1">統計學習基礎</option><option value="t2">線性模型</option><option value="t3">時間數列</option><option value="t4">決策樹</option><option value="t5">非監督式學習</option></select>
+<label for="unitSelect">選擇單元</label><select id="unitSelect" aria-label="選擇單元"><option value="index.html" data-scope="all">課程首頁</option><option value="ch01.html" data-scope="t1">第 1 章｜統計學習的基本問題</option><option value="ch02.html" data-scope="t2">第 2 章｜線性迴歸：估計參數</option><option value="ch03.html" data-scope="t2">第 3 章｜線性迴歸：標準誤、解釋力與 t 檢定</option><option value="ch04.html" data-scope="t2" selected>第 4 章｜線性迴歸：F 檢定與巢狀模型</option><option value="ch05.html" data-scope="t2">第 5 章｜線性迴歸：模型診斷</option><option value="ch06.html" data-scope="t1">第 6 章｜重抽樣：驗證集與交叉驗證</option><option value="ch07.html" data-scope="t2">第 7 章｜線性迴歸：選擇預測變數</option><option value="ch08.html" data-scope="t2">第 8 章｜線性迴歸：收縮與降維</option><option value="ch09.html" data-scope="t2">第 9 章｜迴歸預測：平均反應與個別保戶</option><option value="ch10.html" data-scope="t2">第 10 章｜如何解讀迴歸結果</option><option value="ch11.html" data-scope="t2">第 11 章｜廣義線性模型：分配、連結與估計</option><option value="ch12.html" data-scope="t2">第 12 章｜類別反應：二元、名目與次序模型</option><option value="ch13.html" data-scope="t2">第 13 章｜計數反應：暴險量、過度離散與零件數</option><option value="ch14.html" data-scope="t2">第 14 章｜廣義線性模型：如何判斷配適及選模</option><option value="ch15.html" data-scope="t2">第 15 章｜K 最近鄰：從最佳分類到局部預測</option><option value="ch16.html" data-scope="t4">第 16 章｜決策樹與集成學習</option><option value="ch17.html" data-scope="t5">第 17 章｜主成分分析：把多變數資料投影到少數方向</option><option value="ch18.html" data-scope="t5">第 18 章｜群集分析：沒有標籤時如何界定相似</option><option value="ch19.html" data-scope="t3">第 19 章｜時間數列：從平穩性到預測誤差</option><option value="ch20.html" data-scope="t3">第 20 章｜自迴歸：記憶、估計與多步預測</option><option value="ch21.html" data-scope="t3">第 21 章｜預測模型：平滑、季節、單根與波動</option><option value="exams.html" data-scope="all">練習測驗</option><option value="samples.html" data-scope="all">SOA 樣題對照</option><option value="practice.html" data-scope="all">習題索引</option><option value="exam1.html" data-scope="all">練習測驗 1</option><option value="exam2.html" data-scope="all">練習測驗 2</option><option value="exam3.html" data-scope="all">練習測驗 3</option><option value="exam4.html" data-scope="all">練習測驗 4</option><option value="exam5.html" data-scope="all">練習測驗 5</option><option value="exam6.html" data-scope="all">練習測驗 6</option></select><button class="toggle-all" type="button">顯示全部解答</button></div></div><main class="course"><header class="ch-head"><div class="kicker">SRM・第 4 章</div><h1>線性迴歸：F 檢定與巢狀模型</h1><p class="ch-sub">\(t\) 檢定一次只檢查一個係數。要問「整個模型有沒有用」或「這一組變數能不能一起拿掉」，要用 \(F\) 檢定。本章推導 \(F\) 統計量的兩種寫法（平方和與 \(R^2\)），以及 \(F\) 和 \(t\) 的關係。</p><div class="chips"><a href="pdf/ch04.pdf" download>下載本單元 PDF</a><a href="#exercises">章末習題（32 題）</a><span class="chip-note">觀念題 25 題（在各節後面）</span></div></header><section class="toc"><h2>本章內容</h2><ol><li><a href="#s1">4.1 整體 \(F\) 檢定</a></li><li><a href="#s2">4.2 部分 \(F\) 檢定：比較巢狀模型</a></li></ol><p>本章對應講義第 4 課，讀本是 ISLR 3.2.2 節。考場不提供 \(F\) 分配表，所以題目幾乎都是「算出 \(F\) 統計量」；只有分子自由度是 1 時，可以把 \(F\) 開根號變成 \(t\)，用 \(t\) 表判斷顯著性。</p>
 <div class="box map">
 <div class="box-t">考點地圖：這一章在考試裡的位置</div>
 <p><strong>對應考綱</strong>：主題 2「線性模型」（占 40～50%）：整體 \(F\) 檢定、巢狀模型的部分 \(F\) 檢定、\(F\) 與 \(R^2\)、\(F\) 與 \(t\) 的關係。</p>
@@ -123,6 +124,12 @@
 <p>這條式子不必背，只要記住技巧：<strong>分子分母同除以 Total SS</strong>。反過來由 \(F\) 求 \(R^2\)：</p>
 <p>\[F\,k\,(1-R^2)=(n-k-1)R^2\ \Rightarrow\ R^2=\frac{kF}{kF+(n-k-1)} .\]</p>
 <p>所以知道 \(F\)、\(n\)、\(k\) 就能算 \(R^2\)，不需要任何平方和（章末 4.28 題）。\(F\) 是 \(R^2\) 的遞增函數：在 \(n\)、\(k\) 固定時，\(F\) 大等價於 \(R^2\) 大，但 \(F\) 有已知的抽樣分配，可以做檢定，這正好補上<a href="ch03.html">第 3 章</a>說的 \(R^2\) 的缺點。</p>
+<figure><img src="assets/fig/ch04-fr2.svg" alt="左： 時  對  的關係，三種樣本數。同樣的 ， 時 （不顯著）， 時 （非常顯著）。圓點是 5% 臨界值的位置。右：剛好達到 5% 顯著所需的 ： 要 0.378， 只要 0.039。所以「 很小但  檢定顯著」在大樣本中很常見，顯著不代表模型解釋力強。" loading="lazy"><figcaption>左：\(k=3\) 時 \(F\) 對 \(R^2\) 的關係，三種樣本數。同樣的 \(R^2=0.2\)，\(n=20\) 時 \(F=1.33\)（不顯著），\(n=200\) 時 \(F=16.3\)（非常顯著）。圓點是 5% 臨界值的位置。右：剛好達到 5% 顯著所需的 \(R^2\)：\(n=20\) 要 0.378，\(n=200\) 只要 0.039。所以「\(R^2\) 很小但 \(F\) 檢定顯著」在大樣本中很常見，顯著不代表模型解釋力強。</figcaption></figure>
+
+<div class="box intuit">
+<div class="box-t">直覺：\(F\) 是「每個自由度解釋了多少」對「每個自由度剩下多少雜訊」</div>
+<p>分子 Regression SS\(/k\)：每多用一個解釋變數，平均換來多少平方和的下降。分母 \(s^2\)：每個剩下的自由度平均有多少雜訊。\(H_0\) 成立時，解釋變數只是在「配雜訊」，每個變數平均也只能降低大約 \(\sigma^2\)，所以 \(F\approx1\)。\(F\) 遠大於 1，表示這些變數降低的平方和遠超過純雜訊所能做到的。</p>
+</div>
 <h3>五、簡單迴歸：\(F=t^2\)</h3>
 <p>\(k=1\) 時，整體 \(F\) 檢定和斜率的 \(t\) 檢定是同一件事。</p>
 <div class="box derive">
@@ -179,7 +186,7 @@ The \(F\) ratio is 19.45. Determine the upper bound of the shortest 95-percent c
 \[S_{xx}=1{,}330{,}224-\frac{4860^2}{20}=149{,}244 .\]
 \(b_1=-56.527/149{,}244=-0.00037876\)。</p>
 <p><strong>第二步：由 \(F\) 得標準誤。</strong> \(|t|=\sqrt{19.45}=4.410\)，\(s_{b_1}=|b_1|/4.410=0.00008588\)。</p>
-<p><strong>第三步：區間。</strong> \(t_{0.025,18}=2.101\)，上限 \(=-0.00037876+2.101\times0.00008588=-0.000198\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>也可以用 \(\sum y_i^2\) 算 Error SS 再算標準誤，結果相同；用 \(F\) 反推比較快。</p></div></div></article><article class="exercise" id="q4-15"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.15 題</b><small>・講義 p.65・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are given the following excerpt from an ANOVA table for a regression:</p>
+<p><strong>第三步：區間。</strong> \(t_{0.025,18}=2.101\)，上限 \(=-0.00037876+2.101\times0.00008588=-0.000198\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>也可以用 \(\sum y_i^2\) 算 Error SS 再算標準誤，結果相同；用 \(F\) 反推比較快。</p></div></div></article><article class="exercise" id="q4-15"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.15 題</b><small>・講義 p.65・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>You are given the following excerpt from an ANOVA table for a regression:</p>
 <table>
 <thead>
 <tr>
@@ -217,7 +224,7 @@ The \(F\) ratio is 19.45. Determine the upper bound of the shortest 95-percent c
 <p>Determine the regression sum of squares.</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>迴歸的 ANOVA 表節錄：迴歸自由度 4，\(F\) 值 20.79；總和自由度 22、平方和 14,230。求迴歸平方和。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(11{,}698\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>誤差自由度 \(=22-4=18\)。用 \(R^2=\dfrac{kF}{kF+(n-k-1)}\)：
 \[R^2=\frac{4\times20.79}{4\times20.79+18}=\frac{83.16}{101.16}=0.82206 .\]
 Regression SS \(=R^2\times\text{Total SS}=0.82206\times14{,}230=11{,}698\)。</p>
-<p>驗算：Error SS \(=14{,}230-11{,}698=2{,}532\)，\(F=\dfrac{11{,}698/4}{2{,}532/18}=\dfrac{2924.5}{140.67}=20.79\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>總和的自由度是 \(n-1=22\)，所以 \(n=23\)；誤差自由度用 \(22-4\)，不是 \(23-4\)。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（13 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC4-1-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C4.1-1</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For a linear regression with \(k\) explanatory variables, an intercept, \(n\) observations and normal errors, determine which of the following statements about the overall \(F\) test is/are true.</p>
+<p>驗算：Error SS \(=14{,}230-11{,}698=2{,}532\)，\(F=\dfrac{11{,}698/4}{2{,}532/18}=\dfrac{2924.5}{140.67}=20.79\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>總和的自由度是 \(n-1=22\)，所以 \(n=23\)；誤差自由度用 \(22-4\)，不是 \(23-4\)。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（13 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC4-1-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C4.1-1</b><small>仿 SOA 樣題・<a href="#s1">回到本節開頭</a></small></div><div class="prompt"><p>For a linear regression with \(k\) explanatory variables, an intercept, \(n\) observations and normal errors, determine which of the following statements about the overall \(F\) test is/are true.</p>
 <div class="items">
 <p>I. It tests \(H_0:\beta_1=\beta_2=\cdots=\beta_k=0\).</p>
 <p>II. \(H_0\) is rejected when \(F\) is either very small or very large.</p>
@@ -398,6 +405,18 @@ Regression SS \(=R^2\times\text{Total SS}=0.82206\times14{,}230=11{,}698\)。</p
 <li>分母一定用<strong>完整模型</strong>的 Error SS 與自由度 \(n-k-1\)，\(k\) 是完整模型的斜率個數。</li>
 </ul>
 <p>整體 \(F\) 是它的特例：\(q=k\)、受限模型只有截距，\(\text{Error SS}_R=\text{Total SS}\)，分子變成 Regression SS\(/k\)。</p>
+<div class="box derive">
+<div class="box-t">推導：為什麼部分 \(F\) 在 \(H_0\) 下服從 \(F_{q,\,n-k-1}\)</div>
+<p>沿用 <a href="ch04.html#s1">4.1 節</a>的正交座標，但把完整模型的欄位空間再拆開：
+- \(\mathbf q_1,\ldots,\mathbf q_{k-q+1}\)：張成<strong>受限模型</strong>的欄位空間（截距與留下的 \(k-q\) 個變數）；
+- \(\mathbf q_{k-q+2},\ldots,\mathbf q_{k+1}\)：再加上這 \(q\) 個方向，就張成<strong>完整模型</strong>的欄位空間；
+- 其餘 \(n-k-1\) 個方向和完整模型的欄位空間垂直。</p>
+<p>\(\text{Error SS}_{UR}\) 是 \(\mathbf y\) 在最後 \(n-k-1\) 個方向上的長度平方；\(\text{Error SS}_R\) 是在最後 \(n-k-1\) 個方向<strong>加上</strong>中間 \(q\) 個方向的長度平方。所以兩者的差
+\[\text{Error SS}_R-\text{Error SS}_{UR}=\sum_{j=k-q+2}^{k+1}(\mathbf q_j&#x27;\mathbf y)^2,\]
+就是 \(\mathbf y\) 在那 \(q\) 個「新增方向」上的長度平方。\(H_0\) 成立時 \(X\boldsymbol\beta\) 落在受限模型的空間裡，在這 \(q\) 個方向上沒有分量，\(\mathbf q_j&#x27;\mathbf y=\mathbf q_j&#x27;\boldsymbol\varepsilon=z_j\)，於是差值 \(/\sigma^2\sim\chi^2_q\)；它和 \(\text{Error SS}_{UR}/\sigma^2\sim\chi^2_{n-k-1}\) 用的是不重疊的座標，彼此獨立。代入 \(F\) 分配的定義即得。</p>
+</div>
+<figure><img src="assets/fig/ch04-partial-sim.svg" alt="模擬 4,000 次（，完整模型 5 個變數，檢定其中 3 個為 0）。藍色： 成立時部分  的直方圖，與理論的  密度一致，超過 5% 臨界值 2.88 的比例是 0.051。紅色：那 3 個係數其實各是 0.35 時， 整體往右移，有 83% 的機會拒絕 （檢定力）。" loading="lazy"><figcaption>模擬 4,000 次（\(n=40\)，完整模型 5 個變數，檢定其中 3 個為 0）。藍色：\(H_0\) 成立時部分 \(F\) 的直方圖，與理論的 \(F_{3,34}\) 密度一致，超過 5% 臨界值 2.88 的比例是 0.051。紅色：那 3 個係數其實各是 0.35 時，\(F\) 整體往右移，有 83% 的機會拒絕 \(H_0\)（檢定力）。</figcaption></figure>
+
 <figure><img src="assets/fig/ch04-nested.svg" alt="部分  檢定比較的東西。三個模型的 Total SS 相同；受限模型的誤差平方和 46，完整模型多放  個變數後降到 38。分子是這 8 的減少量除以 ，分母是完整模型的 。" loading="lazy"><figcaption>部分 \(F\) 檢定比較的東西。三個模型的 Total SS 相同；受限模型的誤差平方和 46，完整模型多放 \(q\) 個變數後降到 38。分子是這 8 的減少量除以 \(q\)，分母是完整模型的 \(s^2\)。</figcaption></figure>
 
 <div class="box ex">
@@ -455,7 +474,7 @@ Multiple R-squared: 0.82.</p>
 - 完整模型：\(\text{Error SS}_{UR}=3.85^2\times44=652.19\)
 - 受限模型少一個參數，自由度 45：\(\text{Error SS}_R=4.02^2\times45=727.218\)</p>
 <p>\[F_{1,44}=\frac{(727.218-652.19)/1}{652.19/44}=\frac{75.028}{14.823}=5.06 .\]
-\(R^2\) 用不到。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>受限模型的自由度是 45，不是 44。兩個 \(s\) 不能直接相減。</p></div></div></article><article class="exercise" id="q4-18"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.18 題</b><small>・講義 p.66・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>You are fitting the following model to 20 observations:
+\(R^2\) 用不到。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>受限模型的自由度是 45，不是 44。兩個 \(s\) 不能直接相減。</p></div></div></article><article class="exercise" id="q4-18"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.18 題</b><small>・講義 p.66・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>You are fitting the following model to 20 observations:
 \[y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\beta_4x_{i4}+\varepsilon_i\]
 The error sum of squares for this model is 8. You then constrain \(\beta_3=\beta_4=0\) and perform a regression. The error sum of squares for the constrained model is 10.</p>
 <p>Calculate the \(F\) statistic to test the significance of the variables \(x_3\) and \(x_4\).</p></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>以 20 筆觀察配適 \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i3}+\beta_4x_{i4}+\varepsilon_i\)，Error SS \(=8\)。限制 \(\beta_3=\beta_4=0\) 重新迴歸，Error SS \(=10\)。求檢定 \(x_3\)、\(x_4\) 顯著性的 \(F\) 統計量。</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>\(F_{2,15}=1.875\)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(q=2\)，完整模型誤差自由度 \(20-5=15\)。
@@ -491,7 +510,7 @@ The error sum of squares for this model is 8. You then constrain \(\beta_3=\beta
 <strong>受限模型：</strong> \(k=2\)，誤差自由度 \(820-3=817\)。
 \[R^2_R=\frac{2\times759}{2\times759+817}=\frac{1518}{2335}=0.65011 .\]
 <strong>部分 \(F\)：</strong> \(q=3\)，
-\[F_{3,814}=\frac{(0.72018-0.65011)/3}{(1-0.72018)/814}=\frac{0.023357}{0.00034376}=67.95 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>兩個整體 \(F\) 的自由度不同，不能直接相減。受限模型的整體 \(F\) 比較大，只是因為它的分子自由度小，不代表模型比較好。</p></div></div></article><article class="exercise" id="q4-32"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.32 題</b><small>・講義 p.71・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>For a regression model of the form \(y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3+\beta_4x_4+\varepsilon\) based on 15 observations:</p>
+\[F_{3,814}=\frac{(0.72018-0.65011)/3}{(1-0.72018)/814}=\frac{0.023357}{0.00034376}=67.95 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>兩個整體 \(F\) 的自由度不同，不能直接相減。受限模型的整體 \(F\) 比較大，只是因為它的分子自由度小，不代表模型比較好。</p></div></div></article><article class="exercise" id="q4-32"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 4.32 題</b><small>・講義 p.71・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>For a regression model of the form \(y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3+\beta_4x_4+\varepsilon\) based on 15 observations:</p>
 <div class="items">
 <p>(i) The error sum of squares is 123.</p>
 <p>(ii) If variable \(x_4\) is removed, the error sum of squares is 177.</p>
@@ -508,7 +527,7 @@ The error sum of squares for this model is 8. You then constrain \(\beta_3=\beta
 <p>(A) \(x_4\) 在 10% 不顯著　(B) 10% 顯著、5% 不顯著　(C) 5% 顯著、2% 不顯著　(D) 2% 顯著、1% 不顯著　(E) 1% 顯著</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(q=1\)，完整模型誤差自由度 \(15-5=10\)。
 \[F_{1,10}=\frac{177-123}{123/10}=\frac{54}{12.3}=4.390,\qquad |t|=\sqrt{4.390}=2.095 .\]
-雙尾臨界值：10% 為 \(t_{0.05,10}=1.812\)，5% 為 \(t_{0.025,10}=2.228\)。\(1.812&lt;2.095&lt;2.228\)，所以 10% 顯著、5% 不顯著。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>考場沒有 \(F\) 表，這種 \(q=1\) 的題目就是要你轉成 \(t\)。記得 \(F\) 的單尾對應 \(t\) 的雙尾。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（12 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC4-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C4.2-1</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A partial \(F\) test compares a restricted model to an unrestricted model:
+雙尾臨界值：10% 為 \(t_{0.05,10}=1.812\)，5% 為 \(t_{0.025,10}=2.228\)。\(1.812&lt;2.095&lt;2.228\)，所以 10% 顯著、5% 不顯著。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>考場沒有 \(F\) 表，這種 \(q=1\) 的題目就是要你轉成 \(t\)。記得 \(F\) 的單尾對應 \(t\) 的雙尾。</p></div></div></article></div><div class="sec-ex cc"><div class="sec-ex-t">觀念題（12 題，仿 SOA 樣題的觀念判斷與小計算，含跨章節）</div><article class="exercise concept-q" id="qC4-2-1"><div class="ex-head"><span class="ex-tag cc">觀念</span><b>觀念題 C4.2-1</b><small>仿 SOA 樣題・<a href="#s2">回到本節開頭</a></small></div><div class="prompt"><p>A partial \(F\) test compares a restricted model to an unrestricted model:
 \[F=\frac{(\text{Error SS}_R-\text{Error SS}_{UR})/q}{\text{Error SS}_{UR}/(n-k-1)}.\]
 Determine which of the following statements is/are true.</p>
 <div class="items">
@@ -735,7 +754,7 @@ Calculate the \(t\) statistic used for testing the hypothesis \(H_0:\beta_1=0\).
 <p>(A) 1.5　(B) 2.0　(C) 2.5　(D) 3.0　(E) 3.5</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 3.0</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Regression SS \(=225\)，Error SS \(=425-225=200\)，自由度 8。
 \(F=\dfrac{225}{200/8}=9\)，\(|t|=\sqrt9=3\)。</p>
-<p>直接驗算：\(b_1^2S_{xx}=225\)，\(b_1=\pm0.75\)；\(s^2=25\)，\(s_{b_1}=\sqrt{25/400}=0.25\)；\(|t|=0.75/0.25=3\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>由 \(F\) 只能得到 \(|t|\)；正負號要看斜率的方向。</p></div></div></article><article class="exercise" id="q4-11"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.11 題</b><small>・講義 p.63・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[120-81-98:2] You fit a simple regression model to 47 observations and determine \(\hat y_i=1.0+1.2x_i\). The total sum of squares (Total SS), corrected for mean, is 54, and the regression sum of squares (Regression SS) is 7.</p>
+<p>直接驗算：\(b_1^2S_{xx}=225\)，\(b_1=\pm0.75\)；\(s^2=25\)，\(s_{b_1}=\sqrt{25/400}=0.25\)；\(|t|=0.75/0.25=3\)。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>由 \(F\) 只能得到 \(|t|\)；正負號要看斜率的方向。</p></div></div></article><article class="exercise" id="q4-11"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.11 題</b><small>・講義 p.63・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[120-81-98:2] You fit a simple regression model to 47 observations and determine \(\hat y_i=1.0+1.2x_i\). The total sum of squares (Total SS), corrected for mean, is 54, and the regression sum of squares (Regression SS) is 7.</p>
 <p>Determine the value of the \(t\) statistic for testing \(H_0:\beta_1=0\) against \(H_1:\beta_1\ne0\).</p>
 <div class="opts">
 <p>(A) 0.4</p>
@@ -747,7 +766,7 @@ Calculate the \(t\) statistic used for testing the hypothesis \(H_0:\beta_1=0\).
 <div class="opts">
 <p>(A) 0.4　(B) 1.2　(C) 2.2　(D) 2.6　(E) 6.7</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 2.59</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Error SS \(=54-7=47\)，自由度 45，\(s^2=47/45=1.0444\)。
-\(F=7/1.0444=6.702\)，\(t=+\sqrt{6.702}=2.589\)（斜率 1.2 為正，取正號）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>(E) 6.7 是 \(F\)，題目問的是 \(t\)。</p></div></div></article><article class="exercise" id="q4-12"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.12 題</b><small>・講義 p.64・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[120-83-98:3] You fit a one-variable plus intercept regression model to seven observations. You determine:
+\(F=7/1.0444=6.702\)，\(t=+\sqrt{6.702}=2.589\)（斜率 1.2 為正，取正號）。</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>(E) 6.7 是 \(F\)，題目問的是 \(t\)。</p></div></div></article><article class="exercise" id="q4-12"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.12 題</b><small>・講義 p.64・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[120-83-98:3] You fit a one-variable plus intercept regression model to seven observations. You determine:
 \[\text{Error SS}=218.680\qquad F=2.088\]
 Calculate \(R^2\).</p>
 <div class="opts">
@@ -853,7 +872,7 @@ Calculate the \(F\) statistic.</p></div><button class="reveal" type="button" ari
 </div></div><button class="reveal" type="button" aria-expanded="true">隱藏解答</button><div class="solution"><div class="sol-part 中文題意"><div class="sol-t">中文題意</div><p>（MAS-I 2018 秋 #32）以收入、教育、儲蓄估計廚房設備支出，20 筆觀察：</p>
 <p>迴歸平方和 2.65376，總平方和 7.62956。檢定 \(H_0:\beta_1=\beta_2=\beta_3=0\) 的 \(F\) 統計量是多少？</p>
 <p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 2.84</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Error SS \(=7.62956-2.65376=4.97580\)，自由度 \(20-4=16\)。
-\[F_{3,16}=\frac{2.65376/3}{4.97580/16}=\frac{0.88459}{0.31099}=2.84 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>三個 \(t\) 都大於 2.6，個別看都顯著，整體 \(F\) 卻只有 2.84（\(F_{3,16}\) 的 5% 臨界值約 3.24，不顯著）。這種組合在實務上很少見，題目只要求算出 \(F\)，照定義算即可。</p></div></div></article><article class="exercise" id="q4-19"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.19 題</b><small>・講義 p.66・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[ST-S15:21] The following two linear regression models were fit to 20 observations:</p>
+\[F_{3,16}=\frac{2.65376/3}{4.97580/16}=\frac{0.88459}{0.31099}=2.84 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>三個 \(t\) 都大於 2.6，個別看都顯著，整體 \(F\) 卻只有 2.84（\(F_{3,16}\) 的 5% 臨界值約 3.24，不顯著）。這種組合在實務上很少見，題目只要求算出 \(F\)，照定義算即可。</p></div></div></article><article class="exercise" id="q4-19"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.19 題</b><small>・講義 p.66・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[ST-S15:21] The following two linear regression models were fit to 20 observations:</p>
 <ul>
 <li>Model 1: \(Y=\beta_0+\beta_1X_1+\beta_2X_2+\varepsilon\)</li>
 <li>Model 2: \(Y=\beta_0+\beta_1X_1+\beta_2X_2+\beta_3X_3+\beta_4X_4+\varepsilon\)</li>
@@ -1025,7 +1044,7 @@ Calculate the \(F\) statistic.</p></div><button class="reveal" type="button" ari
 <p>(A) 5.8　(B) 4.5　(C) 2.6　(D) 1.9　(E) 1.6</p>
 </div>
 <p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 1.93</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>\(q=6\)，分母用模型 A 的誤差均方 4,272（自由度 18）。
-\[F_{6,18}=\frac{(126{,}471-76{,}893)/6}{76{,}893/18}=\frac{8263.0}{4271.8}=1.934 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>(A) 5.8 是兩個迴歸均方相除之類的錯誤；部分 \(F\) 的分子是 Error SS 的<strong>差</strong>除以 \(q\)。</p></div></div></article><article class="exercise" id="q4-24"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.24 題</b><small>・講義 p.68・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[120-82-97:4] You apply all possible regression models to a set of five observations with three explanatory variables and an intercept. You determine Error SS, the sum of squares due to error (or residual), for each of the models:</p>
+\[F_{6,18}=\frac{(126{,}471-76{,}893)/6}{76{,}893/18}=\frac{8263.0}{4271.8}=1.934 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>(A) 5.8 是兩個迴歸均方相除之類的錯誤；部分 \(F\) 的分子是 Error SS 的<strong>差</strong>除以 \(q\)。</p></div></div></article><article class="exercise" id="q4-24"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.24 題</b><small>・講義 p.68・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[120-82-97:4] You apply all possible regression models to a set of five observations with three explanatory variables and an intercept. You determine Error SS, the sum of squares due to error (or residual), for each of the models:</p>
 <table>
 <thead>
 <tr>
@@ -1086,7 +1105,7 @@ Calculate the \(F\) statistic.</p></div><button class="reveal" type="button" ari
 <p>(A) 0.3　(B) 0.7　(C) 1.0　(D) 1.4　(E) 1.7</p>
 </div>
 <p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 0.69</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>受限模型是 I（只有 \(x_1\)），完整模型是 V（\(x_1,x_3\)）。\(q=1\)，完整模型誤差自由度 \(5-3=2\)。
-\[F_{1,2}=\frac{(5.85-4.35)/1}{4.35/2}=\frac{1.5}{2.175}=0.690 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>分母要用模型 V 的 Error SS，不是有三個變數的模型 VII。\(y\) 的變異數是干擾資訊。</p></div></div></article><article class="exercise" id="q4-25"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.25 題</b><small>・講義 p.68・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[120-81-98:5, Sample C4:35] You are determining the relationship of salary (\(y\)) to experience (\(x_1\)) for both men (\(x_2=1\)) and women (\(x_2=0\)). You fit the model \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i1}x_{i2}+\varepsilon_i\) to a set of observations for a sample of employees. You are given:</p>
+\[F_{1,2}=\frac{(5.85-4.35)/1}{4.35/2}=\frac{1.5}{2.175}=0.690 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>分母要用模型 V 的 Error SS，不是有三個變數的模型 VII。\(y\) 的變異數是干擾資訊。</p></div></div></article><article class="exercise" id="q4-25"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.25 題</b><small>・講義 p.68・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[120-81-98:5, Sample C4:35] You are determining the relationship of salary (\(y\)) to experience (\(x_1\)) for both men (\(x_2=1\)) and women (\(x_2=0\)). You fit the model \(y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i1}x_{i2}+\varepsilon_i\) to a set of observations for a sample of employees. You are given:</p>
 <div class="items">
 <p>(i) There are 11 observations.</p>
 <p>(ii) Regression SS is 330.0117 for this model and Error SS is 12.8156.</p>
@@ -1103,7 +1122,7 @@ Calculate the \(F\) statistic.</p></div><button class="reveal" type="button" ari
 <div class="opts">
 <p>(A) 0.6　(B) 2.0　(C) 3.5　(D) 4.1　(E) 6.2</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(D) 4.07</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>「男女的線性關係相同」表示截距與斜率都相同：\(\beta_2=\beta_3=0\)，\(q=2\)。完整模型 \(k=3\)，誤差自由度 \(11-4=7\)。
-\[F_{2,7}=\frac{(27.7281-12.8156)/2}{12.8156/7}=\frac{7.45625}{1.83080}=4.073 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>只檢定 \(\beta_3=0\)（斜率相同）是另一個問題。「線性關係相同」指整條線，包括截距。</p></div></div></article><article class="exercise" id="q4-28"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.28 題</b><small>・講義 p.69・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #24] Sarah performs a regression of the return on a mutual fund (\(y\)) on four predictors plus an intercept. She uses monthly returns over 105 months.</p>
+\[F_{2,7}=\frac{(27.7281-12.8156)/2}{12.8156/7}=\frac{7.45625}{1.83080}=4.073 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>只檢定 \(\beta_3=0\)（斜率相同）是另一個問題。「線性關係相同」指整條線，包括截距。</p></div></div></article><article class="exercise" id="q4-28"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.28 題</b><small>・講義 p.69・<a href="#s1">回到對應概念</a></small></div><div class="prompt"><p>[SRM Sample Question #24] Sarah performs a regression of the return on a mutual fund (\(y\)) on four predictors plus an intercept. She uses monthly returns over 105 months.</p>
 <p>Her software calculates the \(F\) statistic for the regression as \(F=20.0\), but then it quits working before it calculates the value of \(R^2\). While she waits on hold with the help desk, she tries to calculate \(R^2\) from the \(F\)-statistic.</p>
 <p>Determine which of the following statements about the attempted calculation is true.</p>
 <div class="opts">
@@ -1137,7 +1156,7 @@ For this new model, you determine: Regression SS \(=65.6\), Total SS \(=128\).</
 <p>(A) 0.01　(B) 0.41　(C) 1.76　(D) 4.30　(E) 10.40</p>
 </div></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(B) 0.41</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>Error SS 的減少量等於 Regression SS 的增加量：\(65.6-61.3=4.3\)。
 完整模型 Error SS \(=128-65.6=62.4\)，自由度 \(10-4=6\)。
-\[F_{1,6}=\frac{4.3/1}{62.4/6}=\frac{4.3}{10.4}=0.413 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯</div><p>(D) 4.30 只算了分子；(E) 10.40 是分母。</p></div></div></article><article class="exercise" id="q4-30"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.30 題</b><small>・講義 p.70・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[4-F02:27] For the multiple regression model \(y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3+\beta_4x_4+\beta_5x_5+\varepsilon\), you are given:</p>
+\[F_{1,6}=\frac{4.3/1}{62.4/6}=\frac{4.3}{10.4}=0.413 .\]</p></div><div class="sol-part 易錯"><div class="sol-t">易錯提醒</div><p>(D) 4.30 只算了分子；(E) 10.40 是分母。</p></div></div></article><article class="exercise" id="q4-30"><div class="ex-head"><span class="ex-tag">練習</span><b>第 4.30 題</b><small>・講義 p.70・<a href="#s2">回到對應概念</a></small></div><div class="prompt"><p>[4-F02:27] For the multiple regression model \(y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3+\beta_4x_4+\beta_5x_5+\varepsilon\), you are given:</p>
 <div class="items">
 <p>(i) There are 3,120 observations.</p>
 <p>(ii) The total sum of squares is 15,000.</p>
@@ -1193,4 +1212,4 @@ For this new model, you determine: Regression SS \(=65.6\), Total SS \(=128\).</
 </div>
 <p>（數據、圖表與選項見上方英文題目。）</p></div><div class="sol-part 答案"><div class="sol-t">答案</div><p>(E)</p></div><div class="sol-part 解析"><div class="sol-t">解析</div><p>只加入一個變數，\(q=1\)，部分 \(F\) 等於失業率係數 \(t\) 比的平方。完整模型（II）誤差自由度 \(11-3=8\)。
 \[F_{1,8}=\frac{12{,}204-9{,}286}{9{,}286/8}=\frac{2918}{1160.75}=2.514,\qquad |t|=\sqrt{2.514}=1.586 .\]
-10% 雙尾臨界值 \(t_{0.05,8}=1.860&gt;1.586\)，所以 10% 也不顯著。</p></div></div></article></section><button class="toggle-all float" type="button">顯示全部解答</button><div class="navfoot"><a href="ch03.html">← 第 3 章</a><a href="ch05.html">第 5 章 →</a></div></main></body></html>
+10% 雙尾臨界值 \(t_{0.05,8}=1.860&gt;1.586\)，所以 10% 也不顯著。</p></div></div></article></section><div class="navfoot"><a href="ch03.html">← 第 3 章</a><a href="ch05.html">第 5 章 →</a></div></main></body></html>

@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded',()=>{
- const sel=document.getElementById('chapter');if(sel)sel.onchange=()=>location.href=sel.value;
+ const sel=document.getElementById('unitSelect');if(sel)sel.onchange=()=>location.href=sel.value;
+ const sc=document.getElementById('scopeSelect');if(sc&&sel){const apply=()=>{const v=sc.value;[...sel.options].forEach(o=>{o.hidden=!(v==='all'||o.dataset.scope==='all'||o.dataset.scope===v||o.selected)})};
+  try{const s0=localStorage.getItem('srm-scope');if(s0)sc.value=s0}catch{};apply();sc.onchange=()=>{try{localStorage.setItem('srm-scope',sc.value)}catch{};apply()}}
  const EXS=()=>[...document.querySelectorAll('.exercise')];
+ window.addEventListener('beforeprint',()=>EXS().forEach(x=>x.classList.remove('folded')));
  const setEx=(ex,f)=>{ex.classList.toggle('folded',f);const r=ex.querySelector('button.reveal');if(r){r.textContent=f?'顯示解答':'隱藏解答';r.setAttribute('aria-expanded',String(!f))}};
  const syncAll=()=>{const open=EXS().some(x=>!x.classList.contains('folded'));document.querySelectorAll('button.toggle-all').forEach(b=>{b.textContent=open?'隱藏全部解答':'顯示全部解答';b.setAttribute('aria-pressed',String(!open))})};
  document.addEventListener('click',e=>{const t=e.target.closest('button.toggle-all');if(t){const open=EXS().some(x=>!x.classList.contains('folded'));EXS().forEach(x=>setEx(x,open));syncAll();return}
