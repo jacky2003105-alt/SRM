@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>第 7 章　線性迴歸：選擇預測變數｜SRM 精算考試</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css?v=89e65295">
+<title>第 7 章　線性迴歸：選擇預測變數｜SRM 精算考試</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css?v=462b7acd">
 <script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js?v=779c73c2"></script></head>
 <body><div class="topbar"><a class="brand" href="index.html">SRM 精算考試｜課程筆記</a><div class="pickers">
 <label for="scopeSelect" class="scope-label">考試範圍</label><select id="scopeSelect" aria-label="考試範圍"><option value="all">全部</option><option value="t1">統計學習基礎</option><option value="t2">線性模型</option><option value="t3">時間數列</option><option value="t4">決策樹</option><option value="t5">非監督式學習</option></select>
@@ -519,8 +519,6 @@ TSS\(/(n-1)\) 就是反應的樣本變異數 40，所以
 <figure><img src="assets/fig/ch07-criteria.svg" alt="模擬：，10 個候選變數中只有前 4 個真的有關（係數 3、−2、1.5、1，）。每個大小  先用最佳子集選出 RSS 最小的模型，再算各準則；綠線是用 20,000 筆新資料算的真正測試 MSE。訓練 MSE 隨  一路下降；BIC 與真正的測試 MSE 都在  最低，而且  的最佳子集剛好就是那 4 個真變數。 在  之後幾乎平坦，最低點落在 7；調整  最大在 8。懲罰越輕（調整  &lt;  &lt; BIC），選出的模型越大。" loading="lazy"><figcaption>模擬：\(n=60\)，10 個候選變數中只有前 4 個真的有關（係數 3、−2、1.5、1，\(\sigma=2\)）。每個大小 \(d\) 先用最佳子集選出 RSS 最小的模型，再算各準則；綠線是用 20,000 筆新資料算的真正測試 MSE。訓練 MSE 隨 \(d\) 一路下降；BIC 與真正的測試 MSE 都在 \(d=4\) 最低，而且 \(d=4\) 的最佳子集剛好就是那 4 個真變數。\(C_p\) 在 \(d=4\) 之後幾乎平坦，最低點落在 7；調整 \(R^2\) 最大在 8。懲罰越輕（調整 \(R^2\) < \(C_p\) < BIC），選出的模型越大。</figcaption></figure>
 
 <h3>五、用哪一個</h3>
-<figure><img src="assets/fig/ch07-criteria.svg" alt="模擬：、10 個候選變數（彼此有相關），真正有用的只有 3 個。對每個大小做最佳子集選擇，再用各準則挑大小。訓練 MSE（灰虛線）隨變數個數一路下降。10 折 CV 選 4 個、（即 (7.4) 的 AIC）與 BIC 都選 3 個、調整  選 5 個。調整  的曲線在 3 到 7 個變數之間非常平，懲罰最輕，所以傾向選比較大的模型。" loading="lazy"><figcaption>模擬：\(n=100\)、10 個候選變數（彼此有相關），真正有用的只有 3 個。對每個大小做最佳子集選擇，再用各準則挑大小。訓練 MSE（灰虛線）隨變數個數一路下降。10 折 CV 選 4 個、\(C_p\)（即 (7.4) 的 AIC）與 BIC 都選 3 個、調整 \(R^2\) 選 5 個。調整 \(R^2\) 的曲線在 3 到 7 個變數之間非常平，懲罰最輕，所以傾向選比較大的模型。</figcaption></figure>
-
 <ul>
 <li>\(C_p\)、AIC、BIC 都要估計 \(\sigma^2\)，而且要知道模型的參數個數；交叉驗證兩者都不需要，適用範圍最廣，也最準確，只是計算量大。</li>
 <li>交叉驗證曲線常常在最低點附近很平。常用<strong>一個標準誤法則</strong>（one-standard-error rule）：先算出每個大小的 CV 估計與它的標準誤，在「CV 值不超過最低點加一個標準誤」的模型中，選最簡單的那個。</li>

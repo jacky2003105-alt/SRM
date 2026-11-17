@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>第 14 章　廣義線性模型：如何判斷配適及選模｜SRM 精算考試</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css?v=89e65295">
+<title>第 14 章　廣義線性模型：如何判斷配適及選模｜SRM 精算考試</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css?v=462b7acd">
 <script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js?v=779c73c2"></script></head>
 <body><div class="topbar"><a class="brand" href="index.html">SRM 精算考試｜課程筆記</a><div class="pickers">
 <label for="scopeSelect" class="scope-label">考試範圍</label><select id="scopeSelect" aria-label="考試範圍"><option value="all">全部</option><option value="t1">統計學習基礎</option><option value="t2">線性模型</option><option value="t3">時間數列</option><option value="t4">決策樹</option><option value="t5">非監督式學習</option></select>
@@ -850,6 +850,17 @@
 <div class="box-t">例題 14-8：max-scaled \(R^2\)（講義小測驗 14-3）</div>
 <p>85 筆觀察，模型的最大對數概似 −74.3，只有截距的 −95.5。
 \[R^2_{\text{ms}}=1-\left(\frac{e^{-95.5/85}}{e^{-74.3/85}}\right)^2=1-e^{-2(21.2)/85}=0.39276,\qquad \text{max-scaled }R^2=\frac{0.39276}{1-e^{-2(95.5)/85}}=\frac{0.39276}{0.89430}=0.4392 .\]</p>
+</div>
+<div class="box exam">
+<div class="box-t">考試怎麼考：\(R^2\) 類指標</div>
+<ul>
+<li><strong>正算</strong>：給 \(\ell_0\)、\(\ell(\mathbf b)\)、\(n\)，算 max-scaled \(R^2\)（例題 14-8）或 pseudo-\(R^2\)（需要 \(\ell_{\max}\)）。</li>
+<li><strong>反算</strong>（練習測驗 5 第 8 題、練習測驗 6 第 25 題）：給 \(\ell_0\)、\(n\) 與 max-scaled \(R^2\)，求模型的 AIC。步驟是倒著走：
+  1. 乘回上限：\(R^2_{\text{ms}}=\text{max-scaled }R^2\times\big(1-e^{2\ell_0/n}\big)\)。
+  2. 反解對數概似：\(1-R^2_{\text{ms}}=e^{2(\ell_0-\ell)/n}\)，所以 \(\ell=\ell_0-\frac n2\ln(1-R^2_{\text{ms}})\)。
+  3. \(\text{AIC}=-2\ell+2p\)，\(p\) 要把類別變數的 \(c-1\) 個指標與交互作用都數進去。</li>
+<li>\(R^2_{\text{ms}}\) 本身只用到 \(\ell_0-\ell\)，常數會消掉；但上限 \(1-e^{2\ell_0/n}\) 只有 \(\ell_0\) 一項，常數消不掉，所以 \(\ell_0\) 必須是含 \(\ln y!\) 這類常數的完整值。</li>
+</ul>
 </div><div class="sec-ex"><div class="sec-ex-t">這一節的精選習題</div><article class="exercise" id="q14-30"><div class="ex-head"><span class="ex-tag star">★ 精選</span><b>第 14.30 題</b><small>・講義 p.253・<a href="#s4">回到對應概念</a></small></div><div class="prompt"><p>For a Poisson regression with a log link, you have the following actual and fitted values:</p>
 <table>
 <thead>

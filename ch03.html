@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>第 3 章　線性迴歸：標準誤、解釋力與 t 檢定｜SRM 精算考試</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css?v=89e65295">
+<title>第 3 章　線性迴歸：標準誤、解釋力與 t 檢定｜SRM 精算考試</title><link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/srm2.css?v=462b7acd">
 <script defer src="assets/katex/katex.min.js"></script><script defer src="assets/katex/auto-render.min.js"></script><script defer src="assets/srm2.js?v=779c73c2"></script></head>
 <body><div class="topbar"><a class="brand" href="index.html">SRM 精算考試｜課程筆記</a><div class="pickers">
 <label for="scopeSelect" class="scope-label">考試範圍</label><select id="scopeSelect" aria-label="考試範圍"><option value="all">全部</option><option value="t1">統計學習基礎</option><option value="t2">線性模型</option><option value="t3">時間數列</option><option value="t4">決策樹</option><option value="t5">非監督式學習</option></select>
@@ -581,7 +581,8 @@ Total SS \(=\sum y_i^2-n\bar y^2=1056-18(16)=768\)。
 <p><strong>共變異矩陣</strong>（covariance matrix）<strong>：</strong> 隨機向量的共變異矩陣，對角線是各元素的變異數，非對角線是兩兩的共變異數。\(\mathrm{Var}(\boldsymbol\varepsilon)=\sigma^2I\)：對角線都是 \(\sigma^2\)（同質變異），非對角線都是 0（獨立）。</p>
 <p>需要的規則是：對常數矩陣 \(A\)，\(\mathrm{Var}(A\boldsymbol\varepsilon)=A\,\mathrm{Var}(\boldsymbol\varepsilon)\,A&#x27;\)。它是一維公式 \(\mathrm{Var}(a\varepsilon)=a^2\mathrm{Var}(\varepsilon)\) 的推廣：\(a^2\) 拆成「左邊乘 \(A\)、右邊乘 \(A&#x27;\)」。</p>
 <p>令 \(A=(X&#x27;X)^{-1}X&#x27;\)，則 \(\mathbf b-\boldsymbol\beta=A\boldsymbol\varepsilon\)。\(A&#x27;=X\big((X&#x27;X)^{-1}\big)&#x27;=X(X&#x27;X)^{-1}\)（\(X&#x27;X\) 對稱，所以它的反矩陣也對稱）。代入：
-\[\mathrm{Var}(\mathbf b)=A\,\sigma^2I\,A&#x27;=\sigma^2(X&#x27;X)^{-1}\underbrace{X&#x27;X(X&#x27;X)^{-1}}_{=I}=\sigma^2(X&#x27;X)^{-1} .\]若誤差是常態，\(\mathbf b\) 是常態變數的線性組合，也是常態：\(\mathbf b\sim N\big(\boldsymbol\beta,\ \sigma^2(X&#x27;X)^{-1}\big)\)。</p>
+\[\mathrm{Var}(\mathbf b)=A\,\sigma^2I\,A&#x27;=\sigma^2(X&#x27;X)^{-1}\underbrace{X&#x27;X(X&#x27;X)^{-1}}_{=I}=\sigma^2(X&#x27;X)^{-1} .\]
+若誤差是常態，\(\mathbf b\) 是常態變數的線性組合，也是常態：\(\mathbf b\sim N\big(\boldsymbol\beta,\ \sigma^2(X&#x27;X)^{-1}\big)\)。</p>
 </div>
 <p>在誤差不相關、同質變異的假設下，最小平方估計是所有「\(\mathbf y\) 的線性函數」而且不偏的估計量裡變異數最小的，簡稱 BLUE（best linear unbiased estimator），這叫<strong>高斯—馬可夫定理</strong>（Gauss–Markov theorem）。這個定理不需要常態假設；它也是<a href="ch02.html">第 2 章</a>加權最小平方「先把資料變形成同質變異、再用普通最小平方」的理由。</p>
 <p>\(\sigma^2\) 未知，用 \(s^2\) 代替。記 \((X&#x27;X)^{-1}\) 的對角線元素為 \(c_{00},c_{11},\ldots,c_{kk}\)（矩陣的第 \(j+1\) 個對角線元素對應 \(b_j\)，因為係數從 0 編號）。則</p>
