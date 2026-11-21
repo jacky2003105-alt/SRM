@@ -142,3 +142,5 @@ main.course{overflow-x:clip}
 @media (max-width:650px){.w-plots.two{grid-template-columns:1fr}.widget{padding:12px 12px}.w-sl{flex-basis:100%}}
 @media print{.widget{display:none!important}}
 .w-plots:not(.two) .w-svg{max-width:660px;margin:0 auto}
+.box.calc{background:#f2f0fa;border-left:4px solid #6b5ca8}.box.calc .box-t{color:#4b3f86}
+.box.calc .box-t::before{content:"▦ ";font-weight:400}
